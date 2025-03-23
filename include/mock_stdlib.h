@@ -20,7 +20,10 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_STDLIB_H_
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <gmock/gmock.h>
+#pragma GCC diagnostic pop
 
 extern void *delegate_real_calloc(const char *, const int, const char *, size_t, size_t);
 

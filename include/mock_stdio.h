@@ -31,7 +31,10 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H_
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <gmock/gmock.h>
+#pragma GCC diagnostic pop
 
 extern int delegate_real_fclose(const char *, const int, const char *, FILE *);
 extern int delegate_fake_fclose(const char *, const int, const char *, FILE *);

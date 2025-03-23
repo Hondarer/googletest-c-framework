@@ -1,4 +1,8 @@
-#include "gtest/gtest.h"
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#include <gtest/gtest.h>
+#pragma GCC diagnostic pop
+
 #include <gtest_wrapmain.h>
 
 using namespace testing;

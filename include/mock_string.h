@@ -20,7 +20,10 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_STRING_H_
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <gmock/gmock.h>
+#pragma GCC diagnostic pop
 
 extern void *delegate_real_memset(const char *, const int, const char *, void *, int, size_t);
 

@@ -1,8 +1,7 @@
+#include <test_com.h>
 #include <iostream>
 #include <unordered_map>
 #include <stdexcept>
-
-#include <test_com.h>
 
 using namespace std;
 using namespace testing;

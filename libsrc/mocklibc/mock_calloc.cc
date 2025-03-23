@@ -1,5 +1,3 @@
-#include <gmock/gmock.h>
-
 #include <test_com.h>
 #include <mock_stdlib.h>
 

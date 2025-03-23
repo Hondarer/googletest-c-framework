@@ -1,5 +1,3 @@
-#include <gmock/gmock.h>
-
 #include <sys/mock_stat.h>
 
 using namespace testing;

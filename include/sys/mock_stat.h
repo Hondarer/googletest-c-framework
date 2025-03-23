@@ -20,7 +20,10 @@ extern int mock_stat(const char *, const int, const char *, const char *, struct
 
 #else // _IN_OVERRIDE_HEADER_STAT_H_
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <gmock/gmock.h>
+#pragma GCC diagnostic pop
 
 extern int delegate_real_stat(const char *, const int, const char *, const char *, struct stat *);
 

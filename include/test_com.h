@@ -5,7 +5,10 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 #include <gmock/gmock.h>
+#pragma GCC diagnostic pop
 
 using namespace std;
 
