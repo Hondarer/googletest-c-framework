@@ -437,8 +437,8 @@ ifndef NO_LINK
 test: $(TESTSH) $(TARGETDIR)/$(TARGET)
 	@status=0; \
 	export TEST_SRCS="$(TEST_SRCS)" && $(SHELL) $(TESTSH) > >(nkf) 2> >(nkf >&2) || status=$$?; \
+	$(MAKE) clean-cov; \
 	exit $$status
-	$(MAKE) clean-cov
 else
 # 何もしない
 # Do nothing
