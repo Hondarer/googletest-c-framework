@@ -1,6 +1,7 @@
 #ifndef _MOCK_UNISTD_H_
 #define _MOCK_UNISTD_H_
 
+#include <sys/types.h>
 #include <unistd.h>
 
 #ifdef __cplusplus
@@ -9,6 +10,7 @@ extern "C"
 #endif
 
     extern int mock_access(const char *, const int, const char *, const char *, int);
+    extern pid_t mock_fork(const char *, const int, const char *);
 
 #ifdef __cplusplus
 }
@@ -17,6 +19,7 @@ extern "C"
 #ifdef _IN_OVERRIDE_HEADER_UNISTD_H_
 
 #define access(path, amode) mock_access(__FILE__, __LINE__, __func__, path, amode)
+#define fork() mock_fork(__FILE__, __LINE__, __func__)
 
 #else // _IN_OVERRIDE_HEADER_UNISTD_H_
 
@@ -26,11 +29,13 @@ extern "C"
 #pragma GCC diagnostic pop
 
 extern int delegate_real_access(const char *, const int, const char *, const char *, int);
+extern pid_t delegate_real_fork(const char *, const int, const char *);
 
 class Mock_unistd
 {
 public:
     MOCK_METHOD(int, access, (const char *, const int, const char *, const char *, int));
+    MOCK_METHOD(pid_t, fork, (const char *, const int, const char *));
 
     Mock_unistd();
     ~Mock_unistd();
