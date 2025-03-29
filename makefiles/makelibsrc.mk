@@ -101,6 +101,15 @@ ifeq ($(findstring -g,$(CPPCOMFLAGS)),)
 	CPPCOMFLAGS += -g
 endif
 
+# -fPIC オプションが含まれていない場合に追加
+# Add -fPIC option if not already included
+ifeq ($(findstring -fPIC,$(CCOMFLAGS)),)
+	CCOMFLAGS += -fPIC
+endif
+ifeq ($(findstring -fPIC,$(CPPCOMFLAGS)),)
+	CPPCOMFLAGS += -fPIC
+endif
+
 # c_cpp_properties.json の defines にある値を -D として追加する
 # DEFINES は prepare.mk で設定されている
 # Add defines from c_cpp_properties.json to CCOMFLAGS
