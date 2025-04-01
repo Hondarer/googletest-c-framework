@@ -6,21 +6,7 @@ Mock_stdio *_mock_stdio = nullptr;
 
 Mock_stdio::Mock_stdio()
 {
-    ON_CALL(*this, fclose(_, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fclose));
-
-    ON_CALL(*this, fflush(_, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fflush));
-
-    ON_CALL(*this, fopen(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fopen));
-    reset_fake_fopen();
-
-    ON_CALL(*this, fprintf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fprintf));
-
-    ON_CALL(*this, vfprintf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_vfprintf));
+    switch_to_real_fileio();
 
     ON_CALL(*this, scanf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_scanf));
@@ -45,6 +31,9 @@ void Mock_stdio::switch_to_mock_fileio()
 
     ON_CALL(*this, vfprintf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_fake_vfprintf));
+
+    ON_CALL(*this, fgets(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_fgets));
 }
 
 void Mock_stdio::switch_to_real_fileio()
@@ -57,12 +46,16 @@ void Mock_stdio::switch_to_real_fileio()
 
     ON_CALL(*this, fopen(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_fopen));
+    reset_fake_fopen();
 
     ON_CALL(*this, fprintf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_fprintf));
 
     ON_CALL(*this, vfprintf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_vfprintf));
+
+    ON_CALL(*this, fgets(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_fgets));
 }
 
 Mock_stdio::~Mock_stdio()

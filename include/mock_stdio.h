@@ -15,6 +15,7 @@ extern "C"
     extern int mock_fprintf(const char *, const int, const char *, FILE *, const char *, ...) __attribute__((format(printf, 5, 6)));
     extern int mock_vfprintf(const char *, const int, const char *, FILE *, const char *, va_list) __attribute__((format(printf, 5, 0)));
     extern int mock_scanf(const char *, const int, const char *, const char *, ...) __attribute__((format(scanf, 4, 5)));
+    extern char *mock_fgets(const char *, const int, const char *, char *, int, FILE *);
 
 #ifdef __cplusplus
 }
@@ -28,6 +29,7 @@ extern "C"
 #define fprintf(stream, format, ...) mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
 #define vfprintf(stream, format, ap) mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
 #define scanf(format, ...) mock_scanf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
+#define fgets(s, n, stream) mock_fgets(__FILE__, __LINE__, __func__, s, n, stream)
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H_
 
@@ -47,6 +49,8 @@ extern int delegate_real_fprintf(const char *, const int, const char *, FILE *, 
 extern int delegate_fake_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_real_vfprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_fake_vfprintf(const char *, const int, const char *, FILE *, const char *);
+extern char *delegate_real_fgets(const char *, const int, const char *, char *, int, FILE *);
+extern char *delegate_fake_fgets(const char *, const int, const char *, char *, int, FILE *);
 
 extern int delegate_real_scanf(const char *, const int, const char *, const char *, va_list) __attribute__((format(scanf, 1, 0)));
 
@@ -59,6 +63,7 @@ public:
     MOCK_METHOD(FILE *, fopen, (const char *, const int, const char *, const char *, const char *));
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
+    MOCK_METHOD(char *, fgets, (const char *, const int, const char *, char *, int, FILE *));
 
     void switch_to_real_fileio();
     void switch_to_mock_fileio();
