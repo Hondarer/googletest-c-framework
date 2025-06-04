@@ -96,7 +96,7 @@ LIBSDIR := $(LIBSDIR) \
 	$(WORKSPACE_FOLDER)/testfw/lib \
 	$(WORKSPACE_FOLDER)/test/lib
 
-LIBSFILES := $(shell for dir in $(LIBSDIR); do find $$dir -maxdepth 1 -type f; done)
+LIBSFILES := $(shell for dir in $(LIBSDIR); do [ -d $$dir ] && find $$dir -maxdepth 1 -type f; done)
 
 # テストライブラリの設定
 # Set test libraries
