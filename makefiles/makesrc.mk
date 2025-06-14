@@ -238,8 +238,14 @@ $(1):
 endef
 
 # ファイルごとの依存関係を動的に定義
+# ただし、from, to が同じになる場合 (一般的には Makefile の定義ミス) はスキップ
 # Dynamically define file-by-file dependencies
-$(foreach link_src,$(LINK_SRCS),$(eval $(call generate_link_src_rule,$(notdir $(link_src)),$(link_src))))
+$(foreach link_src,$(LINK_SRCS), \
+  $(if \
+    $(filter-out $(notdir $(link_src)),$(link_src)), \
+    $(eval $(call generate_link_src_rule,$(notdir $(link_src)),$(link_src))) \
+  ) \
+)
 
 # コピー対象のソースファイルをコピーして
 # 1. フィルター処理をする
