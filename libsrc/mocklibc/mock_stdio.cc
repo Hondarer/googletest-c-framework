@@ -8,6 +8,9 @@ Mock_stdio::Mock_stdio()
 {
     switch_to_real_fileio();
 
+    ON_CALL(*this, printf(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_printf));
+
     ON_CALL(*this, scanf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_scanf));
 
