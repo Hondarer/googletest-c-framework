@@ -92,6 +92,11 @@ endif
 
 CPP := g++
 
+# gtest が C++ versions less than C++17 are not supported. のため、
+# -std=c++17 とする
+# (あまり綺麗な指定方法ではないため、オプションの競合に注意)
+CPPCOMFLAGS += -std=c++17
+
 # -g オプションが含まれていない場合に追加
 # Add -g option if not already included
 ifeq ($(findstring -g,$(CCOMFLAGS)),)
