@@ -247,7 +247,7 @@ $(OBJDIR):
 	mkdir -p $@
 
 .PHONY: all
-all: clean $(TARGETDIR)/$(TARGET)
+all: $(TARGETDIR)/$(TARGET)
 
 .PHONY: clean
 clean:

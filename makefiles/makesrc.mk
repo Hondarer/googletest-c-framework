@@ -315,13 +315,13 @@ $(LCOVDIR):
 
 .PHONY: all
 ifndef NO_LINK
-# clean & 実行体の生成
-# Clean and build the executable
-all: clean $(TARGETDIR)/$(TARGET)
+# 実行体の生成
+# Build the executable
+all: $(TARGETDIR)/$(TARGET)
 else
-# clean & リンクのみ
-# Clean and link only
-all: clean $(OBJS) $(LIBSFILES)
+# リンクのみ
+# Link only
+all: $(OBJS) $(LIBSFILES)
 endif
 
 .PHONY: clean
