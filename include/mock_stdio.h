@@ -27,7 +27,7 @@ extern "C"
 #define fclose(stream) mock_fclose(__FILE__, __LINE__, __func__, stream)
 #define fflush(stream) mock_fflush(__FILE__, __LINE__, __func__, stream)
 #define fopen(filename, modes) mock_fopen(__FILE__, __LINE__, __func__, filename, modes)
-#define printf(stream, format, ...) mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
+#define printf(format, ...) mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
 #define fprintf(stream, format, ...) mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
 #define vfprintf(stream, format, ap) mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
 #define scanf(format, ...) mock_scanf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
