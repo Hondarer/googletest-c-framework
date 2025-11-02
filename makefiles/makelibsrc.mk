@@ -134,6 +134,13 @@ OBJS := $(filter-out $(OBJDIR)/%.inject.o, \
 # DEPS
 DEPS := $(patsubst %.o, %.d, $(OBJS))
 
+# BUILD の設定 (デフォルトは static)
+# BUILD setting (default is static)
+# make BUILD=shared で、shared となる
+ifeq ($(BUILD),)
+	BUILD := static
+endif
+
 # アーカイブのディレクトリ名とアーカイブ名
 # TARGETDIR := . の場合、カレントディレクトリにアーカイブを生成する
 # If TARGETDIR := ., the archive is created in the current directory
@@ -143,13 +150,22 @@ endif
 # ディレクトリ名をアーカイブ名にする
 # Use directory name as archive name if TARGET is not specified
 ifeq ($(TARGET),)
-	TARGET := lib$(shell basename `pwd`).a
+	ifeq ($(BUILD),shared)
+		TARGET := lib$(shell basename `pwd`).so
+	else
+		TARGET := lib$(shell basename `pwd`).a
+	endif
 endif
 
-# アーカイブの生成
-# Make the archive
+# アーカイブまたは共有ライブラリの生成
+# Make the archive or shared library
+ifeq ($(BUILD),shared)
+$(TARGETDIR)/$(TARGET): $(OBJS) | $(TARGETDIR)
+	$(CC) -shared -o $@ $(OBJS)
+else
 $(TARGETDIR)/$(TARGET): $(OBJS) | $(TARGETDIR)
 	ar rvs $@ $(OBJS)
+endif
 
 # コンパイル時の依存関係に $(notdir $(LINK_SRCS)) $(notdir $(CP_SRCS)) を定義しているのは
 # ヘッダ類などを引き込んでおく必要がある場合に、先に処理を行っておきたいため

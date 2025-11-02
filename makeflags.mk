@@ -72,6 +72,6 @@ CPPCOMFLAGS=\
 LDCOMFLAGS  =
 LIBSDIR     =
 
-# makesrc.mk のデフォルトのターゲットは $(WORKSPACE_FOLDER)/test/lib であるため、
+# makelibsrc.mk のデフォルトのターゲットは $(WORKSPACE_FOLDER)/test/lib であるため、
 # ここでオーバーライド
 TARGETDIR := $(WORKSPACE_FOLDER)/testfw/lib

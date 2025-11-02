@@ -92,18 +92,24 @@ INCDIR := $(shell sh $(WORKSPACE_FOLDER)/testfw/cmnd/get_include_paths.sh)
 
 # 外部で LIBSDIR が指定されている場合は維持して結合
 # Merge external LIBSDIR if specified
+# LINK_TEST が 1 の場合にのみ設定する
+ifeq ($(LINK_TEST), 1)
 LIBSDIR := $(LIBSDIR) \
 	$(WORKSPACE_FOLDER)/testfw/lib \
 	$(WORKSPACE_FOLDER)/test/lib
+endif
 
 LIBSFILES := $(shell for dir in $(LIBSDIR); do [ -d $$dir ] && find $$dir -maxdepth 1 -type f; done)
 
 # テストライブラリの設定
 # Set test libraries
-TEST_LIBS := -lgtest_main -lgtest -lpthread -lgmock -lgcov
-ifneq ($(NO_GTEST_MAIN),)
-	ifeq ($(NO_GTEST_MAIN), 1)
-		TEST_LIBS := $(filter-out -lgtest_main, $(TEST_LIBS))
+# LINK_TEST が 1 の場合にのみ設定する
+ifeq ($(LINK_TEST), 1)
+	TEST_LIBS := -lgtest_main -lgtest -lpthread -lgmock -lgcov
+	ifneq ($(NO_GTEST_MAIN),)
+		ifeq ($(NO_GTEST_MAIN), 1)
+			TEST_LIBS := $(filter-out -lgtest_main, $(TEST_LIBS))
+		endif
 	endif
 endif
 
@@ -122,7 +128,11 @@ ifneq ($(CC),g++)
 endif
 
 CPP := g++
-LD := g++
+
+# LD が定義されていたら、定義値を優先し、定義がなければ LD は g++ とする。
+ifneq ($(LD),)
+	LD := g++
+endif
 
 # gtest が C++ versions less than C++17 are not supported. のため、
 # -std=c++17 とする
