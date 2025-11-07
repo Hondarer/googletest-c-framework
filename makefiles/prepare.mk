@@ -9,9 +9,7 @@ DEFINES := $(shell sh $(WORKSPACE_FOLDER)/testfw/cmnd/get_defines.sh)
 $(foreach define, $(DEFINES), $(eval $(define) = 1))
 
 # test
-#ifdef GOOGLETEST_C_SAMPLE
-#$(info GOOGLETEST_C_SAMPLE: $(GOOGLETEST_C_SAMPLE));
-#endif
+#$(info DEFINES: $(DEFINES));
 
 # ソースファイルのエンコード指定から LANG を得る
 FILES_LANG := $(shell sh $(WORKSPACE_FOLDER)/testfw/cmnd/get_files_lang.sh)
@@ -24,7 +22,11 @@ MAKEFLAGS_MK := $(shell \
 	dir=`pwd`; \
 	while [ "$$dir" != "/" ]; do \
 		if [ -f "$$dir/makeflags.mk" ]; then \
-			echo "$$dir/makeflags.mk"; \
+			if command -v cygpath > /dev/null 2>&1; then \
+				cygpath -w "$$dir/makeflags.mk"; \
+			else \
+				echo "$$dir/makeflags.mk"; \
+			fi; \
 		fi; \
 		if [ -f "$$dir/.workspaceRoot" ]; then \
 			break; \
@@ -37,5 +39,4 @@ MAKEFLAGS_MK := $(shell \
 MAKEFLAGS_MK := $(foreach mkfile, $(shell seq $(words $(MAKEFLAGS_MK)) -1 1), $(word $(mkfile), $(MAKEFLAGS_MK)))
 
 # makeflags.mk が存在すればインクルード
-#$(foreach makeflags, $(MAKEFLAGS_MK), $(info include $(makeflags)) $(eval include $(makeflags)))
 $(foreach makeflags, $(MAKEFLAGS_MK), $(eval include $(makeflags)))
