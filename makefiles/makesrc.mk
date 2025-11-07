@@ -329,8 +329,8 @@ ifndef NO_LINK
 # Build the executable
 all: $(TARGETDIR)/$(TARGET)
 else
-# リンクのみ
-# Link only
+# コンパイルのみ
+# Compile only
 all: $(OBJS) $(LIBSFILES)
 endif
 
