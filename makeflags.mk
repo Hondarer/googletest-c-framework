@@ -1,4 +1,6 @@
-CCOMFLAGS=\
+ifneq ($(OS),Windows_NT)
+    # Linux
+CFLAGS=\
 	-Wall \
 	-Wextra \
 	-Wcast-align \
@@ -34,10 +36,8 @@ CCOMFLAGS=\
 	-Wimplicit-fallthrough=0 \
 	-Wformat-overflow=0 \
 	-Wunknown-pragmas \
-	-W \
-	-std=c99
-
-CPPCOMFLAGS=\
+	-W
+CXXFLAGS=\
 	-Wall \
 	-Wextra \
 	-Wcast-align \
@@ -68,10 +68,15 @@ CPPCOMFLAGS=\
 	-Wformat-overflow=0 \
 	-Wunknown-pragmas \
 	-W
+LDFLAGS     =
+else
+    # Windows
+CFLAGS      =
+CXXFLAGS    =
+LDFLAGS     =
+endif
 
-LDCOMFLAGS  =
 LIBSDIR     =
 
-# makelibsrc.mk のデフォルトのターゲットは $(WORKSPACE_FOLDER)/test/lib であるため、
-# ここでオーバーライド
-TARGETDIR := $(WORKSPACE_FOLDER)/testfw/lib
+TARGETDIR  :=\
+	$(WORKSPACE_FOLDER)/testfw/lib
