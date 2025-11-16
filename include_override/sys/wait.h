@@ -1,6 +1,7 @@
-#ifndef _SYS_WAIT_H
-/* 本物の include で define されるため、ここでは define しない */
-/* #define _SYS_WAIT_H */
+#ifndef _WIN32
+
+#ifndef _OVERRIDE_SYS_WAIT_H_
+#define _OVERRIDE_SYS_WAIT_H_
 
 /* 本物を include */
 #include "/usr/include/sys/wait.h"
@@ -10,4 +11,6 @@
 #include <sys/mock_wait.h>
 #undef _IN_OVERRIDE_HEADER_WAIT_H_
 
-#endif // _SYS_WAIT_H
+#endif // _OVERRIDE_SYS_WAIT_H_
+
+#endif // _WIN32
