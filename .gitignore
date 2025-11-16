@@ -7,6 +7,9 @@
 # Makefileは管理対象
 !Makefile
 
+# gtestは管理対象
+!/gtest
+
 # 以下は管理対象外
 lib
 obj

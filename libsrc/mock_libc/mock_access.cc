@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #include <test_com.h>
 #include <mock_unistd.h>
 
@@ -41,3 +43,5 @@ int mock_access(const char *file, const int line, const char *func, const char *
 
     return rtc;
 }
+
+#endif // _WIN32

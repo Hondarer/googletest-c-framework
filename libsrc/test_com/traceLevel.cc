@@ -6,8 +6,10 @@
 using namespace std;
 using namespace testing;
 
+#ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
+#endif // _WIN32
 class TraceLevelDictionary
 {
 private:
@@ -58,7 +60,9 @@ public:
         return it->second;
     }
 };
+#ifndef _WIN32
 #pragma GCC diagnostic pop
+#endif // _WIN32
 
 void testing::resetTraceLevel(int defaultTraceLevel)
 {

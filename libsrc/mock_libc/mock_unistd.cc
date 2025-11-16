@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #include <mock_unistd.h>
 
 using namespace testing;
@@ -18,3 +20,5 @@ Mock_unistd::~Mock_unistd()
 {
     _mock_unistd = nullptr;
 }
+
+#endif // _WIN32

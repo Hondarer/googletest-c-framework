@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #include <test_com.h>
 #include <mock_unistd.h>
 
@@ -41,3 +43,5 @@ pid_t mock_fork(const char *file, const int line, const char *func)
 
     return rtc;
 }
+
+#endif // _WIN32

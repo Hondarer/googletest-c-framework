@@ -23,7 +23,7 @@ int delegate_fake_fprintf(const char *file, const int line, const char *func, FI
     (void)func;
     (void)stream;
 
-    return strlen(str);
+    return (int)strlen(str);
 }
 
 int mock_fprintf(const char *file, const int line, const char *func, FILE *stream, const char *fmt, ...)
@@ -62,7 +62,7 @@ int mock_fprintf(const char *file, const int line, const char *func, FILE *strea
             {
                 trimmed_str[len - 1] = '\0';
             }
-            printf("  > fprintf %d, %s", stream->_fileno, trimmed_str);
+            printf("  > fprintf %p, %s", (void *)stream, trimmed_str);
             free(trimmed_str);
             if (getTraceLevel() >= TRACE_DETAIL)
             {

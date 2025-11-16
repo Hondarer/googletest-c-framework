@@ -28,7 +28,7 @@ void *mock_memset(const char *file, const int line, const char *func, void *s, i
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > memset 0x%p, 0x%02x, %ld", s, c, n);
+        printf("  > memset 0x%p, 0x%02x, %zd", s, c, n);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             if (result == NULL)
