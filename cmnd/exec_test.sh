@@ -7,7 +7,7 @@ SCRIPT_DIR=$(dirname "$0")
 WORKSPACE_FOLDER=$SCRIPT_DIR/../../
 
 # ソースファイルのエンコード指定から LANG を得る
-FILES_LANG=$(sh $SCRIPT_DIR/get_files_lang.sh $WORKSPACE_FOLDER)
+FILES_LANG=$(sh $WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh $WORKSPACE_FOLDER)
 
 # テストバイナリのパス
 TEST_BINARY=$(basename `pwd`)
