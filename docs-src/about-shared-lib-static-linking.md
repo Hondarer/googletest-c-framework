@@ -231,11 +231,11 @@ This feature is only active when `BUILD=shared`. The behavior of `BUILD=static` 
 
 ## 実装ファイル / Implementation File
 
-**ファイル**: `testfw/makefiles/makelibsrc.mk`
+**ファイル**: `makefw/makefiles/makelibsrc.mk`
 
 **変更行**: 162-210行目（共有ライブラリビルドルール部分）
 
-**File**: `testfw/makefiles/makelibsrc.mk`
+**File**: `makefw/makefiles/makelibsrc.mk`
 
 **Modified lines**: Lines 162-210 (shared library build rules)
 
