@@ -80,3 +80,6 @@ LIBSDIR     =
 
 TARGETDIR  :=\
 	$(WORKSPACE_FOLDER)/testfw/lib
+
+# テスト関連ライブラリは、すべて静的リンクとする
+BUILD = static
