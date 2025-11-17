@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# プラットフォーム検出
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "mingw"* ]]; then
+    IS_WINDOWS=1
+else
+    IS_WINDOWS=0
+fi
+
 # このスクリプトのパス
 SCRIPT_DIR=$(dirname "$0")
 
@@ -7,7 +14,7 @@ SCRIPT_DIR=$(dirname "$0")
 WORKSPACE_FOLDER=$SCRIPT_DIR/../../
 
 # ソースファイルのエンコード指定から LANG を得る
-FILES_LANG=$(sh $WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh $WORKSPACE_FOLDER)
+FILES_LANG=$(sh "$WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh" "$WORKSPACE_FOLDER")
 
 # テストバイナリのパス
 TEST_BINARY=$(basename `pwd`)
@@ -57,25 +64,50 @@ function run_test() {
 
     # テストコードに着色する場合:
     # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk | source-highlight -s cpp -f esc;
-    LANG=$FILES_LANG script -q -a -c \
-       "echo \"----\"; \
-        cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-        echo \"----\"; \
-        echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-        ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-        exit_code=\${PIPESTATUS[0]}; \
-        if [ \$exit_code -ge 128 ]; then \
-            signal=\$((exit_code - 128)); \
-            echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-            case \$signal in \
-                6)  echo \"SIGABRT: abort.\";; \
-                11) echo \"SIGSEGV: segmentation fault.\";; \
-                8)  echo \"SIGFPE: floating-point exception.\";; \
-                4)  echo \"SIGILL: illegal instruction.\";; \
-                *)  echo \"Abnormal termination by other signal.\";; \
-            esac; \
-        fi; \
-        echo \$exit_code > $temp_exit_code" $temp_file
+
+    if [ $IS_WINDOWS -eq 1 ]; then
+        # Windows 環境: script コマンドを使わず直接実行
+        LANG=$FILES_LANG bash -c \
+           "echo \"----\"; \
+            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+            echo \"----\"; \
+            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            exit_code=\${PIPESTATUS[0]}; \
+            if [ \$exit_code -ge 128 ]; then \
+                signal=\$((exit_code - 128)); \
+                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                case \$signal in \
+                    6)  echo \"SIGABRT: abort.\";; \
+                    11) echo \"SIGSEGV: segmentation fault.\";; \
+                    8)  echo \"SIGFPE: floating-point exception.\";; \
+                    4)  echo \"SIGILL: illegal instruction.\";; \
+                    *)  echo \"Abnormal termination by other signal.\";; \
+                esac; \
+            fi; \
+            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
+    else
+        # Linux 環境: script コマンドを使用
+        LANG=$FILES_LANG script -q -a -c \
+           "echo \"----\"; \
+            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+            echo \"----\"; \
+            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            exit_code=\${PIPESTATUS[0]}; \
+            if [ \$exit_code -ge 128 ]; then \
+                signal=\$((exit_code - 128)); \
+                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                case \$signal in \
+                    6)  echo \"SIGABRT: abort.\";; \
+                    11) echo \"SIGSEGV: segmentation fault.\";; \
+                    8)  echo \"SIGFPE: floating-point exception.\";; \
+                    4)  echo \"SIGILL: illegal instruction.\";; \
+                    *)  echo \"Abnormal termination by other signal.\";; \
+                esac; \
+            fi; \
+            echo \$exit_code > $temp_exit_code" $temp_file
+    fi
 
     local result=$(cat $temp_exit_code)
     rm -f $temp_exit_code
@@ -190,25 +222,49 @@ function main() {
 
             echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" >> $temp_file
 
-            LANG=$FILES_LANG script -q -a -c \
-               "echo \"----\"; \
-                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-                echo \"----\"; \
-                echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-                exit_code=\${PIPESTATUS[0]}; \
-                if [ \$exit_code -ge 128 ]; then \
-                    signal=\$((exit_code - 128)); \
-                    echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                    case \$signal in \
-                        6)  echo \"SIGABRT: abort.\";; \
-                        11) echo \"SIGSEGV: segmentation fault.\";; \
-                        8)  echo \"SIGFPE: floating-point exception.\";; \
-                        4)  echo \"SIGILL: illegal instruction.\";; \
-                        *)  echo \"Abnormal termination by other signal.\";; \
-                    esac; \
-                fi; \
-                echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
+            if [ $IS_WINDOWS -eq 1 ]; then
+                # Windows 環境: script コマンドを使わず直接実行 (ログのみ記録、表示なし)
+                LANG=$FILES_LANG bash -c \
+                   "echo \"----\"; \
+                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                    echo \"----\"; \
+                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    exit_code=\${PIPESTATUS[0]}; \
+                    if [ \$exit_code -ge 128 ]; then \
+                        signal=\$((exit_code - 128)); \
+                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                        case \$signal in \
+                            6)  echo \"SIGABRT: abort.\";; \
+                            11) echo \"SIGSEGV: segmentation fault.\";; \
+                            8)  echo \"SIGFPE: floating-point exception.\";; \
+                            4)  echo \"SIGILL: illegal instruction.\";; \
+                            *)  echo \"Abnormal termination by other signal.\";; \
+                        esac; \
+                    fi; \
+                    echo \$exit_code > $temp_exit_code" >> $temp_file 2>&1
+            else
+                # Linux 環境: script コマンドを使用
+                LANG=$FILES_LANG script -q -a -c \
+                   "echo \"----\"; \
+                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                    echo \"----\"; \
+                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    exit_code=\${PIPESTATUS[0]}; \
+                    if [ \$exit_code -ge 128 ]; then \
+                        signal=\$((exit_code - 128)); \
+                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                        case \$signal in \
+                            6)  echo \"SIGABRT: abort.\";; \
+                            11) echo \"SIGSEGV: segmentation fault.\";; \
+                            8)  echo \"SIGFPE: floating-point exception.\";; \
+                            4)  echo \"SIGILL: illegal instruction.\";; \
+                            *)  echo \"Abnormal termination by other signal.\";; \
+                        esac; \
+                    fi; \
+                    echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
+            fi
 
             local result=$(cat $temp_exit_code)
             rm -f $temp_exit_code

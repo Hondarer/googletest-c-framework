@@ -95,7 +95,7 @@ in_multiline_comment {
 {
     # 動的な正規表現を構築
     test_pattern = "^[[:space:]]*TEST(_[FP]*)?\\([[:space:]]*" test_suite_name "[[:space:]]*,[[:space:]]*" test_name "[[:space:]]*\\)";
-    test_pattern2 = "^[[:space:]]*INSTANTIATE_TEST_SUITE_P\\([[:space:]]*" prefix "[[:space:]]*,[[:space:]]*" test_suite_name "[[:space:]]*\\,";
+    test_pattern2 = "^[[:space:]]*INSTANTIATE_TEST_SUITE_P\\([[:space:]]*" prefix "[[:space:]]*,[[:space:]]*" test_suite_name "[[:space:]]*,";
 
     if ($0 ~ test_pattern || $0 ~ test_pattern2) {
         if ($0 ~ test_pattern)
