@@ -71,15 +71,8 @@ ifneq ($(OS),Windows_NT)
     LDFLAGS     =
 else
     # Windows
-    # UCRT (Universal C Runtime) のパスを環境変数 UniversalCRTSdkDir と UCRTVersion から取得
-    UCRT_SDK_DIR := $(shell cmd /c echo %UniversalCRTSdkDir% 2>nul)
-    UCRT_VERSION := $(shell cmd /c echo %UCRTVersion% 2>nul)
-    UCRT_SDK_DIR_FIXED := $(subst \,/,$(UCRT_SDK_DIR))
-    UCRT_DIR := $(UCRT_SDK_DIR_FIXED)Include/$(UCRT_VERSION)/ucrt
-    $(info [makeflags.mk] Using UCRT from SDK environment variables: $(UCRT_DIR))
-
-    CFLAGS      = -DUCRT_INCLUDE_DIR=\"$(UCRT_DIR)\"
-    CXXFLAGS    = -DUCRT_INCLUDE_DIR=\"$(UCRT_DIR)\"
+    CFLAGS      =
+    CXXFLAGS    =
     LDFLAGS     =
 endif
 

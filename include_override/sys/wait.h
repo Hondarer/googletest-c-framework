@@ -4,7 +4,7 @@
 #define _OVERRIDE_SYS_WAIT_H_
 
 /* 本物を include */
-#include "/usr/include/sys/wait.h"
+#include_next <sys/wait.h>
 
 /* モックにすげ替え */
 #define _IN_OVERRIDE_HEADER_WAIT_H_

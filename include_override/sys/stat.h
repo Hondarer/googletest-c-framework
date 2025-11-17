@@ -3,16 +3,12 @@
 
 /* 本物を include */
 #ifndef _WIN32
-#include "/usr/include/sys/stat.h"
+#include_next <sys/stat.h>
 #else // _WIN32
-/* UCRT_INCLUDE_DIR からの相対パスで 本物を include */
-#define STRINGIFY(x) #x
-#define TOSTRING(x) STRINGIFY(x)
-#define MAKE_UCRT_PATH(header) TOSTRING(UCRT_INCLUDE_DIR / header)
-#include MAKE_UCRT_PATH(sys\stat.h)
-#undef MAKE_UCRT_PATH
-#undef TOSTRING
-#undef STRINGIFY
+#pragma push_macro("_INC_SYS_STAT")
+#undef _INC_SYS_STAT
+#include <../ucrt/sys/stat.h>
+#pragma pop_macro("_INC_SYS_STAT")
 #endif // _WIN32
 
 /* モックにすげ替え */
