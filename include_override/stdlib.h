@@ -8,9 +8,15 @@
 #pragma GCC diagnostic ignored "-Wpadded"
 #include "/usr/include/stdlib.h"
 #pragma GCC diagnostic pop
-#else
-/* FIXME: 何らかのかたちで、crt のパスを得る必要がある */
-#include "C:\ProgramData\devbin-win\bin\vsbt\Windows Kits\10\Include\10.0.26100.0\ucrt\stdlib.h"
+#else // _WIN32
+/* UCRT_INCLUDE_DIR からの相対パスで 本物を include */
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+#define MAKE_UCRT_PATH(header) TOSTRING(UCRT_INCLUDE_DIR / header)
+#include MAKE_UCRT_PATH(stdlib.h)
+#undef MAKE_UCRT_PATH
+#undef TOSTRING
+#undef STRINGIFY
 #endif // _WIN32
 
 /* モックにすげ替え */
