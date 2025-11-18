@@ -339,9 +339,9 @@ function main() {
                 done
             fi
         fi
-    fi
 
-    echo "" | tee -a results/all_tests/summary.log
+        echo "" | tee -a results/all_tests/summary.log
+    fi
 
     # カバレッジツール統合は現状 Linux のみ
     if [ $IS_WINDOWS -ne 1 ]; then
