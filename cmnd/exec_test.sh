@@ -7,8 +7,8 @@ else
     IS_WINDOWS=0
 fi
 
-# このスクリプトのパス
-SCRIPT_DIR=$(dirname "$0")
+# このスクリプトのパス (dirname "$0" 相当)
+SCRIPT_DIR=${0%/*}
 
 # ワークスペースのディレクトリ
 WORKSPACE_FOLDER=$SCRIPT_DIR/../../
@@ -16,8 +16,8 @@ WORKSPACE_FOLDER=$SCRIPT_DIR/../../
 # ソースファイルのエンコード指定から LANG を得る
 FILES_LANG=$(sh "$WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh" "$WORKSPACE_FOLDER")
 
-# テストバイナリのパス
-TEST_BINARY=$(basename `pwd`)
+# テストバイナリのパス (basename `pwd` 相当)
+TEST_BINARY=${PWD##*/}
 
 # スタックサイズ制限緩和
 # (1) ハードリミットのスタックサイズを取得
@@ -40,17 +40,20 @@ function run_test() {
         test_comment_delim=" "
         test_comment="#${1#*#}"
     fi
-    local test_name=$(echo "$1" | cut -d' ' -f1)
+    # 最初のスペースより前を取得 (cut -d' ' -f1 相当)
+    local test_name=${1%% *}
 
     # 階層構造の管理上の都合で
     # パラメータテストの prefix をテストクラスの後に付けた ID を生成する
     # test_name: google test で内部的に扱うテスト名 (パラメータの prefix がテストクラスの前に付与されているもの)
     # test_id: 人間系に見せるテスト名 (パラメータの prefix がテストクラス名の後、パラメータ名の前に付与されているもの)
     local test_id
-    if [[ $(awk -F'/' '{print NF-1}' <<< "$test_name") -eq 2 ]]; then
-        test_id=$(echo "$test_name" | awk -F'/' '{print $2"/"$1"/"$3}')
+    # '/' で分割して配列に格納 (awk による処理の代替)
+    IFS='/' read -ra parts <<< "$test_name"
+    if [[ ${#parts[@]} -eq 3 ]]; then
+        test_id="${parts[1]}/${parts[0]}/${parts[2]}"
     else
-        test_id=$(echo "$test_name")
+        test_id="$test_name"
     fi
 
     make clean-cov > /dev/null
@@ -109,7 +112,8 @@ function run_test() {
             echo \$exit_code > $temp_exit_code" $temp_file
     fi
 
-    local result=$(cat $temp_exit_code)
+    # ファイル内容を直接読み込み (cat 相当)
+    local result=$(<"$temp_exit_code")
     rm -f $temp_exit_code
     cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' > results/$test_id/results.log
     rm -f $temp_file
@@ -154,9 +158,12 @@ function main() {
 
     tests=$(list_tests)
     #tests=$(echo "$tests" | sort)
-    test_count=$(echo "$tests" | wc -l)
+    # テスト数をカウント (wc -l 相当)
     if [[ -z "$tests" ]]; then
         test_count=0
+    else
+        IFS=$'\n' read -d '' -r -a test_array <<< "$tests"
+        test_count=${#test_array[@]}
     fi
     echo "Found $test_count tests."
     tput cr
@@ -201,17 +208,20 @@ function main() {
                 test_comment_delim=" "
                 test_comment="#${test_name_w_comment#*#}"
             fi
-            local test_name=$(echo "$test_name_w_comment" | cut -d' ' -f1)
+            # 最初のスペースより前を取得 (cut -d' ' -f1 相当)
+            local test_name=${test_name_w_comment%% *}
 
             # 階層構造の管理上の都合で
             # パラメータテストの prefix をテストクラスの後に付けた ID を生成する
             # test_name: google test で内部的に扱うテスト名 (パラメータの prefix がテストクラスの前に付与されているもの)
             # test_id: 人間系に見せるテスト名 (パラメータの prefix がテストクラス名の後、パラメータ名の前に付与されているもの)
             local test_id
-            if [[ $(awk -F'/' '{print NF-1}' <<< "$test_name") -eq 2 ]]; then
-                test_id=$(echo "$test_name" | awk -F'/' '{print $2"/"$1"/"$3}')
+            # '/' で分割して配列に格納 (awk による処理の代替)
+            IFS='/' read -ra parts <<< "$test_name"
+            if [[ ${#parts[@]} -eq 3 ]]; then
+                test_id="${parts[1]}/${parts[0]}/${parts[2]}"
             else
-                test_id=$(echo "$test_name")
+                test_id="$test_name"
             fi
 
             if [ $first_loop -eq 0 ]; then
@@ -266,7 +276,8 @@ function main() {
                     echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
             fi
 
-            local result=$(cat $temp_exit_code)
+            # ファイル内容を直接読み込み (cat 相当)
+            local result=$(<"$temp_exit_code")
             rm -f $temp_exit_code
             if [ $result -eq 0 ]; then
                 if grep -q "WARNING" $temp_file; then
