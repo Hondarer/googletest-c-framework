@@ -56,7 +56,11 @@ function run_test() {
         test_id="$test_name"
     fi
 
-    make clean-cov > /dev/null
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make clean-cov > /dev/null
+    fi
+
     mkdir -p results/$test_id
     local temp_file=$(mktemp)
     local temp_exit_code=$(mktemp)
@@ -117,12 +121,16 @@ function run_test() {
     rm -f $temp_exit_code
     cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' > results/$test_id/results.log
     rm -f $temp_file
-    make take-gcov 1> /dev/null 2>&1
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/$test_id/$(basename "$file").txt"
-        done
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make take-gcov 1> /dev/null 2>&1
+
+        if ls gcov/*.gcov 1> /dev/null 2>&1; then
+            for file in gcov/*.gcov; do
+                cp -p "$file" "results/$test_id/${file##*/}.txt"
+            done
+        fi
     fi
 
     return $result
@@ -185,7 +193,11 @@ function main() {
     SUCCESS_COUNT=0
     WARNING_COUNT=0
     FAILURE_COUNT=0
-    make clean-cov > /dev/null
+
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make clean-cov > /dev/null
+    fi
 
     echo -e ""
     
@@ -306,27 +318,35 @@ function main() {
 
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
-    make take-gcov take-lcov 1> /dev/null 2>&1
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/all_tests/$(basename "$file").txt"
-        done
-    fi
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make take-gcov take-lcov 1> /dev/null 2>&1
 
-    if ls lcov/* 1> /dev/null 2>&1; then
-        cp -rp lcov results/all_tests/.
-
-        # FILES_LANG が utf-8 でない場合の処理
-        if [[ ! "${FILES_LANG}" =~ [Uu][Tt][Ff][-+_]*8 ]]; then
-            find results/all_tests/lcov -name "*.gcov.html" | while read -r file; do
-                sed -i "s/charset=UTF-8/charset=${FILES_LANG#*.}/" "$file"
+        if ls gcov/*.gcov 1> /dev/null 2>&1; then
+            for file in gcov/*.gcov; do
+                cp -p "$file" "results/all_tests/${file##*/}.txt"
             done
+        fi
+
+        if ls lcov/* 1> /dev/null 2>&1; then
+            cp -rp lcov results/all_tests/.
+
+            # FILES_LANG が utf-8 でない場合の処理
+            if [[ ! "${FILES_LANG}" =~ [Uu][Tt][Ff][-+_]*8 ]]; then
+                find results/all_tests/lcov -name "*.gcov.html" | while read -r file; do
+                    sed -i "s/charset=UTF-8/charset=${FILES_LANG#*.}/" "$file"
+                done
+            fi
         fi
     fi
 
     echo "" | tee -a results/all_tests/summary.log
-    make --no-print-directory take-gcovr 2>&1 | grep -v "include " | grep -v "(INFO)" | grep -v "Directory:" | tee -a results/all_tests/summary.log
+
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make --no-print-directory take-gcovr 2>&1 | grep -vE "include |\(INFO\)|Directory:" | tee -a results/all_tests/summary.log
+    fi
 
     if [ $FAILURE_COUNT -eq 0 ]; then
         if [ $WARNING_COUNT -eq 0 ]; then
