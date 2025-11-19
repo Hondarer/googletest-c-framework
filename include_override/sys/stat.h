@@ -1,13 +1,19 @@
-#ifndef _SYS_STAT_H
-/* 本物の include で define されるため、ここでは define しない */
-/* #define _SYS_STAT_H */
+#ifndef _OVERRIDE_SYS_STAT_H_
+#define _OVERRIDE_SYS_STAT_H_
 
 /* 本物を include */
-#include "/usr/include/sys/stat.h"
+#ifndef _WIN32
+#include_next <sys/stat.h>
+#else // _WIN32
+#pragma push_macro("_INC_SYS_STAT")
+#undef _INC_SYS_STAT
+#include <../ucrt/sys/stat.h>
+#pragma pop_macro("_INC_SYS_STAT")
+#endif // _WIN32
 
 /* モックにすげ替え */
 #define _IN_OVERRIDE_HEADER_STAT_H_
 #include <sys/mock_stat.h>
 #undef _IN_OVERRIDE_HEADER_STAT_H_
 
-#endif // _SYS_STAT_H
+#endif // _OVERRIDE_SYS_STAT_H_

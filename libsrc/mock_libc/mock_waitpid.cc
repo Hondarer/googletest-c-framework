@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #include <test_com.h>
 #include <sys/mock_wait.h>
 
@@ -49,3 +51,5 @@ pid_t mock_waitpid(const char *file, const int line, const char *func, pid_t pid
 
     return rtc;
 }
+
+#endif // _WIN32

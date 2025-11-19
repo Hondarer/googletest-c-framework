@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #include <sys/mock_wait.h>
 
 using namespace testing;
@@ -16,3 +18,5 @@ Mock_sys_wait::~Mock_sys_wait()
 {
     _mock_sys_wait = nullptr;
 }
+
+#endif // _WIN32

@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #ifndef _MOCK_UNISTD_H_
 #define _MOCK_UNISTD_H_
 
@@ -46,3 +48,5 @@ extern Mock_unistd *_mock_unistd;
 #endif // _IN_OVERRIDE_HEADER_UNISTD_H_
 
 #endif // _MOCK_UNISTD_H_
+
+#endif // _WIN32

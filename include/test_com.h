@@ -4,11 +4,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <attr.h>
 
+#ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
+#endif // _WIN32
 #include <gmock/gmock.h>
+#ifndef _WIN32
 #pragma GCC diagnostic pop
+#endif // _WIN32
 
 using namespace std;
 
@@ -22,8 +27,8 @@ namespace testing
     constexpr int TRACE_INFO = 1;
     constexpr int TRACE_DETAIL = 2;
 
-    extern char *allocprintf(const char *, ...) __attribute__((format(printf, 1, 2)));
-    extern char *allocvprintf(const char *, va_list) __attribute__((format(printf, 1, 0)));
+    extern char *allocprintf(PRINTF_FMT const char *, ...) PRINTF_ATTR(1, 2);
+    extern char *allocvprintf(PRINTF_FMT const char *, va_list) PRINTF_ATTR(1, 0);
 
     extern void resetTraceLevel(int = TRACE_NONE);
     extern int _getTraceLevel(const char *);

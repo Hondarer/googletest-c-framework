@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <attr.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -12,10 +13,10 @@ extern "C"
     extern int mock_fclose(const char *, const int, const char *, FILE *);
     extern int mock_fflush(const char *, const int, const char *, FILE *);
     extern FILE *mock_fopen(const char *, const int, const char *, const char *, const char *);
-    extern int mock_printf(const char *, const int, const char *, const char *, ...) __attribute__((format(printf, 4, 5)));
-    extern int mock_fprintf(const char *, const int, const char *, FILE *, const char *, ...) __attribute__((format(printf, 5, 6)));
-    extern int mock_vfprintf(const char *, const int, const char *, FILE *, const char *, va_list) __attribute__((format(printf, 5, 0)));
-    extern int mock_scanf(const char *, const int, const char *, const char *, ...) __attribute__((format(scanf, 4, 5)));
+    extern int mock_printf(PRINTF_FMT const char *, const int, const char *, const char *, ...) PRINTF_ATTR(4, 5);
+    extern int mock_fprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, ...) PRINTF_ATTR(5, 6);
+    extern int mock_vfprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, va_list) PRINTF_ATTR(5, 0);
+    extern int mock_scanf(SCANF_FMT const char *, const int, const char *, const char *, ...) SCANF_ATTR(4, 5);
     extern char *mock_fgets(const char *, const int, const char *, char *, int, FILE *);
 
 #ifdef __cplusplus
@@ -35,10 +36,14 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H_
 
+#ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
+#endif // _WIN32
 #include <gmock/gmock.h>
+#ifndef _WIN32
 #pragma GCC diagnostic pop
+#endif // _WIN32
 
 extern int delegate_real_fclose(const char *, const int, const char *, FILE *);
 extern int delegate_fake_fclose(const char *, const int, const char *, FILE *);
@@ -55,7 +60,7 @@ extern char *delegate_real_fgets(const char *, const int, const char *, char *, 
 extern char *delegate_fake_fgets(const char *, const int, const char *, char *, int, FILE *);
 
 extern int delegate_real_printf(const char *, const int, const char *, const char *);
-extern int delegate_real_scanf(const char *, const int, const char *, const char *, va_list) __attribute__((format(scanf, 1, 0)));
+extern int delegate_real_scanf(const char *, const int, const char *, const char *, va_list) SCANF_ATTR(1, 0);
 
 class Mock_stdio
 {

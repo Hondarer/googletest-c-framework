@@ -1,3 +1,5 @@
+#ifndef _WIN32
+
 #ifndef _MOCK_WAIT_H_
 #define _MOCK_WAIT_H_
 
@@ -42,3 +44,5 @@ extern Mock_sys_wait *_mock_sys_wait;
 #endif // _IN_OVERRIDE_HEADER_WAIT_H_
 
 #endif // _MOCK_WAIT_H_
+
+#endif // _WIN32

@@ -28,7 +28,7 @@ void *mock_calloc(const char *file, const int line, const char *func, size_t __n
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > calloc %ld, %ld", __nmemb, __size);
+        printf("  > calloc %zd, %zd", __nmemb, __size);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             if (result == NULL)

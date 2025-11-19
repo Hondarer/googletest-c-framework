@@ -1,16 +1,23 @@
 #!/bin/bash
 
-# このスクリプトのパス
-SCRIPT_DIR=$(dirname "$0")
+# プラットフォーム検出
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "mingw"* ]]; then
+    IS_WINDOWS=1
+else
+    IS_WINDOWS=0
+fi
+
+# このスクリプトのパス (dirname "$0" 相当)
+SCRIPT_DIR=${0%/*}
 
 # ワークスペースのディレクトリ
 WORKSPACE_FOLDER=$SCRIPT_DIR/../../
 
 # ソースファイルのエンコード指定から LANG を得る
-FILES_LANG=$(sh $SCRIPT_DIR/get_files_lang.sh $WORKSPACE_FOLDER)
+FILES_LANG=$(sh "$WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh" "$WORKSPACE_FOLDER")
 
-# テストバイナリのパス
-TEST_BINARY=$(basename `pwd`)
+# テストバイナリのパス (basename `pwd` 相当)
+TEST_BINARY=${PWD##*/}
 
 # スタックサイズ制限緩和
 # (1) ハードリミットのスタックサイズを取得
@@ -33,20 +40,27 @@ function run_test() {
         test_comment_delim=" "
         test_comment="#${1#*#}"
     fi
-    local test_name=$(echo "$1" | cut -d' ' -f1)
+    # 最初のスペースより前を取得 (cut -d' ' -f1 相当)
+    local test_name=${1%% *}
 
     # 階層構造の管理上の都合で
     # パラメータテストの prefix をテストクラスの後に付けた ID を生成する
     # test_name: google test で内部的に扱うテスト名 (パラメータの prefix がテストクラスの前に付与されているもの)
     # test_id: 人間系に見せるテスト名 (パラメータの prefix がテストクラス名の後、パラメータ名の前に付与されているもの)
     local test_id
-    if [[ $(awk -F'/' '{print NF-1}' <<< "$test_name") -eq 2 ]]; then
-        test_id=$(echo "$test_name" | awk -F'/' '{print $2"/"$1"/"$3}')
+    # '/' で分割して配列に格納 (awk による処理の代替)
+    IFS='/' read -ra parts <<< "$test_name"
+    if [[ ${#parts[@]} -eq 3 ]]; then
+        test_id="${parts[1]}/${parts[0]}/${parts[2]}"
     else
-        test_id=$(echo "$test_name")
+        test_id="$test_name"
     fi
 
-    make clean-cov > /dev/null
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make clean-cov > /dev/null
+    fi
+
     mkdir -p results/$test_id
     local temp_file=$(mktemp)
     local temp_exit_code=$(mktemp)
@@ -57,36 +71,66 @@ function run_test() {
 
     # テストコードに着色する場合:
     # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk | source-highlight -s cpp -f esc;
-    LANG=$FILES_LANG script -q -a -c \
-       "echo \"----\"; \
-        cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-        echo \"----\"; \
-        echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-        ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-        exit_code=\${PIPESTATUS[0]}; \
-        if [ \$exit_code -ge 128 ]; then \
-            signal=\$((exit_code - 128)); \
-            echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-            case \$signal in \
-                6)  echo \"SIGABRT: abort.\";; \
-                11) echo \"SIGSEGV: segmentation fault.\";; \
-                8)  echo \"SIGFPE: floating-point exception.\";; \
-                4)  echo \"SIGILL: illegal instruction.\";; \
-                *)  echo \"Abnormal termination by other signal.\";; \
-            esac; \
-        fi; \
-        echo \$exit_code > $temp_exit_code" $temp_file
 
-    local result=$(cat $temp_exit_code)
+    if [ $IS_WINDOWS -eq 1 ]; then
+        # Windows 環境: script コマンドを使わず直接実行
+        LANG=$FILES_LANG bash -c \
+           "echo \"----\"; \
+            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+            echo \"----\"; \
+            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            exit_code=\${PIPESTATUS[0]}; \
+            if [ \$exit_code -ge 128 ]; then \
+                signal=\$((exit_code - 128)); \
+                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                case \$signal in \
+                    6)  echo \"SIGABRT: abort.\";; \
+                    11) echo \"SIGSEGV: segmentation fault.\";; \
+                    8)  echo \"SIGFPE: floating-point exception.\";; \
+                    4)  echo \"SIGILL: illegal instruction.\";; \
+                    *)  echo \"Abnormal termination by other signal.\";; \
+                esac; \
+            fi; \
+            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
+    else
+        # Linux 環境: script コマンドを使用
+        LANG=$FILES_LANG script -q -a -c \
+           "echo \"----\"; \
+            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+            echo \"----\"; \
+            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            exit_code=\${PIPESTATUS[0]}; \
+            if [ \$exit_code -ge 128 ]; then \
+                signal=\$((exit_code - 128)); \
+                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                case \$signal in \
+                    6)  echo \"SIGABRT: abort.\";; \
+                    11) echo \"SIGSEGV: segmentation fault.\";; \
+                    8)  echo \"SIGFPE: floating-point exception.\";; \
+                    4)  echo \"SIGILL: illegal instruction.\";; \
+                    *)  echo \"Abnormal termination by other signal.\";; \
+                esac; \
+            fi; \
+            echo \$exit_code > $temp_exit_code" $temp_file
+    fi
+
+    # ファイル内容を直接読み込み (cat 相当)
+    local result=$(<"$temp_exit_code")
     rm -f $temp_exit_code
     cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' > results/$test_id/results.log
     rm -f $temp_file
-    make take-gcov 1> /dev/null 2>&1
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/$test_id/$(basename "$file").txt"
-        done
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make take-gcov 1> /dev/null 2>&1
+
+        if ls gcov/*.gcov 1> /dev/null 2>&1; then
+            for file in gcov/*.gcov; do
+                cp -p "$file" "results/$test_id/${file##*/}.txt"
+            done
+        fi
     fi
 
     return $result
@@ -122,9 +166,12 @@ function main() {
 
     tests=$(list_tests)
     #tests=$(echo "$tests" | sort)
-    test_count=$(echo "$tests" | wc -l)
+    # テスト数をカウント (wc -l 相当)
     if [[ -z "$tests" ]]; then
         test_count=0
+    else
+        IFS=$'\n' read -d '' -r -a test_array <<< "$tests"
+        test_count=${#test_array[@]}
     fi
     echo "Found $test_count tests."
     tput cr
@@ -146,7 +193,11 @@ function main() {
     SUCCESS_COUNT=0
     WARNING_COUNT=0
     FAILURE_COUNT=0
-    make clean-cov > /dev/null
+
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make clean-cov > /dev/null
+    fi
 
     echo -e ""
     
@@ -169,17 +220,20 @@ function main() {
                 test_comment_delim=" "
                 test_comment="#${test_name_w_comment#*#}"
             fi
-            local test_name=$(echo "$test_name_w_comment" | cut -d' ' -f1)
+            # 最初のスペースより前を取得 (cut -d' ' -f1 相当)
+            local test_name=${test_name_w_comment%% *}
 
             # 階層構造の管理上の都合で
             # パラメータテストの prefix をテストクラスの後に付けた ID を生成する
             # test_name: google test で内部的に扱うテスト名 (パラメータの prefix がテストクラスの前に付与されているもの)
             # test_id: 人間系に見せるテスト名 (パラメータの prefix がテストクラス名の後、パラメータ名の前に付与されているもの)
             local test_id
-            if [[ $(awk -F'/' '{print NF-1}' <<< "$test_name") -eq 2 ]]; then
-                test_id=$(echo "$test_name" | awk -F'/' '{print $2"/"$1"/"$3}')
+            # '/' で分割して配列に格納 (awk による処理の代替)
+            IFS='/' read -ra parts <<< "$test_name"
+            if [[ ${#parts[@]} -eq 3 ]]; then
+                test_id="${parts[1]}/${parts[0]}/${parts[2]}"
             else
-                test_id=$(echo "$test_name")
+                test_id="$test_name"
             fi
 
             if [ $first_loop -eq 0 ]; then
@@ -190,27 +244,52 @@ function main() {
 
             echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" >> $temp_file
 
-            LANG=$FILES_LANG script -q -a -c \
-               "echo \"----\"; \
-                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-                echo \"----\"; \
-                echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-                exit_code=\${PIPESTATUS[0]}; \
-                if [ \$exit_code -ge 128 ]; then \
-                    signal=\$((exit_code - 128)); \
-                    echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                    case \$signal in \
-                        6)  echo \"SIGABRT: abort.\";; \
-                        11) echo \"SIGSEGV: segmentation fault.\";; \
-                        8)  echo \"SIGFPE: floating-point exception.\";; \
-                        4)  echo \"SIGILL: illegal instruction.\";; \
-                        *)  echo \"Abnormal termination by other signal.\";; \
-                    esac; \
-                fi; \
-                echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
+            if [ $IS_WINDOWS -eq 1 ]; then
+                # Windows 環境: script コマンドを使わず直接実行 (ログのみ記録、表示なし)
+                LANG=$FILES_LANG bash -c \
+                   "echo \"----\"; \
+                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                    echo \"----\"; \
+                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    exit_code=\${PIPESTATUS[0]}; \
+                    if [ \$exit_code -ge 128 ]; then \
+                        signal=\$((exit_code - 128)); \
+                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                        case \$signal in \
+                            6)  echo \"SIGABRT: abort.\";; \
+                            11) echo \"SIGSEGV: segmentation fault.\";; \
+                            8)  echo \"SIGFPE: floating-point exception.\";; \
+                            4)  echo \"SIGILL: illegal instruction.\";; \
+                            *)  echo \"Abnormal termination by other signal.\";; \
+                        esac; \
+                    fi; \
+                    echo \$exit_code > $temp_exit_code" >> $temp_file 2>&1
+            else
+                # Linux 環境: script コマンドを使用
+                LANG=$FILES_LANG script -q -a -c \
+                   "echo \"----\"; \
+                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                    echo \"----\"; \
+                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    exit_code=\${PIPESTATUS[0]}; \
+                    if [ \$exit_code -ge 128 ]; then \
+                        signal=\$((exit_code - 128)); \
+                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                        case \$signal in \
+                            6)  echo \"SIGABRT: abort.\";; \
+                            11) echo \"SIGSEGV: segmentation fault.\";; \
+                            8)  echo \"SIGFPE: floating-point exception.\";; \
+                            4)  echo \"SIGILL: illegal instruction.\";; \
+                            *)  echo \"Abnormal termination by other signal.\";; \
+                        esac; \
+                    fi; \
+                    echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
+            fi
 
-            local result=$(cat $temp_exit_code)
+            # ファイル内容を直接読み込み (cat 相当)
+            local result=$(<"$temp_exit_code")
             rm -f $temp_exit_code
             if [ $result -eq 0 ]; then
                 if grep -q "WARNING" $temp_file; then
@@ -239,27 +318,35 @@ function main() {
 
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
-    make take-gcov take-lcov 1> /dev/null 2>&1
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/all_tests/$(basename "$file").txt"
-        done
-    fi
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make take-gcov take-lcov 1> /dev/null 2>&1
 
-    if ls lcov/* 1> /dev/null 2>&1; then
-        cp -rp lcov results/all_tests/.
-
-        # FILES_LANG が utf-8 でない場合の処理
-        if [[ ! "${FILES_LANG}" =~ [Uu][Tt][Ff][-+_]*8 ]]; then
-            find results/all_tests/lcov -name "*.gcov.html" | while read -r file; do
-                sed -i "s/charset=UTF-8/charset=${FILES_LANG#*.}/" "$file"
+        if ls gcov/*.gcov 1> /dev/null 2>&1; then
+            for file in gcov/*.gcov; do
+                cp -p "$file" "results/all_tests/${file##*/}.txt"
             done
         fi
+
+        if ls lcov/* 1> /dev/null 2>&1; then
+            cp -rp lcov results/all_tests/.
+
+            # FILES_LANG が utf-8 でない場合の処理
+            if [[ ! "${FILES_LANG}" =~ [Uu][Tt][Ff][-+_]*8 ]]; then
+                find results/all_tests/lcov -name "*.gcov.html" | while read -r file; do
+                    sed -i "s/charset=UTF-8/charset=${FILES_LANG#*.}/" "$file"
+                done
+            fi
+        fi
+
+        echo "" | tee -a results/all_tests/summary.log
     fi
 
-    echo "" | tee -a results/all_tests/summary.log
-    make --no-print-directory take-gcovr 2>&1 | grep -v "include " | grep -v "(INFO)" | grep -v "Directory:" | tee -a results/all_tests/summary.log
+    # カバレッジツール統合は現状 Linux のみ
+    if [ $IS_WINDOWS -ne 1 ]; then
+        make --no-print-directory take-gcovr 2>&1 | grep -vE "include |\(INFO\)|Directory:" | tee -a results/all_tests/summary.log
+    fi
 
     if [ $FAILURE_COUNT -eq 0 ]; then
         if [ $WARNING_COUNT -eq 0 ]; then

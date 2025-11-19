@@ -4,9 +4,9 @@ Shared Library Build with Static Library Embedding
 
 ## 概要 / Overview
 
-`makelibsrc.mk` の `BUILD=shared` オプションにおいて、`LIBS` に指定された `.a` ファイル（静的ライブラリ）を共有ライブラリに自動的に静的リンクする機能が実装されています。
+`makelibsrc.mk` の `LIB_TYPE=shared` オプションにおいて、`LIBS` に指定された `.a` ファイル（静的ライブラリ）を共有ライブラリに自動的に静的リンクする機能が実装されています。
 
-When building shared libraries with `BUILD=shared` in `makelibsrc.mk`, `.a` files (static libraries) specified in `LIBS` are automatically statically linked into the shared library.
+When building shared libraries with `LIB_TYPE=shared` in `makelibsrc.mk`, `.a` files (static libraries) specified in `LIBS` are automatically statically linked into the shared library.
 
 ## 背景・目的 / Background and Purpose
 
@@ -87,7 +87,7 @@ The first found `.a` file is used. If not found, it remains as `-l` option for d
 ### 動作フロー / Operation Flow
 
 ```
-BUILD=shared の場合:
+LIB_TYPE=shared の場合:
   ↓
 LIBS から .a ファイルを直接抽出
   ↓
@@ -107,7 +107,7 @@ LIBS から -l オプションを抽出して検索パスから .a を検索
 # Makefile
 LIBSDIR = $(WORKSPACE_FOLDER)/prod/calc/lib
 LIBS = -lcalcbase -lm
-BUILD = shared
+LIB_TYPE = shared
 ```
 
 **動作:**
@@ -128,7 +128,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm
 ```makefile
 # Makefile
 LIBS = -L$(WORKSPACE_FOLDER)/test/lib -lcalcbase -lm
-BUILD = shared
+LIB_TYPE = shared
 ```
 
 **動作:**
@@ -151,7 +151,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm -L/path/to/test/lib
 ```makefile
 # Makefile
 LIBS = libcalcbase.a -lm
-BUILD = shared
+LIB_TYPE = shared
 ```
 
 **動作:**
@@ -172,7 +172,7 @@ gcc -shared -o libcalc.so obj/*.o libcalcbase.a -lm
 ```makefile
 # Makefile
 LIBS = libbase.a -L/custom/path -lcustom -lpthread -Wl,-rpath,/opt/lib
-BUILD = shared
+LIB_TYPE = shared
 ```
 
 **動作:**
@@ -223,19 +223,19 @@ x86_64 Linux 用のシステムライブラリパス（`/usr/lib/x86_64-linux-gn
 
 System library paths for x86_64 Linux (`/usr/lib/x86_64-linux-gnu`, etc.) are hardcoded. For other architectures, appropriate paths must be added to `ALL_LIB_DIRS` in `makelibsrc.mk`.
 
-### 4. BUILD=static には影響なし
+### 4. LIB_TYPE=static には影響なし
 
-この機能は `BUILD=shared` の場合のみ有効です。`BUILD=static`（デフォルト）の動作は変更されていません。
+この機能は `LIB_TYPE=shared` の場合のみ有効です。`LIB_TYPE=static`（デフォルト）の動作は変更されていません。
 
-This feature is only active when `BUILD=shared`. The behavior of `BUILD=static` (default) is unchanged.
+This feature is only active when `LIB_TYPE=shared`. The behavior of `LIB_TYPE=static` (default) is unchanged.
 
 ## 実装ファイル / Implementation File
 
-**ファイル**: `testfw/makefiles/makelibsrc.mk`
+**ファイル**: `makefw/makefiles/makelibsrc.mk`
 
 **変更行**: 162-210行目（共有ライブラリビルドルール部分）
 
-**File**: `testfw/makefiles/makelibsrc.mk`
+**File**: `makefw/makefiles/makelibsrc.mk`
 
 **Modified lines**: Lines 162-210 (shared library build rules)
 
