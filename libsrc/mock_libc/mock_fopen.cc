@@ -26,7 +26,19 @@ FILE *delegate_real_fopen(const char *file, const int line, const char *func, co
     (void)line;
     (void)func;
 
+#ifndef _WIN32
+    // Linux
     return fopen(filename, modes);
+#else
+    // Windows
+    FILE *fp = NULL;
+    errno_t err = fopen_s(&fp, filename, modes);
+    if (err != 0)
+    {
+        return NULL;
+    }
+    return fp;
+#endif
 }
 
 FILE *mock_fopen(const char *file, const int line, const char *func, const char *filename, const char *modes)
