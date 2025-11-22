@@ -1,7 +1,7 @@
 #ifndef _WIN32
 
-#ifndef _MOCK_WAIT_H_
-#define _MOCK_WAIT_H_
+#ifndef _MOCK_WAIT_H
+#define _MOCK_WAIT_H
 
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -17,11 +17,11 @@ extern "C"
 }
 #endif
 
-#ifdef _IN_OVERRIDE_HEADER_WAIT_H_
+#ifdef _IN_OVERRIDE_HEADER_WAIT_H
 
 #define waitpid(pid, stat_loc, options) mock_waitpid(__FILE__, __LINE__, __func__, pid, stat_loc, options)
 
-#else // _IN_OVERRIDE_HEADER_WAIT_H_
+#else // _IN_OVERRIDE_HEADER_WAIT_H
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -41,8 +41,8 @@ public:
 
 extern Mock_sys_wait *_mock_sys_wait;
 
-#endif // _IN_OVERRIDE_HEADER_WAIT_H_
+#endif // _IN_OVERRIDE_HEADER_WAIT_H
 
-#endif // _MOCK_WAIT_H_
+#endif // _MOCK_WAIT_H
 
 #endif // _WIN32

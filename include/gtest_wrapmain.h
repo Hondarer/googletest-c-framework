@@ -1,6 +1,6 @@
-#ifndef _GTEST_WRAPMAIN_H_
-#define _GTEST_WRAPMAIN_H_
+#ifndef _GTEST_WRAPMAIN_H
+#define _GTEST_WRAPMAIN_H
 
 #include <wrapmain.h>
 
-#endif // _GTEST_WRAPMAIN_H_
+#endif // _GTEST_WRAPMAIN_H

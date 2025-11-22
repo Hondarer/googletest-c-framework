@@ -1,7 +1,7 @@
 #ifndef _WIN32
 
-#ifndef _MOCK_UNISTD_H_
-#define _MOCK_UNISTD_H_
+#ifndef _MOCK_UNISTD_H
+#define _MOCK_UNISTD_H
 
 #include <sys/types.h>
 #include <unistd.h>
@@ -18,12 +18,12 @@ extern "C"
 }
 #endif
 
-#ifdef _IN_OVERRIDE_HEADER_UNISTD_H_
+#ifdef _IN_OVERRIDE_HEADER_UNISTD_H
 
 #define access(path, amode) mock_access(__FILE__, __LINE__, __func__, path, amode)
 #define fork() mock_fork(__FILE__, __LINE__, __func__)
 
-#else // _IN_OVERRIDE_HEADER_UNISTD_H_
+#else // _IN_OVERRIDE_HEADER_UNISTD_H
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
@@ -45,8 +45,8 @@ public:
 
 extern Mock_unistd *_mock_unistd;
 
-#endif // _IN_OVERRIDE_HEADER_UNISTD_H_
+#endif // _IN_OVERRIDE_HEADER_UNISTD_H
 
-#endif // _MOCK_UNISTD_H_
+#endif // _MOCK_UNISTD_H
 
 #endif // _WIN32

@@ -1,5 +1,5 @@
-#ifndef _MOCK_STRING_H_
-#define _MOCK_STRING_H_
+#ifndef _MOCK_STRING_H
+#define _MOCK_STRING_H
 
 #include <string.h>
 
@@ -14,11 +14,11 @@ extern "C"
 }
 #endif
 
-#ifdef _IN_OVERRIDE_HEADER_STRING_H_
+#ifdef _IN_OVERRIDE_HEADER_STRING_H
 
 #define memset(s, c, n) mock_memset(__FILE__, __LINE__, __func__, s, c, n)
 
-#else // _IN_OVERRIDE_HEADER_STRING_H_
+#else // _IN_OVERRIDE_HEADER_STRING_H
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
@@ -42,6 +42,6 @@ public:
 
 extern Mock_string *_mock_string;
 
-#endif // _IN_OVERRIDE_HEADER_STRING_H_
+#endif // _IN_OVERRIDE_HEADER_STRING_H
 
-#endif // _MOCK_STRING_H_
+#endif // _MOCK_STRING_H

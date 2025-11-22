@@ -1,5 +1,5 @@
-#ifndef _WRAPMAIN_H_
-#define _WRAPMAIN_H_
+#ifndef _WRAPMAIN_H
+#define _WRAPMAIN_H
 
 #ifdef __cplusplus
 extern "C"
@@ -13,4 +13,4 @@ extern "C"
 }
 #endif
 
-#endif // _WRAPMAIN_H_
+#endif // _WRAPMAIN_H

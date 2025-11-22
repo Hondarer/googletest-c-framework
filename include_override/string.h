@@ -1,5 +1,5 @@
-#ifndef _OVERRIDE_STRING_H_
-#define _OVERRIDE_STRING_H_
+#ifndef _OVERRIDE_STRING_H
+#define _OVERRIDE_STRING_H
 
 /* 本物を include */
 #ifndef _WIN32
@@ -13,8 +13,8 @@
 #endif // _WIN32
 
 /* モックにすげ替え */
-#define _IN_OVERRIDE_HEADER_STRING_H_
+#define _IN_OVERRIDE_HEADER_STRING_H
 #include <mock_string.h>
-#undef _IN_OVERRIDE_HEADER_STRING_H_
+#undef _IN_OVERRIDE_HEADER_STRING_H
 
-#endif // _OVERRIDE_STRING_H_
+#endif // _OVERRIDE_STRING_H

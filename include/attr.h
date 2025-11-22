@@ -1,5 +1,5 @@
-#ifndef _ATTR_H_
-#define _ATTR_H_
+#ifndef _ATTR_H
+#define _ATTR_H
 
 #if defined(_WIN32)
   #include <sal.h>
@@ -14,4 +14,4 @@
   #define SCANF_ATTR(fmt_index, first_arg)  __attribute__((format(scanf, fmt_index, first_arg)))
 #endif // _WIN32
 
-#endif // _ATTR_H_
+#endif // _ATTR_H

@@ -1,5 +1,5 @@
-#ifndef _MOCK_SYS_STAT_H_
-#define _MOCK_SYS_STAT_H_
+#ifndef _MOCK_SYS_STAT_H
+#define _MOCK_SYS_STAT_H
 
 #include <sys/stat.h>
 
@@ -14,11 +14,11 @@ extern int mock_stat(const char *, const int, const char *, const char *, struct
 }
 #endif
 
-#ifdef _IN_OVERRIDE_HEADER_STAT_H_
+#ifdef _IN_OVERRIDE_HEADER_STAT_H
 
 #define stat(path, buf) mock_stat(__FILE__, __LINE__, __func__, path, buf)
 
-#else // _IN_OVERRIDE_HEADER_STAT_H_
+#else // _IN_OVERRIDE_HEADER_STAT_H
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
@@ -42,6 +42,6 @@ MOCK_METHOD(int, stat, (const char *, const int, const char *, const char *, str
 
 extern Mock_sys_stat *_mock_sys_stat;
 
-#endif // _IN_OVERRIDE_HEADER_STAT_H_
+#endif // _IN_OVERRIDE_HEADER_STAT_H
 
-#endif // _MOCK_SYS_STAT_H_
+#endif // _MOCK_SYS_STAT_H

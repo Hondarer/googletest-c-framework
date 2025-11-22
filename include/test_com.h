@@ -1,5 +1,5 @@
-#ifndef _TEST_COM_H_
-#define _TEST_COM_H_
+#ifndef _TEST_COM_H
+#define _TEST_COM_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,4 +47,4 @@ namespace testing
 
 #define getTraceLevel() _getTraceLevel(__func__)
 
-#endif // _TEST_COM_H_
+#endif // _TEST_COM_H

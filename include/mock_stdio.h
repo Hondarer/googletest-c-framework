@@ -1,5 +1,5 @@
-#ifndef _MOCK_STDIO_H_
-#define _MOCK_STDIO_H_
+#ifndef _MOCK_STDIO_H
+#define _MOCK_STDIO_H
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -23,7 +23,7 @@ extern "C"
 }
 #endif
 
-#ifdef _IN_OVERRIDE_HEADER_STDIO_H_
+#ifdef _IN_OVERRIDE_HEADER_STDIO_H
 
 #define fclose(stream) mock_fclose(__FILE__, __LINE__, __func__, stream)
 #define fflush(stream) mock_fflush(__FILE__, __LINE__, __func__, stream)
@@ -34,7 +34,7 @@ extern "C"
 #define scanf(format, ...) mock_scanf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
 #define fgets(s, n, stream) mock_fgets(__FILE__, __LINE__, __func__, s, n, stream)
 
-#else // _IN_OVERRIDE_HEADER_STDIO_H_
+#else // _IN_OVERRIDE_HEADER_STDIO_H
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
@@ -85,6 +85,6 @@ public:
 
 extern Mock_stdio *_mock_stdio;
 
-#endif // _IN_OVERRIDE_HEADER_STDIO_H_
+#endif // _IN_OVERRIDE_HEADER_STDIO_H
 
-#endif // _MOCK_STDIO_H_
+#endif // _MOCK_STDIO_H

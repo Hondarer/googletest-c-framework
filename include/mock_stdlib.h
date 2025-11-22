@@ -1,5 +1,5 @@
-#ifndef _MOCK_STDLIB_H_
-#define _MOCK_STDLIB_H_
+#ifndef _MOCK_STDLIB_H
+#define _MOCK_STDLIB_H
 
 #include <stdlib.h>
 
@@ -14,11 +14,11 @@ extern "C"
 }
 #endif
 
-#ifdef _IN_OVERRIDE_HEADER_STDLIB_H_
+#ifdef _IN_OVERRIDE_HEADER_STDLIB_H
 
 #define calloc(__nmemb, __size) mock_calloc(__FILE__, __LINE__, __func__, __nmemb, __size)
 
-#else // _IN_OVERRIDE_HEADER_STDLIB_H_
+#else // _IN_OVERRIDE_HEADER_STDLIB_H
 
 #ifndef _WIN32
 #pragma GCC diagnostic push
@@ -42,6 +42,6 @@ public:
 
 extern Mock_stdlib *_mock_stdlib;
 
-#endif // _IN_OVERRIDE_HEADER_STDLIB_H_
+#endif // _IN_OVERRIDE_HEADER_STDLIB_H
 
-#endif // _MOCK_STDLIB_H_
+#endif // _MOCK_STDLIB_H
