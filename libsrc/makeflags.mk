@@ -1,0 +1,1 @@
+TARGETDIR := $(WORKSPACE_FOLDER)/testfw/lib

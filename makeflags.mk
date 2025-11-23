@@ -77,6 +77,3 @@ else
 endif
 
 LIBSDIR     =
-
-TARGETDIR  :=\
-	$(WORKSPACE_FOLDER)/testfw/lib
