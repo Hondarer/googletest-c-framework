@@ -61,7 +61,7 @@ function run_test() {
         make clean-cov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov lcov
+        rm -rf opencppcoverage gcov
     fi
 
     mkdir -p results/$test_id
@@ -223,7 +223,7 @@ function main() {
         make clean-cov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov lcov 1> /dev/null 2>&1
+        rm -rf opencppcoverage gcov 1> /dev/null 2>&1
     fi
 
     echo -e ""
@@ -377,7 +377,7 @@ function main() {
         fi
     else
         # Windows
-        ReportGenerator -reports:./opencppcoverage/coverage.xml -targetdir:lcov -reporttypes:Html 1> /dev/null 2>&1
+        ReportGenerator -reports:./opencppcoverage/coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
     fi
 
     echo "" | tee -a results/all_tests/summary.log
@@ -419,7 +419,7 @@ function main() {
         make clean-cov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov lcov 1> /dev/null 2>&1
+        rm -rf opencppcoverage gcov 1> /dev/null 2>&1
     fi
 
     return 0
