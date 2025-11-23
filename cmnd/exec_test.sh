@@ -154,10 +154,15 @@ function main() {
         # Windows
         # OpenCppCoverage のソース指定オプションを生成
         SOURCES_OPTS=""
+        # カレントディレクトリの絶対パスを Windows 形式で取得 (スラッシュをバックスラッシュに変換)
+        local current_dir=$(pwd -W 2>/dev/null || cygpath -w "$(pwd)")
+        current_dir=${current_dir//\//\\}
         for src in $TEST_SRCS; do
             # パスからファイル名のみを抽出 (basename 相当)
             local src_basename=${src##*/}
-            SOURCES_OPTS="$SOURCES_OPTS --sources \"$src_basename\""
+            # Windows 形式の絶対パスに結合
+            local src_fullpath="$current_dir\\$src_basename"
+            SOURCES_OPTS="$SOURCES_OPTS --sources \"$src_fullpath\""
         done
     fi
 

@@ -1,0 +1,300 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+cobertura_merge.py - 指定フォルダ以下の coverage.xml を合成するスクリプト
+
+使用方法:
+    python cobertura_merge.py <search_dir> [output.xml]
+
+引数:
+    search_dir  - coverage.xml を検索するルートディレクトリ
+    output.xml  - 合成結果の出力先ファイル (省略時: search_dir/coverage.xml)
+
+動作:
+    - search_dir 以下を再帰的に検索し、すべての coverage.xml を収集する
+    - 出力先ファイル自体は合成対象から除外する
+    - 各ファイルのカバレッジ情報を合成 (同一ファイル・同一行の hits を加算)
+    - 合成結果を output.xml に出力する
+"""
+
+import sys
+import os
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+
+def find_coverage_files(search_dir):
+    """
+    指定ディレクトリ以下の coverage.xml を再帰的に検索する。
+
+    Args:
+        search_dir: 検索ルートディレクトリ
+
+    Returns:
+        list: coverage.xml ファイルパスのリスト
+    """
+    coverage_files = []
+    for root, dirs, files in os.walk(search_dir):
+        for filename in files:
+            if filename == 'coverage.xml':
+                coverage_files.append(os.path.join(root, filename))
+    return coverage_files
+
+
+def merge_coverage_files(coverage_files):
+    """
+    複数の Cobertura XML ファイルを合成する。
+
+    Args:
+        coverage_files: coverage.xml ファイルパスのリスト
+
+    Returns:
+        ElementTree: 合成された XML ツリー
+    """
+    if not coverage_files:
+        return None
+
+    # 最初のファイルをベースとして使用
+    base_tree = ET.parse(coverage_files[0])
+    base_root = base_tree.getroot()
+
+    # ベースの行情報を辞書化
+    # キー: (package_name, filename, line_number)
+    # 値: line 要素への参照
+    merged_lines = {}
+    merged_classes = {}  # (package_name, filename) -> class 要素
+    merged_packages = {}  # package_name -> package 要素
+
+    # 最大 timestamp を追跡
+    max_timestamp = int(base_root.get('timestamp', '0'))
+
+    # ベースのパッケージを取得 (新しいパッケージ追加用)
+    base_packages = base_root.find('.//packages')
+    if base_packages is None:
+        base_packages = ET.SubElement(base_root, 'packages')
+
+    for package in base_root.findall('.//package'):
+        pkg_name = package.get('name')
+        merged_packages[pkg_name] = package
+        for cls in package.findall('.//class'):
+            filename = cls.get('filename')
+            merged_classes[(pkg_name, filename)] = cls
+            for line in cls.findall('.//line'):
+                line_num = line.get('number')
+                key = (pkg_name, filename, line_num)
+                merged_lines[key] = line
+
+    # 2番目以降のファイルを合成
+    for xml_path in coverage_files[1:]:
+        try:
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+        except ET.ParseError as e:
+            print(f"Warning: Failed to parse {xml_path}: {e}", file=sys.stderr)
+            continue
+
+        # timestamp の最大値を更新
+        timestamp = int(root.get('timestamp', '0'))
+        if timestamp > max_timestamp:
+            max_timestamp = timestamp
+
+        for package in root.findall('.//package'):
+            pkg_name = package.get('name')
+
+            # 新しいパッケージの場合、追加
+            if pkg_name not in merged_packages:
+                new_pkg = ET.SubElement(base_packages, 'package')
+                new_pkg.set('name', pkg_name)
+                new_pkg.set('line-rate', '0')
+                new_pkg.set('branch-rate', '0')
+                new_pkg.set('complexity', '0')
+                ET.SubElement(new_pkg, 'classes')
+                merged_packages[pkg_name] = new_pkg
+
+            target_package = merged_packages[pkg_name]
+
+            for cls in package.findall('.//class'):
+                filename = cls.get('filename')
+                cls_key = (pkg_name, filename)
+
+                if cls_key not in merged_classes:
+                    # 新しいファイルの場合、クラスを追加
+                    classes_elem = target_package.find('classes')
+                    if classes_elem is None:
+                        classes_elem = ET.SubElement(target_package, 'classes')
+
+                    new_cls = ET.SubElement(classes_elem, 'class')
+                    new_cls.set('name', cls.get('name'))
+                    new_cls.set('filename', filename)
+                    new_cls.set('line-rate', '0')
+                    new_cls.set('branch-rate', '0')
+                    new_cls.set('complexity', '0')
+
+                    ET.SubElement(new_cls, 'methods')
+                    ET.SubElement(new_cls, 'lines')
+
+                    merged_classes[cls_key] = new_cls
+
+                for line in cls.findall('.//line'):
+                    line_num = line.get('number')
+                    hits = int(line.get('hits'))
+                    key = (pkg_name, filename, line_num)
+
+                    if key in merged_lines:
+                        # 既存の行に hits を加算
+                        existing_line = merged_lines[key]
+                        existing_hits = int(existing_line.get('hits'))
+                        existing_line.set('hits', str(existing_hits + hits))
+                    else:
+                        # 新しい行の場合
+                        target_cls = merged_classes[cls_key]
+                        lines_elem = target_cls.find('lines')
+                        if lines_elem is None:
+                            lines_elem = ET.SubElement(target_cls, 'lines')
+                        new_line = ET.SubElement(lines_elem, 'line')
+                        new_line.set('number', line_num)
+                        new_line.set('hits', str(hits))
+                        merged_lines[key] = new_line
+
+    # timestamp を最大値に設定
+    base_root.set('timestamp', str(max_timestamp))
+
+    # カバレッジ統計を再計算
+    recalculate_coverage_stats(base_root)
+
+    return base_tree
+
+
+def indent_xml(elem, level=0):
+    """
+    XML 要素を整形 (インデント) する。
+
+    Args:
+        elem: XML 要素
+        level: 現在のインデントレベル
+    """
+    indent = "\n" + "  " * level
+    if len(elem):
+        if not elem.text or not elem.text.strip():
+            elem.text = indent + "  "
+        if not elem.tail or not elem.tail.strip():
+            elem.tail = indent
+        for child in elem:
+            indent_xml(child, level + 1)
+        if not child.tail or not child.tail.strip():
+            child.tail = indent
+    else:
+        if level and (not elem.tail or not elem.tail.strip()):
+            elem.tail = indent
+
+
+def recalculate_coverage_stats(root):
+    """
+    hits の更新後、カバレッジ統計 (line-rate 等) を再計算する。
+
+    Args:
+        root: Cobertura XML のルート要素
+    """
+    total_lines = 0
+    total_hits = 0
+
+    for package in root.findall('.//package'):
+        pkg_lines = 0
+        pkg_hits = 0
+
+        for cls in package.findall('.//class'):
+            cls_lines = 0
+            cls_hits = 0
+
+            for line in cls.findall('.//line'):
+                cls_lines += 1
+                if int(line.get('hits')) > 0:
+                    cls_hits += 1
+
+            # class の line-rate を更新
+            if cls_lines > 0:
+                cls.set('line-rate', str(cls_hits / cls_lines))
+            else:
+                cls.set('line-rate', '0')
+
+            pkg_lines += cls_lines
+            pkg_hits += cls_hits
+
+        # package の line-rate を更新
+        if pkg_lines > 0:
+            package.set('line-rate', str(pkg_hits / pkg_lines))
+        else:
+            package.set('line-rate', '0')
+
+        total_lines += pkg_lines
+        total_hits += pkg_hits
+
+    # 全体の line-rate を更新
+    if total_lines > 0:
+        root.set('line-rate', str(total_hits / total_lines))
+        root.set('lines-valid', str(total_lines))
+        root.set('lines-covered', str(total_hits))
+    else:
+        root.set('line-rate', '0')
+
+
+def main():
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print("Usage: python cobertura_merge.py <search_dir> [output.xml]",
+              file=sys.stderr)
+        sys.exit(1)
+
+    search_dir = sys.argv[1]
+    if len(sys.argv) == 3:
+        output_path = sys.argv[2]
+    else:
+        output_path = os.path.join(search_dir, 'coverage.xml')
+
+    # 出力パスを絶対パスに変換 (除外判定用)
+    output_path_abs = os.path.abspath(output_path)
+
+    # 検索ディレクトリの存在確認
+    if not os.path.isdir(search_dir):
+        print(f"Error: Directory not found: {search_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    # coverage.xml を検索
+    coverage_files = find_coverage_files(search_dir)
+
+    # 出力先ファイルを合成対象から除外
+    coverage_files = [f for f in coverage_files if os.path.abspath(f) != output_path_abs]
+
+    if not coverage_files:
+        print(f"Error: No coverage.xml found in {search_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Found {len(coverage_files)} coverage.xml file(s):")
+    for f in coverage_files:
+        print(f"  - {f}")
+
+    # 合成処理を実行
+    try:
+        merged_tree = merge_coverage_files(coverage_files)
+    except ET.ParseError as e:
+        print(f"Error: Failed to parse XML: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    if merged_tree is None:
+        print("Error: Failed to merge coverage files", file=sys.stderr)
+        sys.exit(1)
+
+    # 出力ディレクトリの作成
+    output_dir = os.path.dirname(output_path)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+
+    # XML を整形
+    indent_xml(merged_tree.getroot())
+
+    # 結果を保存
+    merged_tree.write(output_path, encoding='utf-8', xml_declaration=True)
+    print(f"Merged coverage written to: {output_path}")
+
+
+if __name__ == '__main__':
+    main()
