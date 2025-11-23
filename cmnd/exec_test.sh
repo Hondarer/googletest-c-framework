@@ -58,10 +58,10 @@ function run_test() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        make clean-cov > /dev/null
+        rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov
+        rm -rf opencppcoverage gcov > /dev/null
     fi
 
     mkdir -p results/$test_id
@@ -75,7 +75,28 @@ function run_test() {
     # テストコードに着色する場合:
     # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk | source-highlight -s cpp -f esc;
 
-    if [ $IS_WINDOWS -eq 1 ]; then
+    if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
+        LANG=$FILES_LANG script -q -a -c \
+           "echo \"----\"; \
+            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+            echo \"----\"; \
+            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            exit_code=\${PIPESTATUS[0]}; \
+            if [ \$exit_code -ge 128 ]; then \
+                signal=\$((exit_code - 128)); \
+                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                case \$signal in \
+                    6)  echo \"SIGABRT: abort.\";; \
+                    11) echo \"SIGSEGV: segmentation fault.\";; \
+                    8)  echo \"SIGFPE: floating-point exception.\";; \
+                    4)  echo \"SIGILL: illegal instruction.\";; \
+                    *)  echo \"Abnormal termination by other signal.\";; \
+                esac; \
+            fi; \
+            echo \$exit_code > $temp_exit_code" $temp_file
+    else
         # Windows
         # script コマンドを使わず直接実行
         LANG=$FILES_LANG bash -c \
@@ -98,27 +119,6 @@ function run_test() {
             fi; \
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
         mv LastCoverageResults.log opencppcoverage/. 1> /dev/null 2>&1
-    else
-        # Linux 環境: script コマンドを使用
-        LANG=$FILES_LANG script -q -a -c \
-           "echo \"----\"; \
-            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-            echo \"----\"; \
-            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-            exit_code=\${PIPESTATUS[0]}; \
-            if [ \$exit_code -ge 128 ]; then \
-                signal=\$((exit_code - 128)); \
-                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                case \$signal in \
-                    6)  echo \"SIGABRT: abort.\";; \
-                    11) echo \"SIGSEGV: segmentation fault.\";; \
-                    8)  echo \"SIGFPE: floating-point exception.\";; \
-                    4)  echo \"SIGILL: illegal instruction.\";; \
-                    *)  echo \"Abnormal termination by other signal.\";; \
-                esac; \
-            fi; \
-            echo \$exit_code > $temp_exit_code" $temp_file
     fi
 
     # ファイル内容を直接読み込み (cat 相当)
@@ -129,7 +129,23 @@ function run_test() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        make take-gcov 1> /dev/null 2>&1
+        # gcov で生成したファイルを削除する
+        # Delete any existing .gcov files
+        rm -rf gcov/* > /dev/null
+        # gcov でカバレッジ情報を取得する
+        # Run gcov to collect coverage
+        gcov $TEST_SRCS -o obj > /dev/null
+        # カバレッジ未通過の *.gcov ファイルは削除する
+        # Delete *.gcov files without coverage
+        if [ -n "`ls *.gcov 2>/dev/null`" ]; then
+            for file in *.gcov; do
+                if ! grep -qE '^\s*[0-9]+\*?:' "$file"; then
+                    rm "$file";
+                fi;
+            done
+        fi
+        mkdir -p gcov
+        mv *.gcov gcov/. 1> /dev/null 2>&1
     else
         # Windows
         python $SCRIPT_DIR/cobertura2gcov.py opencppcoverage/coverage.xml gcov/ 1> /dev/null 2>&1
@@ -220,10 +236,10 @@ function main() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        make clean-cov > /dev/null
+        rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov 1> /dev/null 2>&1
+        rm -rf opencppcoverage gcov > /dev/null
     fi
 
     echo -e ""
@@ -271,8 +287,29 @@ function main() {
 
             echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" >> $temp_file
 
-            if [ $IS_WINDOWS -eq 1 ]; then
-                # Windows 環境: script コマンドを使わず直接実行 (ログのみ記録、表示なし)
+            if [ $IS_WINDOWS -ne 1 ]; then
+                # Linux
+                LANG=$FILES_LANG script -q -a -c \
+                   "echo \"----\"; \
+                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                    echo \"----\"; \
+                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    exit_code=\${PIPESTATUS[0]}; \
+                    if [ \$exit_code -ge 128 ]; then \
+                        signal=\$((exit_code - 128)); \
+                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
+                        case \$signal in \
+                            6)  echo \"SIGABRT: abort.\";; \
+                            11) echo \"SIGSEGV: segmentation fault.\";; \
+                            8)  echo \"SIGFPE: floating-point exception.\";; \
+                            4)  echo \"SIGILL: illegal instruction.\";; \
+                            *)  echo \"Abnormal termination by other signal.\";; \
+                        esac; \
+                    fi; \
+                    echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
+            else
+                # Windows
                 # OpenCppCoverage は .gcda 方式の累積ができないので、各テストのカバレッジデータを合成する
                 LANG=$FILES_LANG bash -c \
                    "echo \"----\"; \
@@ -295,27 +332,6 @@ function main() {
                     echo \$exit_code > $temp_exit_code" >> $temp_file 2>&1
                 python $SCRIPT_DIR/cobertura_accumulate.py opencppcoverage/single_coverage.xml opencppcoverage/coverage.xml 1> /dev/null 2>&1
                 rm -f LastCoverageResults.log opencppcoverage/single_coverage.xml 1> /dev/null 2>&1
-            else
-                # Linux 環境: script コマンドを使用
-                LANG=$FILES_LANG script -q -a -c \
-                   "echo \"----\"; \
-                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-                    echo \"----\"; \
-                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-                    exit_code=\${PIPESTATUS[0]}; \
-                    if [ \$exit_code -ge 128 ]; then \
-                        signal=\$((exit_code - 128)); \
-                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                        case \$signal in \
-                            6)  echo \"SIGABRT: abort.\";; \
-                            11) echo \"SIGSEGV: segmentation fault.\";; \
-                            8)  echo \"SIGFPE: floating-point exception.\";; \
-                            4)  echo \"SIGILL: illegal instruction.\";; \
-                            *)  echo \"Abnormal termination by other signal.\";; \
-                        esac; \
-                    fi; \
-                    echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
             fi
 
             # ファイル内容を直接読み込み (cat 相当)
@@ -351,7 +367,44 @@ function main() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        make take-gcov take-lcov 1> /dev/null 2>&1
+        # gcov で生成したファイルを削除する
+        # Delete any existing .gcov files
+        rm -rf gcov/* > /dev/null
+        mkdir -p gcov
+        # gcov でカバレッジ情報を取得する
+        # Run gcov to collect coverage
+        gcov $TEST_SRCS -o obj  > /dev/null
+        # カバレッジ未通過の *.gcov ファイルは削除する
+        # Delete *.gcov files without coverage
+        if [ -n "`ls *.gcov 2>/dev/null`" ]; then
+            for file in *.gcov; do
+                if ! grep -qE '^\s*[0-9]+\*?:' "$file"; then
+                    rm "$file";
+                fi;
+            done
+        fi
+        mv *.gcov gcov/. 1> /dev/null 2>&1
+        # lcov で生成したファイルを削除する
+        # Delete any existing info files generated by lcov
+        rm -rf obj/*.info lcov/*
+        mkdir -p lcov
+        # lcov でカバレッジ情報を取得する
+        # Run lcov to collect coverage
+        if [ -s "`command -v lcov 2> /dev/null`" ]; then
+            echo lcov -d obj -c -o obj/$TEST_BINARY.info;
+            lcov -d obj -c -o obj/$TEST_BINARY.info;
+        else
+            echo "lcov not found. Skipping.";
+        fi
+        # genhtml は空のファイルを指定するとエラーを出力して終了するため
+        # lcov の出力ファイルが空でないか確認してから genhtml を実行する
+        # genhtml fails on empty files; verify that .info is not empty first
+        if [ -s obj/$TEST_BINARY.info ]; then
+            echo genhtml --function-coverage -o lcov obj/$TEST_BINARY.info;
+            genhtml --function-coverage -o lcov obj/$TEST_BINARY.info;
+        else
+            echo "No valid records found in tracefile obj/$TEST_BINARY.info.";
+        fi
     else
         # Windows
         python $SCRIPT_DIR/cobertura2gcov.py opencppcoverage/coverage.xml gcov/ 1> /dev/null 2>&1
@@ -384,7 +437,11 @@ function main() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        make --no-print-directory take-gcovr 2>&1 | grep -vE "include |\(INFO\)|Directory:" | tee -a results/all_tests/summary.log
+        # gcovr (dnf install python3.11 python3.11-pip; pip3.11 install gcovr)
+        # If gcovr is available, run coverage. Otherwise skip.
+        if command -v gcovr > /dev/null 2>&1; then
+            gcovr --exclude-unreachable-branches 2>&1 | grep -vE "include |\(INFO\)|Directory:" | tee -a results/all_tests/summary.log
+        fi
     else
         # Windows
         python $SCRIPT_DIR/cobertura2gcovr.py opencppcoverage/coverage.xml 2>&1 | tee -a results/all_tests/summary.log
@@ -416,10 +473,10 @@ function main() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        make clean-cov > /dev/null
+        rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov 1> /dev/null 2>&1
+        rm -rf opencppcoverage gcov > /dev/null
     fi
 
     return 0
