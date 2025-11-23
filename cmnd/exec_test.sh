@@ -56,9 +56,12 @@ function run_test() {
         test_id="$test_name"
     fi
 
-    # カバレッジツール統合は現状 Linux のみ
     if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
         make clean-cov > /dev/null
+    else
+        # Windows
+        rm -rf opencppcoverage gcov lcov
     fi
 
     mkdir -p results/$test_id
@@ -73,13 +76,14 @@ function run_test() {
     # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk | source-highlight -s cpp -f esc;
 
     if [ $IS_WINDOWS -eq 1 ]; then
-        # Windows 環境: script コマンドを使わず直接実行
+        # Windows
+        # script コマンドを使わず直接実行
         LANG=$FILES_LANG bash -c \
            "echo \"----\"; \
             cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
             echo \"----\"; \
-            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
             exit_code=\${PIPESTATUS[0]}; \
             if [ \$exit_code -ge 128 ]; then \
                 signal=\$((exit_code - 128)); \
@@ -93,6 +97,7 @@ function run_test() {
                 esac; \
             fi; \
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
+        mv LastCoverageResults.log opencppcoverage/. 1> /dev/null 2>&1
     else
         # Linux 環境: script コマンドを使用
         LANG=$FILES_LANG script -q -a -c \
@@ -122,15 +127,18 @@ function run_test() {
     cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' > results/$test_id/results.log
     rm -f $temp_file
 
-    # カバレッジツール統合は現状 Linux のみ
     if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
         make take-gcov 1> /dev/null 2>&1
+    else
+        # Windows
+        python $SCRIPT_DIR/cobertura2gcov.py opencppcoverage/coverage.xml gcov/ 1> /dev/null 2>&1
+    fi
 
-        if ls gcov/*.gcov 1> /dev/null 2>&1; then
-            for file in gcov/*.gcov; do
-                cp -p "$file" "results/$test_id/${file##*/}.txt"
-            done
-        fi
+    if ls gcov/*.gcov 1> /dev/null 2>&1; then
+        for file in gcov/*.gcov; do
+            cp -p "$file" "results/$test_id/${file##*/}.txt"
+        done
     fi
 
     return $result
@@ -141,6 +149,17 @@ function main() {
     rm -rf results
     mkdir results
     mkdir -p results/all_tests
+
+    if [ $IS_WINDOWS -eq 1 ]; then
+        # Windows
+        # OpenCppCoverage のソース指定オプションを生成
+        SOURCES_OPTS=""
+        for src in $TEST_SRCS; do
+            # パスからファイル名のみを抽出 (basename 相当)
+            local src_basename=${src##*/}
+            SOURCES_OPTS="$SOURCES_OPTS --sources \"$src_basename\""
+        done
+    fi
 
     # google test は、GTEST_FILTER が定義されている場合は空文字でもフィルタを行う
     # そのため、指定があるかどうかは環境変数の有無をチェックする必要がある
@@ -194,9 +213,12 @@ function main() {
     WARNING_COUNT=0
     FAILURE_COUNT=0
 
-    # カバレッジツール統合は現状 Linux のみ
     if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
         make clean-cov > /dev/null
+    else
+        # Windows
+        rm -rf opencppcoverage gcov lcov 1> /dev/null 2>&1
     fi
 
     echo -e ""
@@ -246,12 +268,13 @@ function main() {
 
             if [ $IS_WINDOWS -eq 1 ]; then
                 # Windows 環境: script コマンドを使わず直接実行 (ログのみ記録、表示なし)
+                # OpenCppCoverage は .gcda 方式の累積ができないので、各テストのカバレッジデータを合成する
                 LANG=$FILES_LANG bash -c \
                    "echo \"----\"; \
                     cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
                     echo \"----\"; \
-                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/single_coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/single_coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
                     exit_code=\${PIPESTATUS[0]}; \
                     if [ \$exit_code -ge 128 ]; then \
                         signal=\$((exit_code - 128)); \
@@ -265,6 +288,8 @@ function main() {
                         esac; \
                     fi; \
                     echo \$exit_code > $temp_exit_code" >> $temp_file 2>&1
+                python $SCRIPT_DIR/cobertura_accumulate.py opencppcoverage/single_coverage.xml opencppcoverage/coverage.xml 1> /dev/null 2>&1
+                rm -f LastCoverageResults.log opencppcoverage/single_coverage.xml 1> /dev/null 2>&1
             else
                 # Linux 環境: script コマンドを使用
                 LANG=$FILES_LANG script -q -a -c \
@@ -319,16 +344,22 @@ function main() {
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
 
-    # カバレッジツール統合は現状 Linux のみ
     if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
         make take-gcov take-lcov 1> /dev/null 2>&1
+    else
+        # Windows
+        python $SCRIPT_DIR/cobertura2gcov.py opencppcoverage/coverage.xml gcov/ 1> /dev/null 2>&1
+    fi
 
-        if ls gcov/*.gcov 1> /dev/null 2>&1; then
-            for file in gcov/*.gcov; do
-                cp -p "$file" "results/all_tests/${file##*/}.txt"
-            done
-        fi
+    if ls gcov/*.gcov 1> /dev/null 2>&1; then
+        for file in gcov/*.gcov; do
+            cp -p "$file" "results/all_tests/${file##*/}.txt"
+        done
+    fi
 
+    if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
         if ls lcov/* 1> /dev/null 2>&1; then
             cp -rp lcov results/all_tests/.
 
@@ -339,13 +370,19 @@ function main() {
                 done
             fi
         fi
-
-        echo "" | tee -a results/all_tests/summary.log
+    else
+        # Windows
+        ReportGenerator -reports:./opencppcoverage/coverage.xml -targetdir:lcov -reporttypes:Html 1> /dev/null 2>&1
     fi
 
-    # カバレッジツール統合は現状 Linux のみ
+    echo "" | tee -a results/all_tests/summary.log
+
     if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
         make --no-print-directory take-gcovr 2>&1 | grep -vE "include |\(INFO\)|Directory:" | tee -a results/all_tests/summary.log
+    else
+        # Windows
+        python $SCRIPT_DIR/cobertura2gcovr.py opencppcoverage/coverage.xml 2>&1 | tee -a results/all_tests/summary.log
     fi
 
     if [ $FAILURE_COUNT -eq 0 ]; then
@@ -364,6 +401,14 @@ function main() {
             bash $SCRIPT_DIR/banner.sh FAILED
         echo -e "\e[0m"
         return 1
+    fi
+
+    if [ $IS_WINDOWS -ne 1 ]; then
+        # Linux
+        make clean-cov > /dev/null
+    else
+        # Windows
+        rm -rf opencppcoverage gcov lcov 1> /dev/null 2>&1
     fi
 
     return 0
