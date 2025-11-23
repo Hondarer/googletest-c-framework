@@ -385,6 +385,12 @@ function main() {
         python $SCRIPT_DIR/cobertura2gcovr.py opencppcoverage/coverage.xml 2>&1 | tee -a results/all_tests/summary.log
     fi
 
+    if [ $IS_WINDOWS -eq 1 ]; then
+        # Windows
+        # 全体カバレッジ計測用に、カバレッジ xml を保持
+        cp -p opencppcoverage/coverage.xml results/all_tests/.
+    fi
+
     if [ $FAILURE_COUNT -eq 0 ]; then
         if [ $WARNING_COUNT -eq 0 ]; then
             echo -e "\e[32m"
