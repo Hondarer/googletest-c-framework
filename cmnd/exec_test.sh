@@ -391,19 +391,13 @@ function main() {
         # lcov でカバレッジ情報を取得する
         # Run lcov to collect coverage
         if [ -s "`command -v lcov 2> /dev/null`" ]; then
-            echo lcov -d obj -c -o obj/$TEST_BINARY.info;
-            lcov -d obj -c -o obj/$TEST_BINARY.info;
-        else
-            echo "lcov not found. Skipping.";
+            lcov -d obj -c -o obj/$TEST_BINARY.info 1> /dev/null 2>&1
         fi
         # genhtml は空のファイルを指定するとエラーを出力して終了するため
         # lcov の出力ファイルが空でないか確認してから genhtml を実行する
         # genhtml fails on empty files; verify that .info is not empty first
         if [ -s obj/$TEST_BINARY.info ]; then
-            echo genhtml --function-coverage -o lcov obj/$TEST_BINARY.info;
-            genhtml --function-coverage -o lcov obj/$TEST_BINARY.info;
-        else
-            echo "No valid records found in tracefile obj/$TEST_BINARY.info.";
+            genhtml --function-coverage -o lcov obj/$TEST_BINARY.info 1> /dev/null 2>&1
         fi
     else
         # Windows
