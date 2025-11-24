@@ -15,7 +15,26 @@ cobertura2gcovr.py - Cobertura XML を gcovr 形式のテキストレポート�
 
 import sys
 import os
+import re
 import xml.etree.ElementTree as ET
+
+
+def parse_condition_coverage(coverage_str):
+    """
+    condition-coverage 文字列からカバー数と総数を抽出する。
+
+    Args:
+        coverage_str: "50% (1/2)" 形式の文字列
+
+    Returns:
+        (covered, valid) のタプル、パース失敗時は (0, 0)
+    """
+    if not coverage_str:
+        return (0, 0)
+    match = re.search(r'\((\d+)/(\d+)\)', coverage_str)
+    if match:
+        return (int(match.group(1)), int(match.group(2)))
+    return (0, 0)
 
 
 def parse_cobertura(xml_path):
@@ -26,7 +45,7 @@ def parse_cobertura(xml_path):
         xml_path: Cobertura XML ファイルのパス
 
     Returns:
-        list: [(ファイル名, 総行数, 実行行数, 未実行行番号リスト)] のリスト
+        list: [(ファイル名, 総行数, 実行行数, 未実行行番号リスト, 総分岐数, 実行分岐数)] のリスト
     """
     tree = ET.parse(xml_path)
     root = tree.getroot()
@@ -42,6 +61,8 @@ def parse_cobertura(xml_path):
             total_lines = 0
             exec_lines = 0
             missing_lines = []
+            total_branches = 0
+            exec_branches = 0
 
             for line in cls.findall('.//line'):
                 line_num = int(line.get('number'))
@@ -52,7 +73,14 @@ def parse_cobertura(xml_path):
                 else:
                     missing_lines.append(line_num)
 
-            coverage_data.append((basename, total_lines, exec_lines, missing_lines))
+                # 分岐カバレッジを抽出
+                if line.get('branch') == 'true':
+                    cov = parse_condition_coverage(line.get('condition-coverage'))
+                    total_branches += cov[1]
+                    exec_branches += cov[0]
+
+            coverage_data.append((basename, total_lines, exec_lines, missing_lines,
+                                total_branches, exec_branches))
 
     return coverage_data
 
@@ -100,10 +128,10 @@ def print_report(coverage_data):
     gcovr 形式のレポートを出力する。
 
     Args:
-        coverage_data: [(ファイル名, 総行数, 実行行数, 未実行行番号リスト)] のリスト
+        coverage_data: [(ファイル名, 総行数, 実行行数, 未実行行番号リスト, 総分岐数, 実行分岐数)] のリスト
     """
     separator = "-" * 78
-    header = "OpenCppCoverage Code Coverage Report"
+    header = "Code Coverage Report"
 
     print(separator)
     print(f"{header:^78}")
@@ -114,7 +142,9 @@ def print_report(coverage_data):
     total_lines = 0
     total_exec = 0
 
-    for filename, lines, exec_lines, missing in coverage_data:
+    for data in coverage_data:
+        filename, lines, exec_lines, missing = data[0], data[1], data[2], data[3]
+
         total_lines += lines
         total_exec += exec_lines
 

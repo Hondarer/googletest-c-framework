@@ -25,6 +25,14 @@ hard_limit=$(ulimit -H -s)
 # (2) ハードリミットのスタックサイズをソフトリミットに設定
 ulimit -s "$hard_limit"
 
+# 集計値のリセット
+SUCCESS_COUNT=0
+WARNING_COUNT=0
+FAILURE_COUNT=0
+
+# 最終結果用文字列 (テスト中は積み上げて、最後に一括出力)
+test_summary=""
+
 # テスト一覧を取得
 function list_tests() {
     ./$TEST_BINARY --gtest_list_tests | awk '
@@ -56,13 +64,7 @@ function run_test() {
         test_id="$test_name"
     fi
 
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-        rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
-    else
-        # Windows
-        rm -rf coverage gcov > /dev/null
-    fi
+    rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
 
     mkdir -p results/$test_id
     local temp_file=$(mktemp)
@@ -96,6 +98,7 @@ function run_test() {
                 esac; \
             fi; \
             echo \$exit_code > $temp_exit_code" $temp_file
+        gcovr --exclude-unreachable-branches --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
     else
         # Windows
         # script コマンドを使わず直接実行
@@ -118,20 +121,40 @@ function run_test() {
                 esac; \
             fi; \
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
-        mv LastCoverageResults.log coverage/. 1> /dev/null 2>&1
+        rm -f LastCoverageResults.log 1> /dev/null 2>&1
     fi
 
     # ファイル内容を直接読み込み (cat 相当)
     local result=$(<"$temp_exit_code")
     rm -f $temp_exit_code
+    if [ $result -eq 0 ]; then
+        if grep -q "WARNING" $temp_file; then
+            #                echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment"
+            test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment")"$'\n'
+            echo -e "$test_id\tWARNING\t$test_comment" >> results/all_tests/summary.log
+            WARNING_COUNT=$((WARNING_COUNT + 1))
+        else
+            #                echo -e "$test_id\t\e[32mPASSED\e[0m\t$test_comment"
+            test_summary+="$(echo -e "$test_id\t\e[32mPASSED\e[0m\t$test_comment")"$'\n'
+            echo -e "$test_id\tPASSED\t$test_comment" >> results/all_tests/summary.log
+            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+        fi
+    else
+        #                echo -e "$test_id\t\e[31mFAILED\e[0m\t$test_comment"
+        test_summary+="$(echo -e "$test_id\t\e[31mFAILED\e[0m\t$test_comment")"$'\n'
+        echo -e "$test_id\tFAILED\t$test_comment" >> results/all_tests/summary.log
+        FAILURE_COUNT=$((FAILURE_COUNT + 1))
+    fi
     cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' > results/$test_id/results.log
     rm -f $temp_file
 
+    # gcov で生成したファイルを削除する
+    # Delete any existing .gcov files
+    rm -rf gcov/* > /dev/null
+    mkdir -p gcov
+
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        # gcov で生成したファイルを削除する
-        # Delete any existing .gcov files
-        rm -rf gcov/* > /dev/null
         # gcov でカバレッジ情報を取得する
         # Run gcov to collect coverage
         gcov $TEST_SRCS -o obj > /dev/null
@@ -144,7 +167,6 @@ function run_test() {
                 fi;
             done
         fi
-        mkdir -p gcov
         mv *.gcov gcov/. 1> /dev/null 2>&1
     else
         # Windows
@@ -157,12 +179,20 @@ function run_test() {
         done
     fi
 
+    # 各回のテスト結果を積み上げ
+    python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+
+    # 各テストの coverage.xml を退避 (デバッグ用)
+    #mv coverage/coverage.xml results/$test_id/.
+    rm -f coverage/coverage.xml 1> /dev/null 2>&1
+
     return $result
 }
 
 # メイン処理
 function main() {
-    rm -rf results
+    rm -rf obj/*.gcda obj/*.info gcov lcov coverage results
+    mkdir coverage
     mkdir results
     mkdir -p results/all_tests
 
@@ -228,134 +258,12 @@ function main() {
         done
     unset IFS
 
-    # すべてのテストを通しで実行後、全体カバレッジを取得
-    # プロセスの依存性排除のため、一括ではなく個別にテストを実施
-    SUCCESS_COUNT=0
-    WARNING_COUNT=0
-    FAILURE_COUNT=0
-
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-        rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
-    else
-        # Windows
-        rm -rf coverage gcov > /dev/null
-    fi
-
-    echo -e ""
-    
-    local first_loop=0
-
+    # 全体結果を出力
     if [[ "${GTEST_FILTER+x}" ]]; then
-        echo -e "Note: GTEST_FILTER = $GTEST_FILTER\n" >> results/all_tests/results.log
         echo -e "Note: GTEST_FILTER = $GTEST_FILTER\n" >> results/all_tests/summary.log
     fi
-
     echo "Test results:" >> results/all_tests/summary.log
-
-    IFS=$'\n'
-        for test_name_w_comment in $tests; do
-            local temp_file=$(mktemp)
-            local temp_exit_code=$(mktemp)
-            local test_comment=""
-            local test_comment_delim=""
-            if [[ "$test_name_w_comment" == *#* ]]; then
-                test_comment_delim=" "
-                test_comment="#${test_name_w_comment#*#}"
-            fi
-            # 最初のスペースより前を取得 (cut -d' ' -f1 相当)
-            local test_name=${test_name_w_comment%% *}
-
-            # 階層構造の管理上の都合で
-            # パラメータテストの prefix をテストクラスの後に付けた ID を生成する
-            # test_name: google test で内部的に扱うテスト名 (パラメータの prefix がテストクラスの前に付与されているもの)
-            # test_id: 人間系に見せるテスト名 (パラメータの prefix がテストクラス名の後、パラメータ名の前に付与されているもの)
-            local test_id
-            # '/' で分割して配列に格納 (awk による処理の代替)
-            IFS='/' read -ra parts <<< "$test_name"
-            if [[ ${#parts[@]} -eq 3 ]]; then
-                test_id="${parts[1]}/${parts[0]}/${parts[2]}"
-            else
-                test_id="$test_name"
-            fi
-
-            if [ $first_loop -eq 0 ]; then
-                first_loop=1
-            else
-                echo "" > $temp_file
-            fi
-
-            echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" >> $temp_file
-
-            if [ $IS_WINDOWS -ne 1 ]; then
-                # Linux
-                LANG=$FILES_LANG script -q -a -c \
-                   "echo \"----\"; \
-                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-                    echo \"----\"; \
-                    echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                    ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-                    exit_code=\${PIPESTATUS[0]}; \
-                    if [ \$exit_code -ge 128 ]; then \
-                        signal=\$((exit_code - 128)); \
-                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                        case \$signal in \
-                            6)  echo \"SIGABRT: abort.\";; \
-                            11) echo \"SIGSEGV: segmentation fault.\";; \
-                            8)  echo \"SIGFPE: floating-point exception.\";; \
-                            4)  echo \"SIGILL: illegal instruction.\";; \
-                            *)  echo \"Abnormal termination by other signal.\";; \
-                        esac; \
-                    fi; \
-                    echo \$exit_code > $temp_exit_code" $temp_file > /dev/null
-            else
-                # Windows
-                # OpenCppCoverage は .gcda 方式の累積ができないので、各テストのカバレッジデータを合成する
-                LANG=$FILES_LANG bash -c \
-                   "echo \"----\"; \
-                    cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-                    echo \"----\"; \
-                    echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                    OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-                    exit_code=\${PIPESTATUS[0]}; \
-                    if [ \$exit_code -ge 128 ]; then \
-                        signal=\$((exit_code - 128)); \
-                        echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                        case \$signal in \
-                            6)  echo \"SIGABRT: abort.\";; \
-                            11) echo \"SIGSEGV: segmentation fault.\";; \
-                            8)  echo \"SIGFPE: floating-point exception.\";; \
-                            4)  echo \"SIGILL: illegal instruction.\";; \
-                            *)  echo \"Abnormal termination by other signal.\";; \
-                        esac; \
-                    fi; \
-                    echo \$exit_code > $temp_exit_code" >> $temp_file 2>&1
-                python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
-                rm -f LastCoverageResults.log coverage/coverage.xml 1> /dev/null 2>&1
-            fi
-
-            # ファイル内容を直接読み込み (cat 相当)
-            local result=$(<"$temp_exit_code")
-            rm -f $temp_exit_code
-            if [ $result -eq 0 ]; then
-                if grep -q "WARNING" $temp_file; then
-                    echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment"
-                    echo -e "$test_id\tWARNING\t$test_comment" >> results/all_tests/summary.log
-                    WARNING_COUNT=$((WARNING_COUNT + 1))
-                else
-                    echo -e "$test_id\t\e[32mPASSED\e[0m\t$test_comment"
-                    echo -e "$test_id\tPASSED\t$test_comment" >> results/all_tests/summary.log
-                    SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-                fi
-            else
-                echo -e "$test_id\t\e[31mFAILED\e[0m\t$test_comment"
-                echo -e "$test_id\tFAILED\t$test_comment" >> results/all_tests/summary.log
-                FAILURE_COUNT=$((FAILURE_COUNT + 1))
-            fi
-            cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' >> results/all_tests/results.log
-            rm -f $temp_file
-        done
-    unset IFS
+    printf '\n%s' "$test_summary"
 
     filtered=""
     if [[ "${GTEST_FILTER+x}" ]]; then
@@ -365,34 +273,26 @@ function main() {
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
 
+    # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
+    python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
+
+    if ls gcov/*.gcov 1> /dev/null 2>&1; then
+        for file in gcov/*.gcov; do
+            cp -p "$file" "results/all_tests/${file##*/}.txt"
+        done
+    fi
+
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        # gcov で生成したファイルを削除する
-        # Delete any existing .gcov files
-        rm -rf gcov/* > /dev/null
-        mkdir -p gcov
-        # gcov でカバレッジ情報を取得する
-        # Run gcov to collect coverage
-        gcov $TEST_SRCS -o obj  > /dev/null
-        # カバレッジ未通過の *.gcov ファイルは削除する
-        # Delete *.gcov files without coverage
-        if [ -n "`ls *.gcov 2>/dev/null`" ]; then
-            for file in *.gcov; do
-                if ! grep -qE '^\s*[0-9]+\*?:' "$file"; then
-                    rm "$file";
-                fi;
-            done
-        fi
-        mv *.gcov gcov/. 1> /dev/null 2>&1
+
         # lcov で生成したファイルを削除する
         # Delete any existing info files generated by lcov
         rm -rf obj/*.info lcov/*
         mkdir -p lcov
-        # lcov でカバレッジ情報を取得する
-        # Run lcov to collect coverage
-        if [ -s "`command -v lcov 2> /dev/null`" ]; then
-            lcov -d obj -c -o obj/$TEST_BINARY.info 1> /dev/null 2>&1
-        fi
+ 
+        # coverage/accumulated_coverage.xml をもとに、lcov の出力と互換性がある .info を生成する
+        python $SCRIPT_DIR/cobertura2lcov.py coverage/accumulated_coverage.xml obj/$TEST_BINARY.info 1> /dev/null 2>&1
+
         # genhtml は空のファイルを指定するとエラーを出力して終了するため
         # lcov の出力ファイルが空でないか確認してから genhtml を実行する
         # genhtml fails on empty files; verify that .info is not empty first
@@ -401,15 +301,10 @@ function main() {
         fi
     else
         # Windows
-        python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
+        ReportGenerator -reports:./coverage/accumulated_coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
     fi
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/all_tests/${file##*/}.txt"
-        done
-    fi
-
+    # lcov の文字コードパッチ処理
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
         if ls lcov/* 1> /dev/null 2>&1; then
@@ -422,31 +317,20 @@ function main() {
                 done
             fi
         fi
-    else
-        # Windows
-        ReportGenerator -reports:./coverage/accumulated_coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
     fi
 
     echo "" | tee -a results/all_tests/summary.log
 
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-        # gcovr (dnf install python3.11 python3.11-pip; pip3.11 install gcovr)
-        # If gcovr is available, run coverage. Otherwise skip.
-        if command -v gcovr > /dev/null 2>&1; then
-            gcovr --exclude-unreachable-branches 2>&1 | grep -vE "include |\(INFO\)|Directory:" | tee -a results/all_tests/summary.log
-        fi
-    else
-        # Windows
-        python $SCRIPT_DIR/cobertura2gcovr.py coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
-    fi
+    # Code Coverage Report
+    python $SCRIPT_DIR/cobertura2gcovr.py coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
 
-    if [ $IS_WINDOWS -eq 1 ]; then
-        # Windows
-        # 全体カバレッジ計測用に、カバレッジ xml を保持
-        cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
-    fi
+    # 全体カバレッジ計測用に、カバレッジ xml を保持
+    cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
 
+    # Clean
+    rm -rf obj/*.gcda obj/*.info gcov lcov coverage
+
+    # Banner
     if [ $FAILURE_COUNT -eq 0 ]; then
         if [ $WARNING_COUNT -eq 0 ]; then
             echo -e "\e[32m"
@@ -463,14 +347,6 @@ function main() {
             bash $SCRIPT_DIR/banner.sh FAILED
         echo -e "\e[0m"
         return 1
-    fi
-
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-        rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
-    else
-        # Windows
-        rm -rf coverage gcov > /dev/null
     fi
 
     return 0

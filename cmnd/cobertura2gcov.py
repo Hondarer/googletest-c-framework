@@ -17,8 +17,27 @@ cobertura2gcov.py - Cobertura XML を gcov 形式に変換するスクリプト
 
 import sys
 import os
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+
+def parse_condition_coverage(coverage_str):
+    """
+    condition-coverage 文字列からカバー数と総数を抽出する。
+
+    Args:
+        coverage_str: "50% (1/2)" 形式の文字列
+
+    Returns:
+        (covered, valid) のタプル、パース失敗時は (0, 0)
+    """
+    if not coverage_str:
+        return (0, 0)
+    match = re.search(r'\((\d+)/(\d+)\)', coverage_str)
+    if match:
+        return (int(match.group(1)), int(match.group(2)))
+    return (0, 0)
 
 
 def parse_cobertura(xml_path):
@@ -29,7 +48,7 @@ def parse_cobertura(xml_path):
         xml_path: Cobertura XML ファイルのパス
 
     Returns:
-        dict: {ソースファイルパス: {行番号: ヒット数}} の辞書
+        dict: {ソースファイルパス: {'lines': {行番号: ヒット数}, 'branches': {行番号: (covered, valid)}}} の辞書
     """
     tree = ET.parse(xml_path)
     root = tree.getroot()
@@ -55,14 +74,21 @@ def parse_cobertura(xml_path):
             else:
                 full_path = filename
 
-            # 行カバレッジを抽出
+            # 行カバレッジと分岐カバレッジを抽出
             lines = {}
+            branches = {}
             for line in cls.findall('.//line'):
                 line_num = int(line.get('number'))
                 hits = int(line.get('hits'))
                 lines[line_num] = hits
 
-            coverage_data[full_path] = lines
+                # 分岐カバレッジを抽出
+                if line.get('branch') == 'true':
+                    cov = parse_condition_coverage(line.get('condition-coverage'))
+                    if cov[1] > 0:
+                        branches[line_num] = cov
+
+            coverage_data[full_path] = {'lines': lines, 'branches': branches}
 
     return coverage_data
 
@@ -92,7 +118,7 @@ def read_source_file(source_path):
         return None
 
 
-def generate_gcov(source_path, line_coverage, output_dir):
+def generate_gcov(source_path, coverage_info, output_dir):
     """
     gcov 形式のファイルを生成する。
 
@@ -100,12 +126,15 @@ def generate_gcov(source_path, line_coverage, output_dir):
         実行回数:行番号:ソースコード
         - 実行回数が 0 の場合は "#####"
         - 実行対象外の行は "-"
+        - 分岐情報: branch X taken Y% または branch X never executed
 
     Args:
         source_path: ソースファイルのパス
-        line_coverage: {行番号: ヒット数} の辞書
+        coverage_info: {'lines': {行番号: ヒット数}, 'branches': {行番号: (covered, valid)}} の辞書
         output_dir: 出力ディレクトリ
     """
+    line_coverage = coverage_info['lines']
+    branch_coverage = coverage_info.get('branches', {})
     source_lines = read_source_file(source_path)
 
     # 出力ファイル名を決定
@@ -179,8 +208,8 @@ def main():
 
     # 各ソースファイルの gcov を生成
     generated_files = []
-    for source_path, line_coverage in coverage_data.items():
-        output_path = generate_gcov(source_path, line_coverage, output_dir)
+    for source_path, coverage_info in coverage_data.items():
+        output_path = generate_gcov(source_path, coverage_info, output_dir)
         generated_files.append(output_path)
         print(f"Generated: {output_path}")
 
