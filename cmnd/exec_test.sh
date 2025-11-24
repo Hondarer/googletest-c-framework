@@ -61,7 +61,7 @@ function run_test() {
         rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov > /dev/null
+        rm -rf coverage gcov > /dev/null
     fi
 
     mkdir -p results/$test_id
@@ -103,8 +103,8 @@ function run_test() {
            "echo \"----\"; \
             cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
             echo \"----\"; \
-            echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-            OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+            OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
             exit_code=\${PIPESTATUS[0]}; \
             if [ \$exit_code -ge 128 ]; then \
                 signal=\$((exit_code - 128)); \
@@ -118,7 +118,7 @@ function run_test() {
                 esac; \
             fi; \
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
-        mv LastCoverageResults.log opencppcoverage/. 1> /dev/null 2>&1
+        mv LastCoverageResults.log coverage/. 1> /dev/null 2>&1
     fi
 
     # ファイル内容を直接読み込み (cat 相当)
@@ -148,7 +148,7 @@ function run_test() {
         mv *.gcov gcov/. 1> /dev/null 2>&1
     else
         # Windows
-        python $SCRIPT_DIR/cobertura2gcov.py opencppcoverage/coverage.xml gcov/ 1> /dev/null 2>&1
+        python $SCRIPT_DIR/cobertura2gcov.py coverage/coverage.xml gcov/ 1> /dev/null 2>&1
     fi
 
     if ls gcov/*.gcov 1> /dev/null 2>&1; then
@@ -239,7 +239,7 @@ function main() {
         rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov > /dev/null
+        rm -rf coverage gcov > /dev/null
     fi
 
     echo -e ""
@@ -315,8 +315,8 @@ function main() {
                    "echo \"----\"; \
                     cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
                     echo \"----\"; \
-                    echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/single_coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                    OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:opencppcoverage/single_coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                    echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                    OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
                     exit_code=\${PIPESTATUS[0]}; \
                     if [ \$exit_code -ge 128 ]; then \
                         signal=\$((exit_code - 128)); \
@@ -330,8 +330,8 @@ function main() {
                         esac; \
                     fi; \
                     echo \$exit_code > $temp_exit_code" >> $temp_file 2>&1
-                python $SCRIPT_DIR/cobertura_accumulate.py opencppcoverage/single_coverage.xml opencppcoverage/coverage.xml 1> /dev/null 2>&1
-                rm -f LastCoverageResults.log opencppcoverage/single_coverage.xml 1> /dev/null 2>&1
+                python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+                rm -f LastCoverageResults.log coverage/coverage.xml 1> /dev/null 2>&1
             fi
 
             # ファイル内容を直接読み込み (cat 相当)
@@ -401,7 +401,7 @@ function main() {
         fi
     else
         # Windows
-        python $SCRIPT_DIR/cobertura2gcov.py opencppcoverage/coverage.xml gcov/ 1> /dev/null 2>&1
+        python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
     fi
 
     if ls gcov/*.gcov 1> /dev/null 2>&1; then
@@ -424,7 +424,7 @@ function main() {
         fi
     else
         # Windows
-        ReportGenerator -reports:./opencppcoverage/coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
+        ReportGenerator -reports:./coverage/accumulated_coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
     fi
 
     echo "" | tee -a results/all_tests/summary.log
@@ -438,13 +438,13 @@ function main() {
         fi
     else
         # Windows
-        python $SCRIPT_DIR/cobertura2gcovr.py opencppcoverage/coverage.xml 2>&1 | tee -a results/all_tests/summary.log
+        python $SCRIPT_DIR/cobertura2gcovr.py coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
     fi
 
     if [ $IS_WINDOWS -eq 1 ]; then
         # Windows
         # 全体カバレッジ計測用に、カバレッジ xml を保持
-        cp -p opencppcoverage/coverage.xml results/all_tests/.
+        cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
     fi
 
     if [ $FAILURE_COUNT -eq 0 ]; then
@@ -470,7 +470,7 @@ function main() {
         rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
     else
         # Windows
-        rm -rf opencppcoverage gcov > /dev/null
+        rm -rf coverage gcov > /dev/null
     fi
 
     return 0
