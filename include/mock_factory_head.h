@@ -32,12 +32,12 @@
 
 // ---------------------------------------------------------------------------
 
-#include <gmock/gmock.h>
+#include <testfw.h>
 
-using namespace testing;
-
+#ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-function"
+#endif // _WIN32
 
 // val を返すラムダ式
 #define Return(val) [=](auto..., auto...) { return val; }
