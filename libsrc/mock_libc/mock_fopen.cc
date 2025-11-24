@@ -65,7 +65,7 @@ FILE *mock_fopen(const char *file, const int line, const char *func, const char 
             }
             else
             {
-                printf(" from %s:%d -> %p\n", file, line, (void *)fp);
+                printf(" from %s:%d -> 0x%p\n", file, line, (void *)fp);
             }
         }
         else

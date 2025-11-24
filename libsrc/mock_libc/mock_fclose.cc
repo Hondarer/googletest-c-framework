@@ -41,7 +41,7 @@ int mock_fclose(const char *file, const int line, const char *func, FILE *fp)
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > fclose %p", (void *)_fp);
+        printf("  > fclose 0x%p", (void *)_fp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> %d\n", file, line, rtc);

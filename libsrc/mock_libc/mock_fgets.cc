@@ -41,7 +41,7 @@ char *mock_fgets(const char *file, const int line, const char *func, char *s, in
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > fgets 0x%p, %d, %p", s, n, (void *)stream);
+        printf("  > fgets 0x%p, %d, 0x%p", s, n, (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> %s\n", file, line, rtc);

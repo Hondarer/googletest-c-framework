@@ -39,7 +39,7 @@ int mock_fflush(const char *file, const int line, const char *func, FILE *fp)
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > fflush %p", (void *)fp);
+        printf("  > fflush 0x%p", (void *)fp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> %d\n", file, line, rtc);

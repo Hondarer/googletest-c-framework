@@ -60,7 +60,7 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
             {
                 trimmed_str[len - 1] = '\0';
             }
-            printf("  > vfprintf %p, %s", (void *)stream, trimmed_str);
+            printf("  > vfprintf 0x%p, %s", (void *)stream, trimmed_str);
             free(trimmed_str);
             if (getTraceLevel() >= TRACE_DETAIL)
             {

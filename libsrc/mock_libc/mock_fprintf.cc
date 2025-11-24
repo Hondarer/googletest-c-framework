@@ -62,7 +62,7 @@ int mock_fprintf(const char *file, const int line, const char *func, FILE *strea
             {
                 trimmed_str[len - 1] = '\0';
             }
-            printf("  > fprintf %p, %s", (void *)stream, trimmed_str);
+            printf("  > fprintf 0x%p, %s", (void *)stream, trimmed_str);
             free(trimmed_str);
             if (getTraceLevel() >= TRACE_DETAIL)
             {
