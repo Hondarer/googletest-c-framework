@@ -60,6 +60,60 @@ def find_coverage_files(search_dir):
     return coverage_files
 
 
+def get_common_source_prefix(sources):
+    """
+    複数の source パスから共通のプレフィックスを取得する。
+
+    Args:
+        sources: source パスのリスト
+
+    Returns:
+        共通のディレクトリパス
+    """
+    if not sources:
+        return ""
+    if len(sources) == 1:
+        return sources[0]
+
+    # パスを分割して共通部分を見つける
+    split_paths = [s.rstrip('/').split('/') for s in sources]
+    common_parts = []
+
+    for parts in zip(*split_paths):
+        if len(set(parts)) == 1:
+            common_parts.append(parts[0])
+        else:
+            break
+
+    return '/'.join(common_parts)
+
+
+def normalize_filename(source, filename, common_source):
+    """
+    source と filename を組み合わせて、共通 source からの相対パスに正規化する。
+
+    Args:
+        source: 元の source パス
+        filename: 元の filename
+        common_source: 共通の source パス
+
+    Returns:
+        正規化された filename
+    """
+    # source + filename で完全パスを構築
+    if filename.startswith('/'):
+        full_path = filename
+    else:
+        full_path = os.path.join(source, filename)
+
+    # 共通 source からの相対パスを取得
+    if common_source and full_path.startswith(common_source):
+        relative = full_path[len(common_source):].lstrip('/')
+        return relative if relative else filename
+
+    return filename
+
+
 def merge_coverage_files(coverage_files):
     """
     複数の Cobertura XML ファイルを合成する。
@@ -73,15 +127,39 @@ def merge_coverage_files(coverage_files):
     if not coverage_files:
         return None
 
+    # 全ファイルの source を収集
+    all_sources = []
+    for xml_path in coverage_files:
+        try:
+            tree = ET.parse(xml_path)
+            root = tree.getroot()
+            sources = root.findall('.//sources/source')
+            for source in sources:
+                if source.text:
+                    all_sources.append(source.text)
+        except ET.ParseError:
+            continue
+
+    # 共通 source を計算
+    common_source = get_common_source_prefix(all_sources)
+
     # 最初のファイルをベースとして使用
     base_tree = ET.parse(coverage_files[0])
     base_root = base_tree.getroot()
 
+    # ベースの source を取得
+    base_source_elem = base_root.find('.//sources/source')
+    base_source = base_source_elem.text if base_source_elem is not None and base_source_elem.text else ""
+
+    # ベースの source を共通 source に更新
+    if base_source_elem is not None:
+        base_source_elem.text = common_source
+
     # ベースの行情報を辞書化
-    # キー: (package_name, filename, line_number)
+    # キー: (package_name, normalized_filename, line_number)
     # 値: line 要素への参照
     merged_lines = {}
-    merged_classes = {}  # (package_name, filename) -> class 要素
+    merged_classes = {}  # (package_name, normalized_filename) -> class 要素
     merged_packages = {}  # package_name -> package 要素
 
     # 最大 timestamp を追跡
@@ -96,11 +174,14 @@ def merge_coverage_files(coverage_files):
         pkg_name = package.get('name')
         merged_packages[pkg_name] = package
         for cls in package.findall('.//class'):
-            filename = cls.get('filename')
-            merged_classes[(pkg_name, filename)] = cls
+            orig_filename = cls.get('filename')
+            norm_filename = normalize_filename(base_source, orig_filename, common_source)
+            # filename を正規化されたものに更新
+            cls.set('filename', norm_filename)
+            merged_classes[(pkg_name, norm_filename)] = cls
             for line in cls.findall('.//line'):
                 line_num = line.get('number')
-                key = (pkg_name, filename, line_num)
+                key = (pkg_name, norm_filename, line_num)
                 merged_lines[key] = line
 
     # 2番目以降のファイルを合成
@@ -111,6 +192,10 @@ def merge_coverage_files(coverage_files):
         except ET.ParseError as e:
             print(f"Warning: Failed to parse {xml_path}: {e}", file=sys.stderr)
             continue
+
+        # このファイルの source を取得
+        file_source_elem = root.find('.//sources/source')
+        file_source = file_source_elem.text if file_source_elem is not None and file_source_elem.text else ""
 
         # timestamp の最大値を更新
         timestamp = int(root.get('timestamp', '0'))
@@ -133,7 +218,8 @@ def merge_coverage_files(coverage_files):
             target_package = merged_packages[pkg_name]
 
             for cls in package.findall('.//class'):
-                filename = cls.get('filename')
+                orig_filename = cls.get('filename')
+                filename = normalize_filename(file_source, orig_filename, common_source)
                 cls_key = (pkg_name, filename)
 
                 if cls_key not in merged_classes:
