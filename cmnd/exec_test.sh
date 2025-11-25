@@ -120,7 +120,7 @@ function run_test() {
                     *)  echo \"Abnormal termination by other signal.\";; \
                 esac; \
             fi; \
-            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
+            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
         rm -f LastCoverageResults.log 1> /dev/null 2>&1
     fi
 
