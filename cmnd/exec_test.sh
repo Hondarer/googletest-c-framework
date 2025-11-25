@@ -79,7 +79,7 @@ function run_test() {
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        LANG=$FILES_LANG script -q -a -c \
+        LANG=$FILES_LANG bash -c \
            "echo \"----\"; \
             cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
             echo \"----\"; \
@@ -97,11 +97,10 @@ function run_test() {
                     *)  echo \"Abnormal termination by other signal.\";; \
                 esac; \
             fi; \
-            echo \$exit_code > $temp_exit_code" $temp_file
+            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
         gcovr --exclude-unreachable-branches --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
     else
         # Windows
-        # script コマンドを使わず直接実行
         LANG=$FILES_LANG bash -c \
            "echo \"----\"; \
             cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
