@@ -26,19 +26,43 @@ class AnsiColor:
 
 # 見出しパターンと色の対応
 # タプル形式: (正規表現パターン, 色)
+#
+# GoogleTest ソースコード (gtest.cc) の PrettyUnitTestResultPrinter に基づく。
+# 着色は見出し部 (角括弧内) のみに適用され、テスト名や本文には適用されない。
+#
+# 注意: 元の gtest は result()->Passed(), result()->Failed(), result()->Skipped() の
+# 戻り値に応じて色を決定する。テキストベースのフィルターでは見出し文字列で判定するため、
+# 完全な可逆性は保証されないが、標準出力においては実用上問題ない。
 COLOR_RULES = [
-    # 赤: 失敗
+    # 赤: 失敗 (OnTestEnd で result()->Failed() の場合、PrintFailedTests)
     (re.compile(r"^\[\s*FAILED\s*\]"), AnsiColor.RED),
-    # 黄: スキップ、Death test、情報
+
+    # 黄: スキップ (OnTestEnd で result()->Skipped() の場合、PrintSkippedTests)
     (re.compile(r"^\[\s*SKIPPED\s*\]"), AnsiColor.YELLOW),
+
+    # 黄: Death test 実行中 (DeathTest 内部で使用)
     (re.compile(r"^\[\s*DEATH\s*\]"), AnsiColor.YELLOW),
-    (re.compile(r"^\[\s*INFO\s*\]"), AnsiColor.YELLOW),
-    # 緑: 成功、実行中、その他の標準見出し
-    (re.compile(r"^\[\s*PASSED\s*\]"), AnsiColor.GREEN),
+
+    # 黄: 警告 (GTEST_FLAG の警告出力など)
+    (re.compile(r"^\[\s*WARNING\s*\]"), AnsiColor.YELLOW),
+
+    # 緑: 成功 (OnTestEnd で result()->Passed() の場合)
     (re.compile(r"^\[\s*OK\s*\]"), AnsiColor.GREEN),
+
+    # 緑: 成功サマリ (OnTestProgramEnd)
+    (re.compile(r"^\[\s*PASSED\s*\]"), AnsiColor.GREEN),
+
+    # 緑: テスト開始 (OnTestStart)
     (re.compile(r"^\[\s*RUN\s*\]"), AnsiColor.GREEN),
+
+    # 緑: プログラム開始/終了 (OnTestProgramStart, OnTestProgramEnd)
     (re.compile(r"^\[=+\]"), AnsiColor.GREEN),
+
+    # 緑: テストスイート開始/終了 (OnTestSuiteStart, OnTestSuiteEnd)
     (re.compile(r"^\[-+\]"), AnsiColor.GREEN),
+
+    # 緑: グローバル環境 (OnEnvironmentsSetUpStart 等)
+    # ※ [----------] と同じパターンでカバー済み
 ]
 
 # 見出し部分を抽出する正規表現

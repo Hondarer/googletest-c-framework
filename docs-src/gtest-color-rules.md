@@ -110,6 +110,81 @@ export GTEST_COLOR=0    # 色を無効化
 | `OnTestEnd` | `[       OK ]` (緑) または `[  FAILED  ]` (赤) または `[ SKIPPED  ]` (黄) |
 | `OnTestProgramEnd` | `[  PASSED  ]` (緑)、`[  FAILED  ]` (赤) |
 
+## 着色フィルターの使用
+
+Windows 環境などでエスケープシーケンスなしの出力に色を付けるフィルタースクリプトについて説明します。
+
+```bash
+test.exe | python add_gtest_color.py
+```
+
+このフィルターは、見出し部 (角括弧で囲まれた部分) のみに色を付け、本文はそのまま出力します。
+
+## フィルターの可逆性について
+
+### 結論
+
+テキストベースのフィルターは、元の GoogleTest の着色と **ほぼ完全に可逆** です。ただし、以下の制約があります。
+
+### 可逆である部分
+
+標準的なテスト実行で出力されるすべての見出しは、テキストパターンから一意に色を復元できます。
+
+| 見出しテキスト | 色 | 可逆性 |
+|---|---|---|
+| `[ RUN      ]` | 緑 | ✅ 完全 |
+| `[       OK ]` | 緑 | ✅ 完全 |
+| `[  PASSED  ]` | 緑 | ✅ 完全 |
+| `[  FAILED  ]` | 赤 | ✅ 完全 |
+| `[ SKIPPED  ]` | 黄 | ✅ 完全 |
+| `[==========]` | 緑 | ✅ 完全 |
+| `[----------]` | 緑 | ✅ 完全 |
+
+### 可逆性の技術的根拠
+
+元の GoogleTest ソースコード (`gtest.cc`) では、`PrettyUnitTestResultPrinter` クラスが以下のように着色を行っています。
+
+```cpp
+// OnTestStart - テスト開始時
+ColoredPrintf(GTestColor::kGreen, "[ RUN      ]");
+
+// OnTestEnd - テスト終了時
+if (result.Skipped()) {
+  ColoredPrintf(GTestColor::kYellow, "[ SKIPPED  ]");
+} else if (result.Passed()) {
+  ColoredPrintf(GTestColor::kGreen, "[       OK ]");
+} else {
+  ColoredPrintf(GTestColor::kRed, "[  FAILED  ]");
+}
+```
+
+この実装から、見出し文字列と色は 1 対 1 で対応しており、テキストから色を一意に復元できます。
+
+### 可逆でない可能性がある部分
+
+以下のケースでは、フィルターが対応できない可能性があります。
+
+1. **カスタム TestEventListener の出力**: ユーザーが独自の Listener を実装し、標準と異なる見出しを使用した場合
+
+2. **将来の GoogleTest バージョン**: 新しい見出しが追加された場合は、フィルターの更新が必要
+
+3. **サードパーティツールの出力**: GoogleTest 互換のフォーマットでも、微妙に異なるスペーシングを使用している場合
+
+### 検証方法
+
+フィルターの正確性を確認するには、以下のコマンドで元の出力と比較できます。
+
+```bash
+# 元の着色出力 (参照用)
+./test.exe --gtest_color=yes > colored.txt
+
+# フィルター適用後の出力
+./test.exe --gtest_color=no | python add_gtest_color.py > filtered.txt
+
+# エスケープシーケンスを比較
+diff colored.txt filtered.txt
+```
+
 ## 参考リンク
 
 - [GoogleTest Advanced Topics - Colored Terminal Output](https://google.github.io/googletest/advanced.html)
