@@ -330,21 +330,19 @@ function main() {
     rm -rf obj/*.gcda obj/*.info gcov lcov coverage
 
     # Banner
+    echo ""
     if [ $FAILURE_COUNT -eq 0 ]; then
         if [ $WARNING_COUNT -eq 0 ]; then
-            echo -e "\e[32m"
-                bash $SCRIPT_DIR/banner.sh PASSED
-            echo -e "\e[0m"
+            bash $SCRIPT_DIR/banner.sh PASSED "\e[32m"
+            echo ""
         else
-            echo -e "\e[33m"
-                bash $SCRIPT_DIR/banner.sh WARNING
-            echo -e "\e[0m"
+            bash $SCRIPT_DIR/banner.sh WARNING "\e[33m"
+            echo ""
             #return 1
         fi
     else
-        echo -e "\e[31m"
-            bash $SCRIPT_DIR/banner.sh FAILED
-        echo -e "\e[0m"
+        bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        echo ""
         return 1
     fi
 

@@ -44,6 +44,7 @@ declare -A ascii_art_line4=(
 
 # 入力を受け取る
 input="${1^^}"  # 入力を大文字に変換
+color="${2:-}"  # 色指定（オプション）
 
 # 各行ごとにアスキーアートを構築
 for line in 0 1 2 3 4; do
@@ -53,5 +54,10 @@ for line in 0 1 2 3 4; do
         char="${input:i:1}"
         row+="${line_array[$char]} "
     done
-    echo "$row"
+    # 色指定がある場合は各行に色コードを追加
+    if [ -n "$color" ]; then
+        echo -e "${color}${row}\e[0m"
+    else
+        echo "$row"
+    fi
 done
