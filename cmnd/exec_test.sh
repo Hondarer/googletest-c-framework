@@ -106,18 +106,10 @@ function run_test() {
             cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
             echo \"----\"; \
             echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-            OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+            OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
             exit_code=\${PIPESTATUS[0]}; \
-            if [ \$exit_code -ge 128 ]; then \
-                signal=\$((exit_code - 128)); \
-                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                case \$signal in \
-                    6)  echo \"SIGABRT: abort.\";; \
-                    11) echo \"SIGSEGV: segmentation fault.\";; \
-                    8)  echo \"SIGFPE: floating-point exception.\";; \
-                    4)  echo \"SIGILL: illegal instruction.\";; \
-                    *)  echo \"Abnormal termination by other signal.\";; \
-                esac; \
+            if [ \$exit_code -ne 0 ]; then \
+                echo -e \"\\n\\e[31m[  FAILED  ]\\e[0m Exit code: \$exit_code\"; \
             fi; \
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
         rm -f LastCoverageResults.log 1> /dev/null 2>&1
