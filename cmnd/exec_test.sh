@@ -98,21 +98,40 @@ function run_test() {
                 esac; \
             fi; \
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
-        gcovr --exclude-unreachable-branches --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
+        if [ -n "$TEST_SRCS" ]; then
+            # TEST_SRCS が指定されている場合のみカバレッジ計測
+            gcovr --exclude-unreachable-branches --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
+        fi
     else
         # Windows
-        LANG=$FILES_LANG bash -c \
-           "echo \"----\"; \
-            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
-            echo \"----\"; \
-            echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-            OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
-            exit_code=\${PIPESTATUS[0]}; \
-            if [ \$exit_code -ne 0 ]; then \
-                echo -e \"\\n\\e[31m[  FAILED  ]\\e[0m Exit code: \$exit_code\"; \
-            fi; \
-            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
-        rm -f LastCoverageResults.log 1> /dev/null 2>&1
+        if [ -n "$TEST_SRCS" ]; then
+            # TEST_SRCS が指定されている場合のみカバレッジ計測
+            LANG=$FILES_LANG bash -c \
+               "echo \"----\"; \
+                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                echo \"----\"; \
+                echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
+                exit_code=\${PIPESTATUS[0]}; \
+                if [ \$exit_code -ne 0 ]; then \
+                    echo -e \"\\n\\e[31m[  FAILED  ]\\e[0m Exit code: \$exit_code\"; \
+                fi; \
+                echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
+            rm -f LastCoverageResults.log 1> /dev/null 2>&1
+        else
+            # TEST_SRCS が未指定の場合はカバレッジ計測なし
+            LANG=$FILES_LANG bash -c \
+               "echo \"----\"; \
+                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                echo \"----\"; \
+                echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
+                exit_code=\${PIPESTATUS[0]}; \
+                if [ \$exit_code -ne 0 ]; then \
+                    echo -e \"\\n\\e[31m[  FAILED  ]\\e[0m Exit code: \$exit_code\"; \
+                fi; \
+                echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
+        fi
     fi
 
     # ファイル内容を直接読み込み (cat 相当)
@@ -144,34 +163,37 @@ function run_test() {
     rm -rf gcov/* > /dev/null
     mkdir -p gcov
 
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-        # gcov でカバレッジ情報を取得する
-        # Run gcov to collect coverage
-        gcov $TEST_SRCS -o obj > /dev/null
-        # カバレッジ未通過の *.gcov ファイルは削除する
-        # Delete *.gcov files without coverage
-        if [ -n "`ls *.gcov 2>/dev/null`" ]; then
-            for file in *.gcov; do
-                if ! grep -qE '^\s*[0-9]+\*?:' "$file"; then
-                    rm "$file";
-                fi;
+    if [ -n "$TEST_SRCS" ]; then
+        # TEST_SRCS が指定されている場合のみカバレッジ情報を取得
+        if [ $IS_WINDOWS -ne 1 ]; then
+            # Linux
+            # gcov でカバレッジ情報を取得する
+            # Run gcov to collect coverage
+            gcov $TEST_SRCS -o obj > /dev/null
+            # カバレッジ未通過の *.gcov ファイルは削除する
+            # Delete *.gcov files without coverage
+            if [ -n "`ls *.gcov 2>/dev/null`" ]; then
+                for file in *.gcov; do
+                    if ! grep -qE '^\s*[0-9]+\*?:' "$file"; then
+                        rm "$file";
+                    fi;
+                done
+            fi
+            mv *.gcov gcov/. 1> /dev/null 2>&1
+        else
+            # Windows
+            python $SCRIPT_DIR/cobertura2gcov.py coverage/coverage.xml gcov/ 1> /dev/null 2>&1
+        fi
+
+        if ls gcov/*.gcov 1> /dev/null 2>&1; then
+            for file in gcov/*.gcov; do
+                cp -p "$file" "results/$test_id/${file##*/}.txt"
             done
         fi
-        mv *.gcov gcov/. 1> /dev/null 2>&1
-    else
-        # Windows
-        python $SCRIPT_DIR/cobertura2gcov.py coverage/coverage.xml gcov/ 1> /dev/null 2>&1
-    fi
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/$test_id/${file##*/}.txt"
-        done
+        # 各回のテスト結果を積み上げ
+        python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
     fi
-
-    # 各回のテスト結果を積み上げ
-    python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
 
     # 各テストの coverage.xml を退避 (デバッグ用)
     #mv coverage/coverage.xml results/$test_id/.
@@ -214,16 +236,19 @@ function main() {
     # テスト対象ソースの md5 を取得
     echo -e "Test start on $(export LANG=C && date)." | tee -a results/all_tests/summary.log
     tput cr
-    echo -e "----" | tee -a results/all_tests/summary.log
-    tput cr
-    echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
-    tput cr
-    for src in $TEST_SRCS; do
-        md5sum "$src" | sed -e "s#$(realpath "$WORKSPACE_FOLDER")/##g" | tee -a results/all_tests/summary.log
+    if [ -n "$TEST_SRCS" ]; then
+        # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
+        echo -e "----" | tee -a results/all_tests/summary.log
         tput cr
-    done
-    echo "----" | tee -a results/all_tests/summary.log
-    tput cr
+        echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
+        tput cr
+        for src in $TEST_SRCS; do
+            md5sum "$src" | sed -e "s#$(realpath "$WORKSPACE_FOLDER")/##g" | tee -a results/all_tests/summary.log
+            tput cr
+        done
+        echo "----" | tee -a results/all_tests/summary.log
+        tput cr
+    fi
 
     tests=$(list_tests)
     #tests=$(echo "$tests" | sort)
@@ -264,59 +289,62 @@ function main() {
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
 
-    # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
-    python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
+    if [ -n "$TEST_SRCS" ]; then
+        # TEST_SRCS が指定されている場合のみカバレッジレポートを生成
+        # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
+        python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
 
-    if ls gcov/*.gcov 1> /dev/null 2>&1; then
-        for file in gcov/*.gcov; do
-            cp -p "$file" "results/all_tests/${file##*/}.txt"
-        done
-    fi
-
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-
-        # lcov で生成したファイルを削除する
-        # Delete any existing info files generated by lcov
-        rm -rf obj/*.info lcov/*
-        mkdir -p lcov
- 
-        # coverage/accumulated_coverage.xml をもとに、lcov の出力と互換性がある .info を生成する
-        python $SCRIPT_DIR/cobertura2lcov.py coverage/accumulated_coverage.xml obj/$TEST_BINARY.info 1> /dev/null 2>&1
-
-        # genhtml は空のファイルを指定するとエラーを出力して終了するため
-        # lcov の出力ファイルが空でないか確認してから genhtml を実行する
-        # genhtml fails on empty files; verify that .info is not empty first
-        if [ -s obj/$TEST_BINARY.info ]; then
-            genhtml --function-coverage -o lcov obj/$TEST_BINARY.info 1> /dev/null 2>&1
+        if ls gcov/*.gcov 1> /dev/null 2>&1; then
+            for file in gcov/*.gcov; do
+                cp -p "$file" "results/all_tests/${file##*/}.txt"
+            done
         fi
-    else
-        # Windows
-        ReportGenerator -reports:./coverage/accumulated_coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
-    fi
 
-    # lcov の文字コードパッチ処理
-    if [ $IS_WINDOWS -ne 1 ]; then
-        # Linux
-        if ls lcov/* 1> /dev/null 2>&1; then
-            cp -rp lcov results/all_tests/.
+        if [ $IS_WINDOWS -ne 1 ]; then
+            # Linux
 
-            # FILES_LANG が utf-8 でない場合の処理
-            if [[ ! "${FILES_LANG}" =~ [Uu][Tt][Ff][-+_]*8 ]]; then
-                find results/all_tests/lcov -name "*.gcov.html" | while read -r file; do
-                    sed -i "s/charset=UTF-8/charset=${FILES_LANG#*.}/" "$file"
-                done
+            # lcov で生成したファイルを削除する
+            # Delete any existing info files generated by lcov
+            rm -rf obj/*.info lcov/*
+            mkdir -p lcov
+
+            # coverage/accumulated_coverage.xml をもとに、lcov の出力と互換性がある .info を生成する
+            python $SCRIPT_DIR/cobertura2lcov.py coverage/accumulated_coverage.xml obj/$TEST_BINARY.info 1> /dev/null 2>&1
+
+            # genhtml は空のファイルを指定するとエラーを出力して終了するため
+            # lcov の出力ファイルが空でないか確認してから genhtml を実行する
+            # genhtml fails on empty files; verify that .info is not empty first
+            if [ -s obj/$TEST_BINARY.info ]; then
+                genhtml --function-coverage -o lcov obj/$TEST_BINARY.info 1> /dev/null 2>&1
+            fi
+        else
+            # Windows
+            ReportGenerator -reports:./coverage/accumulated_coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
+        fi
+
+        # lcov の文字コードパッチ処理
+        if [ $IS_WINDOWS -ne 1 ]; then
+            # Linux
+            if ls lcov/* 1> /dev/null 2>&1; then
+                cp -rp lcov results/all_tests/.
+
+                # FILES_LANG が utf-8 でない場合の処理
+                if [[ ! "${FILES_LANG}" =~ [Uu][Tt][Ff][-+_]*8 ]]; then
+                    find results/all_tests/lcov -name "*.gcov.html" | while read -r file; do
+                        sed -i "s/charset=UTF-8/charset=${FILES_LANG#*.}/" "$file"
+                    done
+                fi
             fi
         fi
+
+        echo "" | tee -a results/all_tests/summary.log
+
+        # Code Coverage Report
+        python $SCRIPT_DIR/cobertura2gcovr.py coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
+
+        # 全体カバレッジ計測用に、カバレッジ xml を保持
+        cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
     fi
-
-    echo "" | tee -a results/all_tests/summary.log
-
-    # Code Coverage Report
-    python $SCRIPT_DIR/cobertura2gcovr.py coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
-
-    # 全体カバレッジ計測用に、カバレッジ xml を保持
-    cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
 
     # Clean
     rm -rf obj/*.gcda obj/*.info gcov lcov coverage
