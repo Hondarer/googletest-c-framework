@@ -110,7 +110,7 @@ function run_test() {
                "echo \"----\"; \
                 cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
                 echo \"----\"; \
-                echo OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
+                echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
                 exit_code=\${PIPESTATUS[0]}; \
                 if [ \$exit_code -ne 0 ]; then \
