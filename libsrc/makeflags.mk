@@ -1,1 +1,1 @@
-TARGETDIR := $(WORKSPACE_FOLDER)/testfw/lib
+OUTPUT_DIR := $(WORKSPACE_FOLDER)/testfw/lib
