@@ -17,7 +17,7 @@ WORKSPACE_FOLDER=$SCRIPT_DIR/../../
 FILES_LANG=$(sh "$WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh" "$WORKSPACE_FOLDER")
 
 # テストバイナリのパス (basename `pwd` 相当)
-TEST_BINARY=${PWD##*/}
+TEST_BINARY=bin/${PWD##*/}
 
 # スタックサイズ制限緩和
 # (1) ハードリミットのスタックサイズを取得
@@ -248,6 +248,13 @@ function main() {
         done
         echo "----" | tee -a results/all_tests/summary.log
         tput cr
+    fi
+
+    # TEST_BINARY の存在チェック
+    if [ ! -f "$TEST_BINARY" ]; then
+        echo -e "\e[31mError: Test binary not found: $TEST_BINARY\e[0m" | tee -a results/all_tests/summary.log
+        bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        return 1
     fi
 
     tests=$(list_tests)
