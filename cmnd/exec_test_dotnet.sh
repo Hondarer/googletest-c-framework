@@ -59,11 +59,7 @@ function main() {
         EXIT_CODE=$?
     fi
 
-    echo -e "----"
-    tput cr
-
     # Banner 表示
-    echo ""
     if [ $EXIT_CODE -eq 0 ]; then
         bash "$SCRIPT_DIR/banner.sh" PASSED "\e[32m"
         echo ""
