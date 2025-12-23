@@ -86,17 +86,33 @@ The first found `.a` file is used. If not found, it remains as `-l` option for d
 
 ### 動作フロー / Operation Flow
 
-```
-LIB_TYPE=shared の場合:
-  ↓
-LIBS から .a ファイルを直接抽出
-  ↓
-LIBS から -l オプションを抽出して検索パスから .a を検索
-  ├─ .a が見つかる → 静的リンク対象
-  └─ .a が見つからない → 動的リンク対象
-  ↓
-共有ライブラリをビルド:
-  gcc -shared -o libXXX.so (オブジェクト) (静的ライブラリ) (動的ライブラリオプション)
+```plantuml
+@startuml
+start
+:LIB_TYPE=shared?;
+
+:LIBS から .a ファイルを直接抽出;
+
+partition "LIBS から -l オプションを処理 / Process -l options from LIBS" {
+  :LIBS から -l オプションを抽出;
+
+  :検索パスから .a を検索;
+
+  if (.a が見つかる?) then (yes)
+    :静的リンク対象;
+  else (no)
+    :動的リンク対象;
+  endif
+}
+
+:共有ライブラリをビルド:
+gcc -shared -o libXXX.so
+  (オブジェクト / objects)
+  (静的ライブラリ / static libraries)
+  (動的ライブラリオプション / dynamic library options);
+
+stop
+@enduml
 ```
 
 ## 使用例 / Usage Examples
