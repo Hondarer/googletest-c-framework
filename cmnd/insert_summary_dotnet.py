@@ -183,10 +183,14 @@ def insert_summary():
 
 
 def main():
-    # Windows で標準入出力を UTF-8 に設定
-    sys.stdin.reconfigure(encoding='utf-8')
-    sys.stdout.reconfigure(encoding='utf-8')
-    sys.stderr.reconfigure(encoding='utf-8')
+    # 標準入出力を UTF-8 に設定 (Windows 対応)
+    try:
+        sys.stdin.reconfigure(encoding='utf-8')
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # Python 3.7 未満では reconfigure が存在しない
+        pass
 
     insert_summary()
 

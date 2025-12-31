@@ -166,9 +166,13 @@ def generate_lcov_info(coverage_data, output_file=None):
 
 
 def main():
-    # Windows で標準出力を UTF-8 に設定
-    sys.stdout.reconfigure(encoding='utf-8')
-    sys.stderr.reconfigure(encoding='utf-8')
+    # 標準出力を UTF-8 に設定 (Windows 対応)
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+        sys.stderr.reconfigure(encoding='utf-8')
+    except AttributeError:
+        # Python 3.7 未満では reconfigure が存在しない
+        pass
 
     if len(sys.argv) < 2 or len(sys.argv) > 3:
         print("Usage: python cobertura2lcov.py <cobertura.xml> [output.info]",
