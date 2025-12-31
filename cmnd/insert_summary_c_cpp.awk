@@ -1,7 +1,7 @@
 #!/usr/bin/awk -f
 
 # テスト結果ログにサマリを挿入する AWK スクリプト
-# 使用方法: cat results.log | awk -f insert_summary.awk > results_with_summary.log
+# 使用方法: cat results.log | awk -f insert_summary_c_cpp.awk > results_with_summary.log
 
 function trim(s) {
   sub(/^ /, "", s);                 # 行頭の空白 1 つだけを削除

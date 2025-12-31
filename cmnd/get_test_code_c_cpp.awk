@@ -1,6 +1,6 @@
 #!/usr/bin/awk -f
 
-# 使用方法: awk -v test_id="test_samplelogger.normal_call" -f get_test_code.awk test_file.cc
+# 使用方法: awk -v test_id="test_samplelogger.normal_call" -f get_test_code_c_cpp.awk test_file.cc
 
 BEGIN {
     extracting = 0;              # テストケースの抽出中フラグ

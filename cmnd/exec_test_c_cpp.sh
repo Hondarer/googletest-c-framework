@@ -75,13 +75,13 @@ function run_test() {
     echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > $temp_file
 
     # テストコードに着色する場合:
-    # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk | source-highlight -s cpp -f esc;
+    # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk | source-highlight -s cpp -f esc;
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
         LANG=$FILES_LANG bash -c \
            "echo \"----\"; \
-            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
             echo \"----\"; \
             echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
             ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
@@ -108,7 +108,7 @@ function run_test() {
             # TEST_SRCS が指定されている場合のみカバレッジ計測
             LANG=$FILES_LANG bash -c \
                "echo \"----\"; \
-                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
                 echo \"----\"; \
                 echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
@@ -122,7 +122,7 @@ function run_test() {
             # TEST_SRCS が未指定の場合はカバレッジ計測なし
             LANG=$FILES_LANG bash -c \
                "echo \"----\"; \
-                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code.awk | awk -f $SCRIPT_DIR/insert_summary.awk; \
+                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
                 echo \"----\"; \
                 echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
