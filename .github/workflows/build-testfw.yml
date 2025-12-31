@@ -44,6 +44,13 @@ jobs:
       - name: Create workspace root marker
         run: touch .workspaceRoot
 
+      - name: Clean lib directory
+        run: |
+          # lib ディレクトリをクリーンアップ (古いファイルを削除)
+          # Clean lib directory to remove old files from previous commits
+          rm -rf testfw/lib
+          mkdir -p testfw/lib
+
       - name: Build libraries
         run: |
           cd testfw
@@ -76,9 +83,19 @@ jobs:
         run: New-Item -ItemType File -Path .workspaceRoot -Force
         shell: pwsh
 
+      - name: Clean lib directory
+        run: |
+          # lib ディレクトリをクリーンアップ (古いファイルを削除)
+          # Clean lib directory to remove old files from previous commits
+          if (Test-Path testfw\lib) {
+            Remove-Item -Recurse -Force testfw\lib
+          }
+          New-Item -ItemType Directory -Force -Path testfw\lib
+        shell: pwsh
+
       - name: Setup MSVC environment
         run: |
-          & "${{ github.workspace }}\testfw\.github\workflows\Add-VSBT-Env-x64.ps1"
+          & "${{ github.workspace }}\testfw\.github\scripts\Add-VSBT-Env-x64.ps1"
         shell: pwsh
 
       - name: Build libraries
@@ -135,7 +152,7 @@ jobs:
           # Check for changes in lib directory
           if [ -n "$(git status --porcelain lib/)" ]; then
             echo "Library changes detected"
-            git add lib/
+            git add -A lib/
             git commit -m "ビルド済みライブラリを更新"
             git push
           else
