@@ -105,6 +105,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Clean lib directory
+        run: |
+          # lib ディレクトリをクリーンアップ
+          # Clean lib directory before downloading new artifacts
+          rm -rf lib/
+          mkdir -p lib/
+
       - name: Download Linux libraries
         uses: actions/download-artifact@v4
         with:
