@@ -33,7 +33,7 @@ jobs:
       - name: Checkout makefw repository
         uses: actions/checkout@v4
         with:
-          repository: Hondarer/makefw
+          repository: Hondarer/make-framework
           path: makefw
 
       - name: Configure git safe directory
@@ -69,7 +69,7 @@ jobs:
       - name: Checkout makefw repository
         uses: actions/checkout@v4
         with:
-          repository: Hondarer/makefw
+          repository: Hondarer/make-framework
           path: makefw
 
       - name: Create workspace root marker
