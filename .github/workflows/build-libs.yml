@@ -1,0 +1,136 @@
+name: Build Libraries
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/hondarer/oracle-linux-8-container/oracle-linux-8-dev:latest
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        HOST_USER: user
+        HOST_UID: 1001
+        HOST_GID: 127
+
+    steps:
+      - name: Checkout testfw repository
+        uses: actions/checkout@v4
+        with:
+          path: testfw
+          submodules: recursive
+
+      - name: Checkout makefw repository
+        uses: actions/checkout@v4
+        with:
+          repository: Hondarer/makefw
+          path: makefw
+
+      - name: Configure git safe directory
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/testfw"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/makefw"
+
+      - name: Create workspace root marker
+        run: touch .workspaceRoot
+
+      - name: Build libraries
+        run: |
+          cd testfw
+          make
+
+      - name: Upload Linux libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-libraries
+          path: testfw/lib/linux-*
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-2025
+
+    steps:
+      - name: Checkout testfw repository
+        uses: actions/checkout@v4
+        with:
+          path: testfw
+          submodules: recursive
+
+      - name: Checkout makefw repository
+        uses: actions/checkout@v4
+        with:
+          repository: Hondarer/makefw
+          path: makefw
+
+      - name: Create workspace root marker
+        run: New-Item -ItemType File -Path .workspaceRoot -Force
+        shell: pwsh
+
+      - name: Setup MSVC environment
+        run: |
+          & "${{ github.workspace }}\testfw\.github\workflows\Add-VSBT-Env-x64.ps1"
+        shell: pwsh
+
+      - name: Build libraries
+        run: |
+          cd testfw
+          make
+        shell: bash
+
+      - name: Upload Windows libraries
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-libraries
+          path: testfw/lib/windows-*
+          if-no-files-found: error
+
+  commit-changes:
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout testfw repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Download Linux libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-libraries
+          path: lib/
+
+      - name: Download Windows libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-libraries
+          path: lib/
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and push changes
+        run: |
+          # lib ディレクトリの変更を確認
+          # Check for changes in lib directory
+          if [ -n "$(git status --porcelain lib/)" ]; then
+            echo "Library changes detected"
+            git add lib/
+            git commit -m "ビルド済みライブラリを更新"
+            git push
+          else
+            echo "No library changes to commit"
+          fi
