@@ -76,4 +76,8 @@ else
     LDFLAGS     =
 endif
 
+INCDIR += \
+    gtest/include \
+    include
+
 LIBSDIR     =
