@@ -29,19 +29,23 @@ test : $(SUBDIRS)
 # Build all 4 runtime library variants for Windows
 .PHONY: build-all-windows
 build-all-windows:
-	$(MAKE) CONFIG=Release MSVC_CRT=shared $(SUBDIRS)
+	$(MAKE) CONFIG=RelWithDebInfo MSVC_CRT=shared $(SUBDIRS)
 	$(MAKE) CONFIG=Debug MSVC_CRT=shared $(SUBDIRS)
-	$(MAKE) CONFIG=Release MSVC_CRT=static $(SUBDIRS)
+	$(MAKE) CONFIG=RelWithDebInfo MSVC_CRT=static $(SUBDIRS)
 	$(MAKE) CONFIG=Debug MSVC_CRT=static $(SUBDIRS)
 
 # Windows 用: 4種類のランタイムライブラリをクリーン
 # Clean all 4 runtime library variants for Windows
 .PHONY: clean-all-windows
 clean-all-windows:
-	$(MAKE) CONFIG=Release MSVC_CRT=shared $(SUBDIRS)
-	$(MAKE) CONFIG=Debug MSVC_CRT=shared $(SUBDIRS)
-	$(MAKE) CONFIG=Release MSVC_CRT=static $(SUBDIRS)
-	$(MAKE) CONFIG=Debug MSVC_CRT=static $(SUBDIRS)
+	@for dir in $(SUBDIRS); do \
+		if [ -f $$dir/Makefile ]; then \
+			$(MAKE) -C $$dir CONFIG=RelWithDebInfo MSVC_CRT=shared clean || exit 1; \
+			$(MAKE) -C $$dir CONFIG=Debug MSVC_CRT=shared clean || exit 1; \
+			$(MAKE) -C $$dir CONFIG=RelWithDebInfo MSVC_CRT=static clean || exit 1; \
+			$(MAKE) -C $$dir CONFIG=Debug MSVC_CRT=static clean || exit 1; \
+		fi; \
+	done
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :
