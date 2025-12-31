@@ -77,7 +77,7 @@ else
 endif
 
 INCDIR += \
-    gtest/include \
-    include
+    $(WORKSPACE_FOLDER)/testfw/gtest/include \
+    $(WORKSPACE_FOLDER)/testfw/include
 
 LIBSDIR     =
