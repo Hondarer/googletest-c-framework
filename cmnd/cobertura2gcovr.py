@@ -179,6 +179,10 @@ def print_report(coverage_data):
 
 
 def main():
+    # Windows で標準出力を UTF-8 に設定
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
     if len(sys.argv) != 2:
         print("Usage: python cobertura2gcovr.py <cobertura.xml>",
               file=sys.stderr)

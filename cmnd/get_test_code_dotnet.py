@@ -164,6 +164,10 @@ def extract_test_code(file_path, class_name, method_name):
 
 
 def main():
+    # Windows で標準出力を UTF-8 に設定
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
     if len(sys.argv) != 4:
         print("Usage: get_test_code_dotnet.py <file_path> <class_name> <method_name>", file=sys.stderr)
         print("", file=sys.stderr)

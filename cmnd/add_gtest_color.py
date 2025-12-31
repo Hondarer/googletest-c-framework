@@ -109,6 +109,11 @@ def enable_windows_ansi() -> None:
 
 
 def main() -> None:
+    # Windows で標準入出力を UTF-8 に設定
+    sys.stdin.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
     enable_windows_ansi()
 
     for line in sys.stdin:

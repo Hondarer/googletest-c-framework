@@ -183,6 +183,11 @@ def insert_summary():
 
 
 def main():
+    # Windows で標準入出力を UTF-8 に設定
+    sys.stdin.reconfigure(encoding='utf-8')
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
     insert_summary()
 
 

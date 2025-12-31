@@ -166,6 +166,10 @@ def generate_lcov_info(coverage_data, output_file=None):
 
 
 def main():
+    # Windows で標準出力を UTF-8 に設定
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
     if len(sys.argv) < 2 or len(sys.argv) > 3:
         print("Usage: python cobertura2lcov.py <cobertura.xml> [output.info]",
               file=sys.stderr)
