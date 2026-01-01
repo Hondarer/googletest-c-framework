@@ -242,10 +242,9 @@ function main() {
 
     # テスト対象ソースの md5 を取得
     echo -e "Test start on $(export LANG=C && date)." | tee -a results/all_tests/summary.log
-    safe_tput cr
+    echo -e "----" | tee -a results/all_tests/summary.log
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
-        echo -e "----" | tee -a results/all_tests/summary.log
         safe_tput cr
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
         safe_tput cr
