@@ -33,6 +33,13 @@ FAILURE_COUNT=0
 # 最終結果用文字列 (テスト中は積み上げて、最後に一括出力)
 test_summary=""
 
+# tput を安全に実行するヘルパー関数
+function safe_tput() {
+    if [[ -n "$TERM" && "$TERM" != "dumb" ]]; then
+        tput "$@" 2>/dev/null || true
+    fi
+}
+
 # テスト一覧を取得
 function list_tests() {
     ./$TEST_BINARY --gtest_list_tests | awk '
@@ -71,7 +78,7 @@ function run_test() {
     local temp_exit_code=$(mktemp)
 
     echo -e "\nRunning test: $test_id$test_comment_delim$test_comment on $TEST_BINARY"
-    tput cr
+    safe_tput cr
     echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > $temp_file
 
     # テストコードに着色する場合:
@@ -235,19 +242,19 @@ function main() {
 
     # テスト対象ソースの md5 を取得
     echo -e "Test start on $(export LANG=C && date)." | tee -a results/all_tests/summary.log
-    tput cr
+    safe_tput cr
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
         echo -e "----" | tee -a results/all_tests/summary.log
-        tput cr
+        safe_tput cr
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
-        tput cr
+        safe_tput cr
         for src in $TEST_SRCS; do
             md5sum "$src" | sed -e "s#$(realpath "$WORKSPACE_FOLDER")/##g" | tee -a results/all_tests/summary.log
-            tput cr
+            safe_tput cr
         done
         echo "----" | tee -a results/all_tests/summary.log
-        tput cr
+        safe_tput cr
     fi
 
     # TEST_BINARY の存在チェック
@@ -267,7 +274,7 @@ function main() {
         test_count=${#test_array[@]}
     fi
     echo "Found $test_count tests."
-    tput cr
+    safe_tput cr
 
     IFS=$'\n'
         for test_name_w_comment in $tests; do

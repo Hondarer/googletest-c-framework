@@ -22,6 +22,13 @@ FAILURE_COUNT=0
 # テスト結果サマリ (個別テスト用)
 test_summary=""
 
+# tput を安全に実行するヘルパー関数
+function safe_tput() {
+    if [[ -n "$TERM" && "$TERM" != "dumb" ]]; then
+        tput "$@" 2>/dev/null || true
+    fi
+}
+
 # テスト一覧を取得
 function list_tests() {
     dotnet test --list-tests --no-build -c "$CONFIG" -o "$OUTPUT_DIR" 2>/dev/null | \
@@ -138,7 +145,7 @@ function run_individual_tests() {
     local test_count=$(echo "$tests" | wc -l)
     echo "Found $test_count tests." | tee -a "$RESULTS_DIR/all_tests/summary.log"
     echo "" | tee -a "$RESULTS_DIR/all_tests/summary.log"
-    tput cr
+    safe_tput cr
 
     # 各テストを実行
     for test in $tests; do
