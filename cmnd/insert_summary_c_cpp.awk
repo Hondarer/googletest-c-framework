@@ -20,14 +20,17 @@ function is_list_item(s) {
 # 各カテゴリの格納用 (遭遇順維持)
 BEGIN {
   s_idx = 0; act_idx = 0; pre_s_idx = 0; pre_c_idx = 0; as_c_idx = 0;
-  check_count = 0;  # 確認内容のリスト項目数
+  # 確認内容のカテゴリ別リスト項目数
+  check_normal = 0;      # 正常系
+  check_semi_normal = 0; # 準正常系
+  check_abnormal = 0;    # 異常系
+  check_unspecified = 0; # カテゴリ未指定
 }
 
 {
   buf[NR] = $0
 
-  # 5 種類のタグを検出
-  # [状態] / [Pre-Assert手順] / [手順] / [Pre-Assert確認] / [確認]
+  # タグを検出（より具体的なパターンを先にチェック）
   if (match($0, /\[状態\]/)) {
     s = trim(substr($0, RSTART + RLENGTH))
     if (s != "") state[++s_idx] = s
@@ -37,17 +40,53 @@ BEGIN {
   } else if (match($0, /\[Pre-Assert手順\]/)) {
     s = trim(substr($0, RSTART + RLENGTH))
     if (s != "") pre_step[++pre_s_idx] = s
+  } else if (match($0, /\[Pre-Assert確認_正常系\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      pre_chk[++pre_c_idx] = s
+      if (is_list_item(s)) check_normal++
+    }
+  } else if (match($0, /\[確認_正常系\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      asrt_chk[++as_c_idx] = s
+      if (is_list_item(s)) check_normal++
+    }
+  } else if (match($0, /\[Pre-Assert確認_準正常系\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      pre_chk[++pre_c_idx] = s
+      if (is_list_item(s)) check_semi_normal++
+    }
+  } else if (match($0, /\[確認_準正常系\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      asrt_chk[++as_c_idx] = s
+      if (is_list_item(s)) check_semi_normal++
+    }
+  } else if (match($0, /\[Pre-Assert確認_異常系\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      pre_chk[++pre_c_idx] = s
+      if (is_list_item(s)) check_abnormal++
+    }
+  } else if (match($0, /\[確認_異常系\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      asrt_chk[++as_c_idx] = s
+      if (is_list_item(s)) check_abnormal++
+    }
   } else if (match($0, /\[Pre-Assert確認\]/)) {
     s = trim(substr($0, RSTART + RLENGTH))
     if (s != "") {
       pre_chk[++pre_c_idx] = s
-      if (is_list_item(s)) check_count++
+      if (is_list_item(s)) check_unspecified++
     }
   } else if (match($0, /\[確認\]/)) {
     s = trim(substr($0, RSTART + RLENGTH))
     if (s != "") {
       asrt_chk[++as_c_idx] = s
-      if (is_list_item(s)) check_count++
+      if (is_list_item(s)) check_unspecified++
     }
   }
 }
@@ -76,11 +115,47 @@ END {
       for (i=1; i<=pre_s_idx; i++) print pre_step[i]
 
       # --- 確認内容 (Pre-Assert → Assert) ---
+      # カテゴリ未指定のみかどうかを判定
+      has_categorized = (check_normal > 0 || check_semi_normal > 0 || check_abnormal > 0)
+
+      # ヘッダー文字列を生成
+      if (!has_categorized) {
+        # 後方互換モード: カテゴリ未指定のみの場合
+        check_header = "### 確認内容 (" check_unspecified ")\n"
+      } else {
+        # 新フォーマット: カテゴリ別表示
+        check_header = "### 確認内容 ("
+        first = 1  # 最初のカテゴリかどうかのフラグ
+
+        if (check_normal > 0) {
+          if (!first) check_header = check_header ", "
+          check_header = check_header "正常系:" check_normal
+          first = 0
+        }
+        if (check_semi_normal > 0) {
+          if (!first) check_header = check_header ", "
+          check_header = check_header "準正常系:" check_semi_normal
+          first = 0
+        }
+        if (check_abnormal > 0) {
+          if (!first) check_header = check_header ", "
+          check_header = check_header "異常系:" check_abnormal
+          first = 0
+        }
+        if (check_unspecified > 0) {
+          if (!first) check_header = check_header ", "
+          check_header = check_header "カテゴリ未指定:" check_unspecified
+          first = 0
+        }
+
+        check_header = check_header ")\n"
+      }
+
       # 手順がある場合のみ前改行を入れる
       if (act_idx > 0 || pre_s_idx > 0) {
-        print "\n### 確認内容 (" check_count ")\n"
+        print "\n" check_header "\n"
       } else {
-        print "### 確認内容 (" check_count ")\n"
+        print check_header "\n"
       }
       for (i=1; i<=pre_c_idx; i++) print pre_chk[i]
       for (i=1; i<=as_c_idx; i++) print asrt_chk[i]

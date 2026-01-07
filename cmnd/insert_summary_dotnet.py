@@ -57,7 +57,12 @@ def insert_summary():
     pre_step = []
     pre_chk = []
     asrt_chk = []
-    check_count = 0
+
+    # 確認内容のカテゴリ別カウンター
+    check_normal = 0
+    check_semi_normal = 0
+    check_abnormal = 0
+    check_unspecified = 0
 
     # パラメータテスト検出用
     is_theory = False
@@ -97,24 +102,84 @@ def insert_summary():
                 pre_step.append(s)
             continue
 
-        # [Pre-Assert確認]
+        # [Pre-Assert確認_正常系]
+        match = re.search(r'\[Pre-Assert確認_正常系\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                pre_chk.append(s)
+                if is_list_item(s):
+                    check_normal += 1
+            continue
+
+        # [確認_正常系]
+        match = re.search(r'\[確認_正常系\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                asrt_chk.append(s)
+                if is_list_item(s):
+                    check_normal += 1
+            continue
+
+        # [Pre-Assert確認_準正常系]
+        match = re.search(r'\[Pre-Assert確認_準正常系\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                pre_chk.append(s)
+                if is_list_item(s):
+                    check_semi_normal += 1
+            continue
+
+        # [確認_準正常系]
+        match = re.search(r'\[確認_準正常系\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                asrt_chk.append(s)
+                if is_list_item(s):
+                    check_semi_normal += 1
+            continue
+
+        # [Pre-Assert確認_異常系]
+        match = re.search(r'\[Pre-Assert確認_異常系\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                pre_chk.append(s)
+                if is_list_item(s):
+                    check_abnormal += 1
+            continue
+
+        # [確認_異常系]
+        match = re.search(r'\[確認_異常系\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                asrt_chk.append(s)
+                if is_list_item(s):
+                    check_abnormal += 1
+            continue
+
+        # [Pre-Assert確認] (カテゴリ未指定)
         match = re.search(r'\[Pre-Assert確認\]', line)
         if match:
             s = trim(line[match.end():])
             if s:
                 pre_chk.append(s)
                 if is_list_item(s):
-                    check_count += 1
+                    check_unspecified += 1
             continue
 
-        # [確認]
+        # [確認] (カテゴリ未指定)
         match = re.search(r'\[確認\]', line)
         if match:
             s = trim(line[match.end():])
             if s:
                 asrt_chk.append(s)
                 if is_list_item(s):
-                    check_count += 1
+                    check_unspecified += 1
             continue
 
     # サマリ項目が存在するかチェック
@@ -141,11 +206,44 @@ def insert_summary():
             sys.stdout.write(s + "\n")
 
         # --- 確認内容 (Pre-Assert → Assert) ---
-        # パラメータテストの場合は (確認数 * パラメータ数) 形式で表示
-        if is_theory and param_count > 1:
-            check_header = f"### 確認内容 ({check_count} * {param_count})\n\n"
+        # カテゴリ未指定のみかどうかを判定
+        has_categorized = check_normal > 0 or check_semi_normal > 0 or check_abnormal > 0
+
+        if not has_categorized:
+            # 後方互換モード: カテゴリ未指定のみの場合
+            if is_theory and param_count > 1:
+                check_header = f"### 確認内容 ({check_unspecified} * {param_count})\n\n"
+            else:
+                check_header = f"### 確認内容 ({check_unspecified})\n\n"
         else:
-            check_header = f"### 確認内容 ({check_count})\n\n"
+            # 新フォーマット: カテゴリ別表示（Theory対応）
+            categories = []
+
+            if check_normal > 0:
+                if is_theory and param_count > 1:
+                    categories.append(f"正常系:{check_normal} * {param_count}")
+                else:
+                    categories.append(f"正常系:{check_normal}")
+
+            if check_semi_normal > 0:
+                if is_theory and param_count > 1:
+                    categories.append(f"準正常系:{check_semi_normal} * {param_count}")
+                else:
+                    categories.append(f"準正常系:{check_semi_normal}")
+
+            if check_abnormal > 0:
+                if is_theory and param_count > 1:
+                    categories.append(f"異常系:{check_abnormal} * {param_count}")
+                else:
+                    categories.append(f"異常系:{check_abnormal}")
+
+            if check_unspecified > 0:
+                if is_theory and param_count > 1:
+                    categories.append(f"カテゴリ未指定:{check_unspecified} * {param_count}")
+                else:
+                    categories.append(f"カテゴリ未指定:{check_unspecified}")
+
+            check_header = f"### 確認内容 ({', '.join(categories)})\n\n"
 
         # 手順がある場合のみ前改行を入れる
         if len(act) > 0 or len(pre_step) > 0:
