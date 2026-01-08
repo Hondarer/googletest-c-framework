@@ -153,9 +153,9 @@ END {
 
       # 手順がある場合のみ前改行を入れる
       if (act_idx > 0 || pre_s_idx > 0) {
-        print "\n" check_header "\n"
+        print "\n" check_header
       } else {
-        print check_header "\n"
+        print check_header
       }
       for (i=1; i<=pre_c_idx; i++) print pre_chk[i]
       for (i=1; i<=as_c_idx; i++) print asrt_chk[i]
