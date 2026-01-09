@@ -1,3 +1,5 @@
+#ifdef _WIN32
+
 #include <test_com.h>
 #include <mock_stdio.h>
 
@@ -38,20 +40,8 @@ errno_t delegate_real_fopen_s(const char *file, const int line, const char *func
         return EINVAL;
     }
 
-#ifndef _WIN32
-    // Linux (fopen_s is not available, use fopen instead)
-    FILE *fp = fopen(filename, modes);
-    if (fp == NULL)
-    {
-        *pFile = NULL;
-        return errno;
-    }
-    *pFile = fp;
-    return 0;
-#else
     // Windows
     return fopen_s(pFile, filename, modes);
-#endif
 }
 
 errno_t mock_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename, const char *modes)
@@ -89,3 +79,5 @@ errno_t mock_fopen_s(const char *file, const int line, const char *func, FILE **
 
     return err;
 }
+
+#endif // _WIN32
