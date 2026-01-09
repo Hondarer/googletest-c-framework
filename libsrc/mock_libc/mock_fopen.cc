@@ -56,7 +56,7 @@ FILE *mock_fopen(const char *file, const int line, const char *func, const char 
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > fopen %s, %c", filename, *modes);
+        printf("  > fopen %s, %s", filename, modes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             if (fp == NULL)

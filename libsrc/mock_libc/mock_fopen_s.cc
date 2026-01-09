@@ -59,7 +59,7 @@ errno_t mock_fopen_s(const char *file, const int line, const char *func, FILE **
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > fopen_s %s, %c", filename, *modes);
+        printf("  > fopen_s %s, %s", filename, modes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             if (err != 0 || *pFile == NULL)
