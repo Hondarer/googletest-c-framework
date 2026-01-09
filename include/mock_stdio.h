@@ -5,6 +5,11 @@
 #include <stdarg.h>
 #include <format_attr.h>
 
+#ifndef _WIN32
+#include <errno.h>
+typedef int errno_t;
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -13,6 +18,7 @@ extern "C"
     extern int mock_fclose(const char *, const int, const char *, FILE *);
     extern int mock_fflush(const char *, const int, const char *, FILE *);
     extern FILE *mock_fopen(const char *, const int, const char *, const char *, const char *);
+    extern errno_t mock_fopen_s(const char *, const int, const char *, FILE **, const char *, const char *);
     extern int mock_printf(PRINTF_FMT const char *, const int, const char *, const char *, ...) PRINTF_ATTR(4, 5);
     extern int mock_fprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, ...) PRINTF_ATTR(5, 6);
     extern int mock_vfprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, va_list) PRINTF_ATTR(5, 0);
@@ -28,6 +34,7 @@ extern "C"
 #define fclose(stream) mock_fclose(__FILE__, __LINE__, __func__, stream)
 #define fflush(stream) mock_fflush(__FILE__, __LINE__, __func__, stream)
 #define fopen(filename, modes) mock_fopen(__FILE__, __LINE__, __func__, filename, modes)
+#define fopen_s(pFile, filename, modes) mock_fopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
 #define printf(format, ...) mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
 #define fprintf(stream, format, ...) mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
 #define vfprintf(stream, format, ap) mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
@@ -52,6 +59,8 @@ extern int delegate_fake_fflush(const char *, const int, const char *, FILE *);
 extern FILE *delegate_real_fopen(const char *, const int, const char *, const char *, const char *);
 extern FILE *delegate_fake_fopen(const char *, const int, const char *, const char *, const char *);
 extern void reset_fake_fopen();
+extern errno_t delegate_real_fopen_s(const char *, const int, const char *, FILE **, const char *, const char *);
+extern errno_t delegate_fake_fopen_s(const char *, const int, const char *, FILE **, const char *, const char *);
 extern int delegate_real_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_fake_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_real_vfprintf(const char *, const int, const char *, FILE *, const char *);
@@ -69,6 +78,7 @@ public:
     MOCK_METHOD(int, fclose, (const char *, const int, const char *, FILE *));
     MOCK_METHOD(int, fflush, (const char *, const int, const char *, FILE *));
     MOCK_METHOD(FILE *, fopen, (const char *, const int, const char *, const char *, const char *));
+    MOCK_METHOD(errno_t, fopen_s, (const char *, const int, const char *, FILE **, const char *, const char *));
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(char *, fgets, (const char *, const int, const char *, char *, int, FILE *));
