@@ -71,7 +71,9 @@ function run_test() {
         test_id="$test_name"
     fi
 
-    rm -rf obj/*.gcda obj/*.info gcov lcov > /dev/null
+    # サブフォルダを含めて gcda ファイルをクリア
+    find . -name "*.gcda" -delete 2>/dev/null
+    rm -rf obj/*.info gcov lcov > /dev/null
 
     mkdir -p results/$test_id
     local temp_file=$(mktemp)
@@ -88,7 +90,7 @@ function run_test() {
         # Linux
         LANG=$FILES_LANG bash -c \
            "echo \"----\"; \
-            cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
+            find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
             echo \"----\"; \
             echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
             ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
@@ -115,7 +117,7 @@ function run_test() {
             # TEST_SRCS が指定されている場合のみカバレッジ計測
             LANG=$FILES_LANG bash -c \
                "echo \"----\"; \
-                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
+                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
                 echo \"----\"; \
                 echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
@@ -129,7 +131,7 @@ function run_test() {
             # TEST_SRCS が未指定の場合はカバレッジ計測なし
             LANG=$FILES_LANG bash -c \
                "echo \"----\"; \
-                cat *.cc *.cpp 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
+                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
                 echo \"----\"; \
                 echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
@@ -174,9 +176,27 @@ function run_test() {
         # TEST_SRCS が指定されている場合のみカバレッジ情報を取得
         if [ $IS_WINDOWS -ne 1 ]; then
             # Linux
-            # gcov でカバレッジ情報を取得する
-            # Run gcov to collect coverage
-            gcov $TEST_SRCS -o obj > /dev/null
+            # gcov でカバレッジ情報を取得する (サブフォルダを含む)
+            # Run gcov to collect coverage (including subdirectories)
+            local base_dir=$(pwd)
+            for obj_dir in $(find . -type d -name obj 2>/dev/null); do
+                # obj ディレクトリ内の gcda ファイルに対応するソースファイルのカバレッジを取得
+                for gcda in $obj_dir/*.gcda; do
+                    if [ -f "$gcda" ]; then
+                        # gcda ファイルからベース名を取得
+                        base_name=$(basename "$gcda" .gcda)
+                        # 対応する .c ソースファイルを探す (テストコード .cc は除外)
+                        src_file=$(find . -name "${base_name}.c" 2>/dev/null | head -1)
+                        if [ -n "$src_file" ]; then
+                            # ソースファイルのディレクトリで gcov を実行
+                            src_dir=$(dirname "$src_file")
+                            src_name=$(basename "$src_file")
+                            abs_obj_dir=$(cd "$obj_dir" && pwd)
+                            (cd "$src_dir" && gcov -o "$abs_obj_dir" "$src_name" > /dev/null 2>&1 && mv *.gcov "$base_dir/." 2>/dev/null)
+                        fi
+                    fi
+                done
+            done
             # カバレッジ未通過の *.gcov ファイルは削除する
             # Delete *.gcov files without coverage
             if [ -n "`ls *.gcov 2>/dev/null`" ]; then
@@ -211,7 +231,9 @@ function run_test() {
 
 # メイン処理
 function main() {
-    rm -rf obj/*.gcda obj/*.info gcov lcov coverage results
+    # サブフォルダを含めて gcda ファイルをクリア
+    find . -name "*.gcda" -delete 2>/dev/null
+    rm -rf obj/*.info gcov lcov coverage results
     mkdir coverage
     mkdir results
     mkdir -p results/all_tests
@@ -359,8 +381,9 @@ function main() {
         cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
     fi
 
-    # Clean
-    rm -rf obj/*.gcda obj/*.info gcov lcov coverage
+    # Clean (サブフォルダを含めて gcda ファイルをクリア)
+    find . -name "*.gcda" -delete 2>/dev/null
+    rm -rf obj/*.info gcov lcov coverage
 
     # Banner
     echo ""
