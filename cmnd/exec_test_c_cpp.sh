@@ -238,6 +238,20 @@ function main() {
     mkdir results
     mkdir -p results/all_tests
 
+    # TEST_SRCS が空の場合、サブフォルダの makepart.mk から TEST_SRCS を収集
+    if [ -z "$TEST_SRCS" ]; then
+        for makepart in $(find . -mindepth 2 -name "makepart.mk" 2>/dev/null); do
+            # makepart.mk から TEST_SRCS の値を抽出 (複数行対応)
+            # TEST_SRCS を含む行とその後の継続行からソースファイルパスを取得
+            subdir_test_srcs=$(grep -A10 "^TEST_SRCS" "$makepart" 2>/dev/null | \
+                grep -v "^TEST_SRCS" | grep -v "^#" | grep -v "^--$" | \
+                sed "s|\\\$(WORKSPACE_FOLDER)|$WORKSPACE_FOLDER|g" | \
+                xargs 2>/dev/null)
+            TEST_SRCS="$TEST_SRCS $subdir_test_srcs"
+        done
+        TEST_SRCS=$(echo "$TEST_SRCS" | xargs)  # トリム
+    fi
+
     if [ $IS_WINDOWS -eq 1 ]; then
         # Windows
         # OpenCppCoverage のソース指定オプションを生成
