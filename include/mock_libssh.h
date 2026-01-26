@@ -42,6 +42,10 @@ typedef struct sftp_dir_struct *sftp_dir;
 typedef struct sftp_attributes_struct *sftp_attributes;
 
 /* sftp_attributes 構造体 (簡易版) */
+#ifndef _WIN32
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
+#endif // _WIN32
 struct sftp_attributes_struct {
     char *name;
     char *longname;
@@ -66,6 +70,9 @@ struct sftp_attributes_struct {
     char *extended_type;
     char *extended_data;
 };
+#ifndef _WIN32
+#pragma GCC diagnostic pop
+#endif // _WIN32
 #endif
 
 /* SFTP ファイルタイプ定義 */
