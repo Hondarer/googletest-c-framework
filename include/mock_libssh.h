@@ -3,7 +3,15 @@
 
 #include <stdint.h>
 #include <stddef.h>
+
+#ifdef _WIN32
+/* Windows 用の型定義 */
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+typedef unsigned int mode_t;
+#else
 #include <sys/types.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
