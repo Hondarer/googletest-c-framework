@@ -71,6 +71,82 @@ void Mock_libssh::switch_to_mock_libssh()
 
     ON_CALL(*this, ssh_get_error_code(_, _, _, _))
         .WillByDefault(Invoke(delegate_fake_ssh_get_error_code));
+
+    /* SFTP セッション管理 */
+    ON_CALL(*this, sftp_new(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_new));
+
+    ON_CALL(*this, sftp_free(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_free));
+
+    ON_CALL(*this, sftp_init(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_init));
+
+    ON_CALL(*this, sftp_get_error(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_get_error));
+
+    /* SFTP ファイル操作 */
+    ON_CALL(*this, sftp_open(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_open));
+
+    ON_CALL(*this, sftp_close(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_close));
+
+    ON_CALL(*this, sftp_read(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_read));
+
+    ON_CALL(*this, sftp_write(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_write));
+
+    ON_CALL(*this, sftp_seek(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_seek));
+
+    ON_CALL(*this, sftp_seek64(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_seek64));
+
+    ON_CALL(*this, sftp_tell(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_tell));
+
+    ON_CALL(*this, sftp_tell64(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_tell64));
+
+    ON_CALL(*this, sftp_rewind(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_rewind));
+
+    ON_CALL(*this, sftp_fstat(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_fstat));
+
+    /* SFTP ディレクトリ操作 */
+    ON_CALL(*this, sftp_opendir(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_opendir));
+
+    ON_CALL(*this, sftp_readdir(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_readdir));
+
+    ON_CALL(*this, sftp_closedir(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_closedir));
+
+    ON_CALL(*this, sftp_mkdir(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_mkdir));
+
+    ON_CALL(*this, sftp_rmdir(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_rmdir));
+
+    /* SFTP ファイルシステム操作 */
+    ON_CALL(*this, sftp_unlink(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_unlink));
+
+    ON_CALL(*this, sftp_rename(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_rename));
+
+    ON_CALL(*this, sftp_stat(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_stat));
+
+    ON_CALL(*this, sftp_lstat(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_lstat));
+
+    ON_CALL(*this, sftp_attributes_free(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_sftp_attributes_free));
 }
 
 void Mock_libssh::switch_to_real_libssh()
@@ -133,6 +209,82 @@ void Mock_libssh::switch_to_real_libssh()
 
     ON_CALL(*this, ssh_get_error_code(_, _, _, _))
         .WillByDefault(Invoke(delegate_real_ssh_get_error_code));
+
+    /* SFTP セッション管理 */
+    ON_CALL(*this, sftp_new(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_new));
+
+    ON_CALL(*this, sftp_free(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_free));
+
+    ON_CALL(*this, sftp_init(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_init));
+
+    ON_CALL(*this, sftp_get_error(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_get_error));
+
+    /* SFTP ファイル操作 */
+    ON_CALL(*this, sftp_open(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_open));
+
+    ON_CALL(*this, sftp_close(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_close));
+
+    ON_CALL(*this, sftp_read(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_read));
+
+    ON_CALL(*this, sftp_write(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_write));
+
+    ON_CALL(*this, sftp_seek(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_seek));
+
+    ON_CALL(*this, sftp_seek64(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_seek64));
+
+    ON_CALL(*this, sftp_tell(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_tell));
+
+    ON_CALL(*this, sftp_tell64(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_tell64));
+
+    ON_CALL(*this, sftp_rewind(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_rewind));
+
+    ON_CALL(*this, sftp_fstat(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_fstat));
+
+    /* SFTP ディレクトリ操作 */
+    ON_CALL(*this, sftp_opendir(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_opendir));
+
+    ON_CALL(*this, sftp_readdir(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_readdir));
+
+    ON_CALL(*this, sftp_closedir(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_closedir));
+
+    ON_CALL(*this, sftp_mkdir(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_mkdir));
+
+    ON_CALL(*this, sftp_rmdir(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_rmdir));
+
+    /* SFTP ファイルシステム操作 */
+    ON_CALL(*this, sftp_unlink(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_unlink));
+
+    ON_CALL(*this, sftp_rename(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_rename));
+
+    ON_CALL(*this, sftp_stat(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_stat));
+
+    ON_CALL(*this, sftp_lstat(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_lstat));
+
+    ON_CALL(*this, sftp_attributes_free(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_sftp_attributes_free));
 }
 
 Mock_libssh::~Mock_libssh()
