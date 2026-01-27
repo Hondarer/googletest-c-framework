@@ -19,7 +19,7 @@ A common modules to test existing C programs using googletest.
 
 ## ビルド
 
-親階層で、`make all` (= clean & make) または `make`
+親階層で、`make clean; make`
 
 ## 依存コンポーネント
 
