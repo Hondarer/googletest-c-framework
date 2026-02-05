@@ -39,7 +39,7 @@ build-all-windows:
 .PHONY: clean-all-windows
 clean-all-windows:
 	@for dir in $(SUBDIRS); do \
-		if [ -f $$dir/Makefile ]; then \
+		if [ -f $$dir/makefile ]; then \
 			$(MAKE) -C $$dir CONFIG=RelWithDebInfo MSVC_CRT=shared clean || exit 1; \
 			$(MAKE) -C $$dir CONFIG=Debug MSVC_CRT=shared clean || exit 1; \
 			$(MAKE) -C $$dir CONFIG=RelWithDebInfo MSVC_CRT=static clean || exit 1; \
@@ -49,9 +49,9 @@ clean-all-windows:
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :
-	@if [ -f $@/Makefile ]; then \
+	@if [ -f $@/makefile ]; then \
 		echo $(MAKE) -C $@ $(filter-out $(SUBDIRS),$(MAKECMDGOALS)); \
 		$(MAKE) -C $@ $(filter-out $(SUBDIRS),$(MAKECMDGOALS)) || exit 1; \
 	else \
-		echo "Skipping directory '$@' (no Makefile)"; \
+		echo "Skipping directory '$@' (no makefile)"; \
 	fi

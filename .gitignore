@@ -4,8 +4,9 @@
 !*/
 # ディレクトリ配下の拡張子付きファイルは管理対象
 !*.*
-# Makefileは管理対象
+# makefileは管理対象
 !Makefile
+!makefile
 
 # gtestは管理対象
 !/gtest

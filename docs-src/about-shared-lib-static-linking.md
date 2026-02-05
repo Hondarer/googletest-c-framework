@@ -120,7 +120,7 @@ stop
 ### 例1: LIBSDIR を使用 / Example 1: Using LIBSDIR
 
 ```makefile
-# Makefile
+# makefile
 LIBSDIR = $(WORKSPACE_FOLDER)/prod/calc/lib
 LIBS = -lcalcbase -lm
 LIB_TYPE = shared
@@ -142,7 +142,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm
 ### 例2: -L オプションを使用 / Example 2: Using -L option
 
 ```makefile
-# Makefile
+# makefile
 LIBS = -L$(WORKSPACE_FOLDER)/test/lib -lcalcbase -lm
 LIB_TYPE = shared
 ```
@@ -165,7 +165,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm -L/path/to/test/lib
 ### 例3: 直接 .a を指定 / Example 3: Direct .a specification
 
 ```makefile
-# Makefile
+# makefile
 LIBS = libcalcbase.a -lm
 LIB_TYPE = shared
 ```
@@ -186,7 +186,7 @@ gcc -shared -o libcalc.so obj/*.o libcalcbase.a -lm
 ### 例4: 混在パターン / Example 4: Mixed pattern
 
 ```makefile
-# Makefile
+# makefile
 LIBS = libbase.a -L/custom/path -lcustom -lpthread -Wl,-rpath,/opt/lib
 LIB_TYPE = shared
 ```

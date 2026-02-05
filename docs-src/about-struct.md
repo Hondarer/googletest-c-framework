@@ -23,7 +23,7 @@ void samplefunc()
 
 ## コンパイラを g++ にする
 
-Makefile にて makesrc.mk を include する前に以下を記載する。
+makefile にて makesrc.mk を include する前に以下を記載する。
 
 ```text
 CC=g++
