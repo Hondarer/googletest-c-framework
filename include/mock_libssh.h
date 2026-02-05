@@ -29,6 +29,34 @@ typedef struct ssh_session_struct *ssh_session;
 typedef struct ssh_channel_struct *ssh_channel;
 #endif
 
+#ifndef SSH_KEY_STRUCT_DEFINED
+#define SSH_KEY_STRUCT_DEFINED
+typedef struct ssh_key_struct *ssh_key;
+#endif
+
+/* SSH 公開鍵ハッシュタイプ定義 */
+#ifndef SSH_PUBLICKEY_HASH_TYPE_DEFINED
+#define SSH_PUBLICKEY_HASH_TYPE_DEFINED
+enum ssh_publickey_hash_type {
+    SSH_PUBLICKEY_HASH_SHA1 = 0,
+    SSH_PUBLICKEY_HASH_MD5 = 1,
+    SSH_PUBLICKEY_HASH_SHA256 = 2
+};
+#endif
+
+/* SSH 既知ホスト状態定義 */
+#ifndef SSH_KNOWN_HOSTS_DEFINED
+#define SSH_KNOWN_HOSTS_DEFINED
+enum ssh_known_hosts_e {
+    SSH_KNOWN_HOSTS_ERROR = -2,
+    SSH_KNOWN_HOSTS_NOT_FOUND = -1,
+    SSH_KNOWN_HOSTS_UNKNOWN = 0,
+    SSH_KNOWN_HOSTS_OK = 1,
+    SSH_KNOWN_HOSTS_CHANGED = 2,
+    SSH_KNOWN_HOSTS_OTHER = 3
+};
+#endif
+
 /* SFTP の型定義 */
 #ifndef SFTP_SESSION_STRUCT_DEFINED
 #define SFTP_SESSION_STRUCT_DEFINED
@@ -209,6 +237,15 @@ enum ssh_auth_e {
     extern int mock_ssh_channel_send_eof(const char *, const int, const char *, ssh_channel);
     extern int mock_ssh_channel_is_eof(const char *, const int, const char *, ssh_channel);
 
+    /* 鍵・ホスト検証 */
+    extern int mock_ssh_get_server_publickey(const char *, const int, const char *, ssh_session, ssh_key *);
+    extern int mock_ssh_get_publickey_hash(const char *, const int, const char *, const ssh_key, enum ssh_publickey_hash_type, unsigned char **, size_t *);
+    extern void mock_ssh_key_free(const char *, const int, const char *, ssh_key);
+    extern enum ssh_known_hosts_e mock_ssh_session_is_known_server(const char *, const int, const char *, ssh_session);
+    extern void mock_ssh_clean_pubkey_hash(const char *, const int, const char *, unsigned char **);
+    extern int mock_ssh_session_update_known_hosts(const char *, const int, const char *, ssh_session);
+    extern void mock_ssh_print_hash(const char *, const int, const char *, enum ssh_publickey_hash_type, unsigned char *, size_t);
+
     /* エラー処理 */
     extern const char *mock_ssh_get_error(const char *, const int, const char *, void *);
     extern int mock_ssh_get_error_code(const char *, const int, const char *, void *);
@@ -271,6 +308,14 @@ enum ssh_auth_e {
 #define ssh_channel_write(channel, data, len) mock_ssh_channel_write(__FILE__, __LINE__, __func__, channel, data, len)
 #define ssh_channel_send_eof(channel) mock_ssh_channel_send_eof(__FILE__, __LINE__, __func__, channel)
 #define ssh_channel_is_eof(channel) mock_ssh_channel_is_eof(__FILE__, __LINE__, __func__, channel)
+
+#define ssh_get_server_publickey(session, key) mock_ssh_get_server_publickey(__FILE__, __LINE__, __func__, session, key)
+#define ssh_get_publickey_hash(key, type, hash, hlen) mock_ssh_get_publickey_hash(__FILE__, __LINE__, __func__, key, type, hash, hlen)
+#define ssh_key_free(key) mock_ssh_key_free(__FILE__, __LINE__, __func__, key)
+#define ssh_session_is_known_server(session) mock_ssh_session_is_known_server(__FILE__, __LINE__, __func__, session)
+#define ssh_clean_pubkey_hash(hash) mock_ssh_clean_pubkey_hash(__FILE__, __LINE__, __func__, hash)
+#define ssh_session_update_known_hosts(session) mock_ssh_session_update_known_hosts(__FILE__, __LINE__, __func__, session)
+#define ssh_print_hash(type, hash, len) mock_ssh_print_hash(__FILE__, __LINE__, __func__, type, hash, len)
 
 #define ssh_get_error(error) mock_ssh_get_error(__FILE__, __LINE__, __func__, error)
 #define ssh_get_error_code(error) mock_ssh_get_error_code(__FILE__, __LINE__, __func__, error)
@@ -358,6 +403,22 @@ extern int delegate_real_ssh_channel_send_eof(const char *, const int, const cha
 extern int delegate_fake_ssh_channel_send_eof(const char *, const int, const char *, ssh_channel);
 extern int delegate_real_ssh_channel_is_eof(const char *, const int, const char *, ssh_channel);
 extern int delegate_fake_ssh_channel_is_eof(const char *, const int, const char *, ssh_channel);
+
+/* delegate 関数宣言 - 鍵・ホスト検証 */
+extern int delegate_real_ssh_get_server_publickey(const char *, const int, const char *, ssh_session, ssh_key *);
+extern int delegate_fake_ssh_get_server_publickey(const char *, const int, const char *, ssh_session, ssh_key *);
+extern int delegate_real_ssh_get_publickey_hash(const char *, const int, const char *, const ssh_key, enum ssh_publickey_hash_type, unsigned char **, size_t *);
+extern int delegate_fake_ssh_get_publickey_hash(const char *, const int, const char *, const ssh_key, enum ssh_publickey_hash_type, unsigned char **, size_t *);
+extern void delegate_real_ssh_key_free(const char *, const int, const char *, ssh_key);
+extern void delegate_fake_ssh_key_free(const char *, const int, const char *, ssh_key);
+extern enum ssh_known_hosts_e delegate_real_ssh_session_is_known_server(const char *, const int, const char *, ssh_session);
+extern enum ssh_known_hosts_e delegate_fake_ssh_session_is_known_server(const char *, const int, const char *, ssh_session);
+extern void delegate_real_ssh_clean_pubkey_hash(const char *, const int, const char *, unsigned char **);
+extern void delegate_fake_ssh_clean_pubkey_hash(const char *, const int, const char *, unsigned char **);
+extern int delegate_real_ssh_session_update_known_hosts(const char *, const int, const char *, ssh_session);
+extern int delegate_fake_ssh_session_update_known_hosts(const char *, const int, const char *, ssh_session);
+extern void delegate_real_ssh_print_hash(const char *, const int, const char *, enum ssh_publickey_hash_type, unsigned char *, size_t);
+extern void delegate_fake_ssh_print_hash(const char *, const int, const char *, enum ssh_publickey_hash_type, unsigned char *, size_t);
 
 /* delegate 関数宣言 - エラー処理 */
 extern const char *delegate_real_ssh_get_error(const char *, const int, const char *, void *);
@@ -447,6 +508,15 @@ public:
     MOCK_METHOD(int, ssh_channel_write, (const char *, const int, const char *, ssh_channel, const void *, uint32_t));
     MOCK_METHOD(int, ssh_channel_send_eof, (const char *, const int, const char *, ssh_channel));
     MOCK_METHOD(int, ssh_channel_is_eof, (const char *, const int, const char *, ssh_channel));
+
+    /* 鍵・ホスト検証 */
+    MOCK_METHOD(int, ssh_get_server_publickey, (const char *, const int, const char *, ssh_session, ssh_key *));
+    MOCK_METHOD(int, ssh_get_publickey_hash, (const char *, const int, const char *, const ssh_key, enum ssh_publickey_hash_type, unsigned char **, size_t *));
+    MOCK_METHOD(void, ssh_key_free, (const char *, const int, const char *, ssh_key));
+    MOCK_METHOD(enum ssh_known_hosts_e, ssh_session_is_known_server, (const char *, const int, const char *, ssh_session));
+    MOCK_METHOD(void, ssh_clean_pubkey_hash, (const char *, const int, const char *, unsigned char **));
+    MOCK_METHOD(int, ssh_session_update_known_hosts, (const char *, const int, const char *, ssh_session));
+    MOCK_METHOD(void, ssh_print_hash, (const char *, const int, const char *, enum ssh_publickey_hash_type, unsigned char *, size_t));
 
     /* エラー処理 */
     MOCK_METHOD(const char *, ssh_get_error, (const char *, const int, const char *, void *));

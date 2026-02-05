@@ -65,6 +65,28 @@ void Mock_libssh::switch_to_mock_libssh()
     ON_CALL(*this, ssh_channel_is_eof(_, _, _, _))
         .WillByDefault(Invoke(delegate_fake_ssh_channel_is_eof));
 
+    /* 鍵・ホスト検証 */
+    ON_CALL(*this, ssh_get_server_publickey(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_get_server_publickey));
+
+    ON_CALL(*this, ssh_get_publickey_hash(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_get_publickey_hash));
+
+    ON_CALL(*this, ssh_key_free(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_key_free));
+
+    ON_CALL(*this, ssh_session_is_known_server(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_session_is_known_server));
+
+    ON_CALL(*this, ssh_clean_pubkey_hash(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_clean_pubkey_hash));
+
+    ON_CALL(*this, ssh_session_update_known_hosts(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_session_update_known_hosts));
+
+    ON_CALL(*this, ssh_print_hash(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_ssh_print_hash));
+
     /* エラー処理 */
     ON_CALL(*this, ssh_get_error(_, _, _, _))
         .WillByDefault(Invoke(delegate_fake_ssh_get_error));
@@ -202,6 +224,28 @@ void Mock_libssh::switch_to_real_libssh()
 
     ON_CALL(*this, ssh_channel_is_eof(_, _, _, _))
         .WillByDefault(Invoke(delegate_real_ssh_channel_is_eof));
+
+    /* 鍵・ホスト検証 */
+    ON_CALL(*this, ssh_get_server_publickey(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_get_server_publickey));
+
+    ON_CALL(*this, ssh_get_publickey_hash(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_get_publickey_hash));
+
+    ON_CALL(*this, ssh_key_free(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_key_free));
+
+    ON_CALL(*this, ssh_session_is_known_server(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_session_is_known_server));
+
+    ON_CALL(*this, ssh_clean_pubkey_hash(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_clean_pubkey_hash));
+
+    ON_CALL(*this, ssh_session_update_known_hosts(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_session_update_known_hosts));
+
+    ON_CALL(*this, ssh_print_hash(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_ssh_print_hash));
 
     /* エラー処理 */
     ON_CALL(*this, ssh_get_error(_, _, _, _))
