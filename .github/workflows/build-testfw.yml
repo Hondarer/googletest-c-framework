@@ -13,8 +13,15 @@ permissions:
 jobs:
   build-linux:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - distro: el8
+            image: ghcr.io/hondarer/oracle-linux-container/oracle-linux-8-dev:latest
+          - distro: el10
+            image: ghcr.io/hondarer/oracle-linux-container/oracle-linux-10-dev:latest
     container:
-      image: ghcr.io/hondarer/oracle-linux-8-container/oracle-linux-8-dev:latest
+      image: ${{ matrix.image }}
       credentials:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
@@ -59,8 +66,8 @@ jobs:
       - name: Upload Linux libraries
         uses: actions/upload-artifact@v4
         with:
-          name: linux-libraries
-          path: testfw/lib/linux-*
+          name: linux-${{ matrix.distro }}-libraries
+          path: testfw/lib/linux-${{ matrix.distro }}-*
           if-no-files-found: error
 
   build-windows:
@@ -129,10 +136,16 @@ jobs:
           rm -rf lib/
           mkdir -p lib/
 
-      - name: Download Linux libraries
+      - name: Download Linux EL8 libraries
         uses: actions/download-artifact@v4
         with:
-          name: linux-libraries
+          name: linux-el8-libraries
+          path: lib/
+
+      - name: Download Linux EL10 libraries
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-el10-libraries
           path: lib/
 
       - name: Download Windows libraries
