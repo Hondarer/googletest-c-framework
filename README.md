@@ -27,8 +27,8 @@ A common modules to test existing C programs using googletest.
 - g++
 - make
 - googletest (google mock)
-- nkf  
-  ※ nkf は現在ではディストリビューションに同梱されないことが多いが、ソースが EUC-JP かつ VS Code でログを utf-8 に変換して出力するために使用。
+- iconv
+  ※ ソースが UTF-8 以外のエンコーディング (例: EUC-JP) の場合に、コンパイラ/リンカ出力を UTF-8 に変換するために使用。glibc に含まれるため、追加インストールは通常不要。
 
 ## 任意コンポーネント
 
