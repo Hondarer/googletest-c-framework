@@ -75,8 +75,12 @@ function run_test() {
     echo "dotnet test --filter \"FullyQualifiedName~$class_name.$method_name\"" >> "$temp_file"
     echo "" >> "$temp_file"
 
-    if dotnet test --filter "FullyQualifiedName~$class_name.$method_name" \
-        --no-build -c "$CONFIG" -o "$OUTPUT_DIR" --verbosity normal 2>&1 | \
+    local dotnet_output=$(mktemp)
+    dotnet test --filter "FullyQualifiedName~$class_name.$method_name" \
+        --no-build -c "$CONFIG" -o "$OUTPUT_DIR" --verbosity normal > "$dotnet_output" 2>&1
+    echo $? > "$temp_exit_code"
+
+    cat "$dotnet_output" | \
         grep -v '^\[xUnit\.net' | \
         grep -v 'にビルドを開始しました' | \
         grep -v 'Build started' | \
@@ -88,11 +92,8 @@ function run_test() {
         grep -v '^\s*[0-9]\+\s*Error(s)' | \
         grep -v '経過時間' | \
         grep -v 'Time Elapsed' | \
-        cat -s >> "$temp_file"; then
-        echo 0 > "$temp_exit_code"
-    else
-        echo $? > "$temp_exit_code"
-    fi
+        cat -s >> "$temp_file"
+    rm -f "$dotnet_output"
 
     # 結果を判定
     local result=$(<"$temp_exit_code")
