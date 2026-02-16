@@ -36,102 +36,8 @@ function list_tests() {
         sed -e 's/^[ \t]*//'
 }
 
-# 個別テストを実行
-function run_test() {
-    local fully_qualified_name=$1
-
-    # パラメータ付きテストの場合、パラメータ部分を除去
-    # 例: CalcLib.Tests.CalcLibraryTests.Add_ShouldReturnCorrectResult(a: 10, b: 20, expected: 30)
-    #  -> CalcLib.Tests.CalcLibraryTests.Add_ShouldReturnCorrectResult
-    local fqn_base=$(echo "$fully_qualified_name" | sed 's/(.*//')
-
-    # クラス名とメソッド名を分離
-    # 例: CalcLib.Tests.CalcLibraryTests.Add_ShouldReturnCorrectResult
-    local namespace_and_class="${fqn_base%.*}"  # CalcLib.Tests.CalcLibraryTests
-    local method_name="${fqn_base##*.}"          # Add_ShouldReturnCorrectResult
-    local class_name="${namespace_and_class##*.}" # CalcLibraryTests
-
-    # results ディレクトリを作成
-    local test_id="$class_name.$method_name"
-    mkdir -p "$RESULTS_DIR/$test_id"
-
-    local temp_file=$(mktemp)
-    local temp_exit_code=$(mktemp)
-
-    echo -e "Running test: $test_id" > "$temp_file"
-    echo -e "----" >> "$temp_file"
-
-    # テストファイルを探す
-    local test_file=$(find . -name "${class_name}.cs" -type f | head -1)
-
-    if [ -n "$test_file" ]; then
-        # テストコードを抽出してサマリを生成
-        python3 "$SCRIPT_DIR/get_test_code_dotnet.py" "$test_file" "$class_name" "$method_name" 2>/dev/null | \
-            python3 "$SCRIPT_DIR/insert_summary_dotnet.py" >> "$temp_file"
-        echo -e "----" >> "$temp_file"
-    fi
-
-    # テストを実行
-    echo "dotnet test --filter \"FullyQualifiedName~$class_name.$method_name\"" >> "$temp_file"
-    echo "" >> "$temp_file"
-
-    local dotnet_output=$(mktemp)
-    dotnet test --filter "FullyQualifiedName~$class_name.$method_name" \
-        --no-build -c "$CONFIG" -o "$OUTPUT_DIR" --verbosity normal > "$dotnet_output" 2>&1
-    echo $? > "$temp_exit_code"
-
-    cat "$dotnet_output" | \
-        grep -v '^\[xUnit\.net' | \
-        grep -v 'にビルドを開始しました' | \
-        grep -v 'Build started' | \
-        grep -v 'ビルドに成功しました' | \
-        grep -v 'Build succeeded' | \
-        grep -v '^\s*[0-9]\+\s*個の警告' | \
-        grep -v '^\s*[0-9]\+\s*Warning(s)' | \
-        grep -v '^\s*[0-9]\+\s*エラー' | \
-        grep -v '^\s*[0-9]\+\s*Error(s)' | \
-        grep -v '経過時間' | \
-        grep -v 'Time Elapsed' | \
-        cat -s >> "$temp_file"
-    rm -f "$dotnet_output"
-
-    # 結果を判定
-    local result=$(<"$temp_exit_code")
-    rm -f "$temp_exit_code"
-
-    if [ $result -eq 0 ]; then
-        if grep -q "WARNING" "$temp_file"; then
-            test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m")"$'\n'
-            echo -e "$test_id\tWARNING" >> "$RESULTS_DIR/all_tests/summary.log"
-            WARNING_COUNT=$((WARNING_COUNT + 1))
-        else
-            test_summary+="$(echo -e "$test_id\t\e[32mPASSED\e[0m")"$'\n'
-            echo -e "$test_id\tPASSED" >> "$RESULTS_DIR/all_tests/summary.log"
-            SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
-        fi
-    else
-        test_summary+="$(echo -e "$test_id\t\e[31mFAILED\e[0m")"$'\n'
-        echo -e "$test_id\tFAILED" >> "$RESULTS_DIR/all_tests/summary.log"
-        FAILURE_COUNT=$((FAILURE_COUNT + 1))
-        EXIT_CODE=1
-    fi
-
-    # コンソールに表示 (色コードあり、末尾の空行を削除、メッセージに着色)
-    cat "$temp_file" | \
-        sed -e 's/^テストの実行に成功しました。$/\x1b[32m&\x1b[0m/' | \
-        sed -e 's/^Test Run Successful\.$/\x1b[32m&\x1b[0m/' | \
-        sed -e 's/^テストの実行に失敗しました。$/\x1b[31m&\x1b[0m/' | \
-        sed -e 's/^Test Run Failed\.$/\x1b[31m&\x1b[0m/' | \
-        sed -e :a -e '/^\s*$/{ $d; N; ba; }'
-    echo ""
-
-    # results.log に保存 (色コードを除去し、末尾の空行を削除)
-    cat "$temp_file" | sed -r 's/\x1b\[[0-9;]*m//g' | sed -e :a -e '/^\s*$/{ $d; N; ba; }' > "$RESULTS_DIR/$test_id/results.log"
-    rm -f "$temp_file"
-}
-
-# テストを実行
-function run_individual_tests() {
+# テストを一括実行して結果をパース
+function run_all_tests_batch() {
     echo -e "Test start on $(export LANG=C && date)." | tee "$RESULTS_DIR/all_tests/summary.log"
     echo -e "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"
 
@@ -148,10 +54,126 @@ function run_individual_tests() {
     echo "" | tee -a "$RESULTS_DIR/all_tests/summary.log"
     safe_tput cr
 
-    # 各テストを実行
+    # dotnet test を1回だけ一括実行
+    local trx_dir=$(mktemp -d)
+    local batch_output=$(mktemp)
+    local batch_exit_code=0
+
+    echo "Running all tests in batch mode..."
+    dotnet test \
+        --no-build -c "$CONFIG" -o "$OUTPUT_DIR" \
+        --verbosity normal \
+        --logger "trx;LogFileName=results.trx" \
+        --results-directory "$trx_dir" > "$batch_output" 2>&1
+    batch_exit_code=$?
+
+    # バッチ実行時の dotnet test 出力を表示
+    cat "$batch_output" | \
+        grep -v '^\[xUnit\.net' | \
+        grep -v 'にビルドを開始しました' | \
+        grep -v 'Build started' | \
+        grep -v 'ビルドに成功しました' | \
+        grep -v 'Build succeeded' | \
+        grep -v '^\s*[0-9]\+\s*個の警告' | \
+        grep -v '^\s*[0-9]\+\s*Warning(s)' | \
+        grep -v '^\s*[0-9]\+\s*エラー' | \
+        grep -v '^\s*[0-9]\+\s*Error(s)' | \
+        grep -v '経過時間' | \
+        grep -v 'Time Elapsed' | \
+        cat -s
+    echo ""
+
+    # TRX ファイルを検索
+    local trx_file=$(find "$trx_dir" -name "results.trx" -type f | head -1)
+    if [ -z "$trx_file" ]; then
+        echo "Error: TRX file not found in $trx_dir" >&2
+        rm -f "$batch_output"
+        rm -rf "$trx_dir"
+        return 1
+    fi
+
+    # TRX を解析してテストごとの結果を取得
+    local trx_results=$(mktemp)
+    python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" > "$trx_results"
+
+    # 各テストについてループ処理
     for test in $tests; do
-        run_test "$test"
+        # パラメータ付きテストの場合、パラメータ部分を除去
+        local fqn_base=$(echo "$test" | sed 's/(.*//')
+
+        # クラス名とメソッド名を分離
+        local namespace_and_class="${fqn_base%.*}"
+        local method_name="${fqn_base##*.}"
+        local class_name="${namespace_and_class##*.}"
+
+        # results ディレクトリを作成
+        local test_id="$class_name.$method_name"
+        mkdir -p "$RESULTS_DIR/$test_id"
+
+        local temp_file=$(mktemp)
+
+        echo -e "Running test: $test_id" > "$temp_file"
+        echo -e "----" >> "$temp_file"
+
+        # テストファイルを探す
+        local test_file=$(find . -name "${class_name}.cs" -type f | head -1)
+
+        if [ -n "$test_file" ]; then
+            # テストコードを抽出してサマリを生成
+            python3 "$SCRIPT_DIR/get_test_code_dotnet.py" "$test_file" "$class_name" "$method_name" 2>/dev/null | \
+                python3 "$SCRIPT_DIR/insert_summary_dotnet.py" >> "$temp_file"
+            echo -e "----" >> "$temp_file"
+        fi
+
+        # TRX 結果からこのテストの結果を取得
+        local test_result=$(grep -P "^${test_id}\t" "$trx_results" | cut -f2)
+        if [ -z "$test_result" ]; then
+            # TRX に結果がない場合、バッチの exit code で判定
+            if [ $batch_exit_code -eq 0 ]; then
+                test_result="Passed"
+            else
+                test_result="Failed"
+            fi
+        fi
+
+        # バッチ出力から該当テスト分を抽出
+        python3 "$SCRIPT_DIR/extract_dotnet_output.py" "$batch_output" "$test_id" "$test_result" >> "$temp_file"
+
+        # 結果を判定
+        if [ "$test_result" = "Passed" ]; then
+            if grep -q "WARNING" "$temp_file"; then
+                test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m")"$'\n'
+                echo -e "$test_id\tWARNING" >> "$RESULTS_DIR/all_tests/summary.log"
+                WARNING_COUNT=$((WARNING_COUNT + 1))
+            else
+                test_summary+="$(echo -e "$test_id\t\e[32mPASSED\e[0m")"$'\n'
+                echo -e "$test_id\tPASSED" >> "$RESULTS_DIR/all_tests/summary.log"
+                SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
+            fi
+        else
+            test_summary+="$(echo -e "$test_id\t\e[31mFAILED\e[0m")"$'\n'
+            echo -e "$test_id\tFAILED" >> "$RESULTS_DIR/all_tests/summary.log"
+            FAILURE_COUNT=$((FAILURE_COUNT + 1))
+            EXIT_CODE=1
+        fi
+
+        # コンソールに表示 (色コードあり、末尾の空行を削除、メッセージに着色)
+        cat "$temp_file" | \
+            sed -e 's/^テストの実行に成功しました。$/\x1b[32m&\x1b[0m/' | \
+            sed -e 's/^Test Run Successful\.$/\x1b[32m&\x1b[0m/' | \
+            sed -e 's/^テストの実行に失敗しました。$/\x1b[31m&\x1b[0m/' | \
+            sed -e 's/^Test Run Failed\.$/\x1b[31m&\x1b[0m/' | \
+            sed -e :a -e '/^\s*$/{ $d; N; ba; }'
+        echo ""
+
+        # results.log に保存 (色コードを除去し、末尾の空行を削除)
+        cat "$temp_file" | sed -r 's/\x1b\[[0-9;]*m//g' | sed -e :a -e '/^\s*$/{ $d; N; ba; }' > "$RESULTS_DIR/$test_id/results.log"
+        rm -f "$temp_file"
     done
+
+    # 一時ファイルのクリーンアップ
+    rm -f "$batch_output" "$trx_results"
+    rm -rf "$trx_dir"
 
     # テスト結果サマリを表示
     printf "%s" "$test_summary"
@@ -181,8 +203,8 @@ function main() {
     rm -rf "$RESULTS_DIR"
     mkdir -p "$RESULTS_DIR/all_tests"
 
-    # テストを実行
-    run_individual_tests
+    # テストを一括実行
+    run_all_tests_batch
     return $?
 }
 

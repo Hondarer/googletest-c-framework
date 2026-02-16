@@ -17,11 +17,39 @@ A common modules to test existing C programs using googletest.
 
 ※ 全体が プロジェクトフォルダの testfw/ に配置される前提。
 
+### cmnd 内のスクリプト
+
+#### C/C++ テスト用
+
+| ファイル | 説明 |
+|---------|------|
+| `exec_test_c_cpp.sh` | C/C++ テスト実行スクリプト |
+| `get_test_code_c_cpp.awk` | テストコード抽出 |
+| `insert_summary_c_cpp.awk` | テストサマリ生成 |
+
+#### .NET テスト用
+
+| ファイル | 説明 |
+|---------|------|
+| `exec_test_dotnet.sh` | .NET テスト実行スクリプト (一括実行) |
+| `get_test_code_dotnet.py` | テストコード抽出 |
+| `insert_summary_dotnet.py` | テストサマリ生成 |
+| `parse_trx_results.py` | TRX XML パーサー |
+| `extract_dotnet_output.py` | バッチ出力から個別テスト結果を抽出 |
+
+#### 共通
+
+| ファイル | 説明 |
+|---------|------|
+| `banner.sh` | テスト結果バナー表示 |
+
 ## ビルド
 
 親階層で、`make clean; make`
 
 ## 依存コンポーネント
+
+### C/C++ テスト
 
 - gcc
 - g++
@@ -29,6 +57,12 @@ A common modules to test existing C programs using googletest.
 - googletest (google mock)
 - iconv
   ※ ソースが UTF-8 以外のエンコーディング (例: EUC-JP) の場合に、コンパイラ/リンカ出力を UTF-8 に変換するために使用。glibc に含まれるため、追加インストールは通常不要。
+
+### .NET テスト
+
+- .NET SDK
+- python3
+- xUnit
 
 ## 任意コンポーネント
 
