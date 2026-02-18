@@ -13,8 +13,8 @@ GCC_WARN_C_ONLY = \
 
 ifneq ($(OS),Windows_NT)
     # Linux
-    CFLAGS     += $(GCC_WARN_BASE) $(GCC_WARN_C_ONLY)
-    CXXFLAGS   += $(GCC_WARN_BASE)
+    CFLAGS      = $(GCC_WARN_BASE) $(GCC_WARN_C_ONLY)
+    CXXFLAGS    = $(GCC_WARN_BASE)
     LDFLAGS     =
 else
     # Windows
