@@ -126,7 +126,7 @@ function run_all_tests_batch() {
         fi
 
         # TRX 結果からこのテストの結果を取得
-        local test_result=$(grep -P "^${test_id}\t" "$trx_results" | cut -f2)
+        local test_result=$(grep "^${test_id}"$'\t' "$trx_results" | cut -f2)
         if [ -z "$test_result" ]; then
             # TRX に結果がない場合、バッチの exit code で判定
             if [ $batch_exit_code -eq 0 ]; then
