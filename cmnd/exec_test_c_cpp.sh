@@ -316,7 +316,7 @@ function main() {
         IFS=$'\n' read -d '' -r -a test_array <<< "$tests"
         test_count=${#test_array[@]}
     fi
-    echo "Found $test_count tests."
+    echo "Found $test_count test(s)."
     safe_tput cr
 
     IFS=$'\n'

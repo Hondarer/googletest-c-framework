@@ -50,7 +50,7 @@ function run_all_tests_batch() {
     fi
 
     local test_count=$(echo "$tests" | wc -l)
-    echo "Found $test_count tests." | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    echo "Found $test_count test(s)." | tee -a "$RESULTS_DIR/all_tests/summary.log"
     echo "" | tee -a "$RESULTS_DIR/all_tests/summary.log"
     safe_tput cr
 
@@ -59,29 +59,35 @@ function run_all_tests_batch() {
     local batch_output=$(mktemp)
     local batch_exit_code=0
 
-    echo "Running all tests in batch mode..."
+    echo "Running all tests in batch mode..." > "$batch_output"
     dotnet test \
         --no-build -c "$CONFIG" -o "$OUTPUT_DIR" \
         --verbosity normal \
         --logger "trx;LogFileName=results.trx" \
-        --results-directory "$trx_dir" > "$batch_output" 2>&1
+        --results-directory "$trx_dir" >> "$batch_output" 2>&1
     batch_exit_code=$?
 
-    # バッチ実行時の dotnet test 出力を表示
-    cat "$batch_output" | \
-        grep -v '^\[xUnit\.net' | \
-        grep -v 'にビルドを開始しました' | \
-        grep -v 'Build started' | \
-        grep -v 'ビルドに成功しました' | \
-        grep -v 'Build succeeded' | \
-        grep -v '^\s*[0-9]\+\s*個の警告' | \
-        grep -v '^\s*[0-9]\+\s*Warning(s)' | \
-        grep -v '^\s*[0-9]\+\s*エラー' | \
-        grep -v '^\s*[0-9]\+\s*Error(s)' | \
-        grep -v '経過時間' | \
-        grep -v 'Time Elapsed' | \
-        cat -s
-    echo ""
+    # バッチ実行時の dotnet test 出力を表示 (失敗時のみ)
+    if [ $batch_exit_code -ne 0 ]; then
+        cat "$batch_output" | \
+            grep -v '^\[xUnit\.net' | \
+            grep -v 'にビルドを開始しました' | \
+            grep -v 'Build started' | \
+            grep -v 'ビルドに成功しました' | \
+            grep -v 'Build succeeded' | \
+            grep -v '^\s*[0-9]\+\s*個の警告' | \
+            grep -v '^\s*[0-9]\+\s*Warning(s)' | \
+            grep -v '^\s*[0-9]\+\s*エラー' | \
+            grep -v '^\s*[0-9]\+\s*Error(s)' | \
+            grep -v '経過時間' | \
+            grep -v 'Time Elapsed' | \
+            cat -s
+        echo ""
+        echo "Error: dotnet test failed with exit code $batch_exit_code." >&2
+        rm -f "$batch_output"
+        rm -rf "$trx_dir"
+        return $batch_exit_code
+    fi
 
     # TRX ファイルを検索
     local trx_file=$(find "$trx_dir" -name "results.trx" -type f | head -1)
