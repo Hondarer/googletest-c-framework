@@ -43,8 +43,9 @@ function safe_tput() {
 # テスト一覧を取得
 function list_tests() {
     ./$TEST_BINARY --gtest_list_tests | awk '
-    /^[^ ]/ {suite=$1} 
+    /^[^ ]/ {suite=$1}
     /^  / {print suite substr($0, 3)}'
+    return ${PIPESTATUS[0]}
 }
 
 # テストを実行 (個別カバレッジあり)
@@ -300,7 +301,14 @@ function main() {
     fi
 
     tests=$(list_tests)
+    local list_exit_code=$?
     #tests=$(echo "$tests" | sort)
+    if [ $list_exit_code -ne 0 ]; then
+        echo -e "\e[31mError: Failed to execute test binary: $TEST_BINARY (exit code: $list_exit_code)\e[0m" | tee -a results/all_tests/summary.log
+        bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        echo ""
+        return 1
+    fi
     # テスト数をカウント (wc -l 相当)
     if [[ -z "$tests" ]]; then
         test_count=0
