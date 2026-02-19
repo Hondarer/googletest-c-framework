@@ -46,7 +46,7 @@ function run_all_tests_batch() {
 
     if [ -z "$tests" ]; then
         echo "No tests found."
-        return 1
+        return 0
     fi
 
     local test_count=$(echo "$tests" | wc -l)
@@ -69,32 +69,26 @@ function run_all_tests_batch() {
 
     # バッチ実行時の dotnet test 出力を表示 (失敗時のみ)
     if [ $batch_exit_code -ne 0 ]; then
-        cat "$batch_output" | \
-            grep -v '^\[xUnit\.net' | \
-            grep -v 'にビルドを開始しました' | \
-            grep -v 'Build started' | \
-            grep -v 'ビルドに成功しました' | \
-            grep -v 'Build succeeded' | \
-            grep -v '^\s*[0-9]\+\s*個の警告' | \
-            grep -v '^\s*[0-9]\+\s*Warning(s)' | \
-            grep -v '^\s*[0-9]\+\s*エラー' | \
-            grep -v '^\s*[0-9]\+\s*Error(s)' | \
-            grep -v '経過時間' | \
-            grep -v 'Time Elapsed' | \
-            cat -s
+        cat "$batch_output"
         echo ""
-        echo "Error: dotnet test failed with exit code $batch_exit_code." >&2
+        echo -e "\e[31mError: dotnet test failed with exit code $batch_exit_code.\e[0m" >&2
         rm -f "$batch_output"
         rm -rf "$trx_dir"
+        echo ""
+        bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
+        echo ""
         return $batch_exit_code
     fi
 
     # TRX ファイルを検索
     local trx_file=$(find "$trx_dir" -name "results.trx" -type f | head -1)
     if [ -z "$trx_file" ]; then
-        echo "Error: TRX file not found in $trx_dir" >&2
+        echo -e "\e[31mError: TRX file not found in $trx_dir\e[0m" >&2
         rm -f "$batch_output"
         rm -rf "$trx_dir"
+        echo ""
+        bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
+        echo ""
         return 1
     fi
 
