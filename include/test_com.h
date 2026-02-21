@@ -34,6 +34,8 @@ namespace testing
     extern int _getTraceLevel(const char *);
     extern void setDefaultTraceLevel(int);
     extern void setTraceLevel(const char *, int);
+
+    extern string findWorkspaceRoot();
 }
 
 #define EXPECT_FILE_NOT_EXISTS(file_path) \
