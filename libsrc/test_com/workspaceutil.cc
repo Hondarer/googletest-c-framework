@@ -6,7 +6,14 @@
     #include <limits.h>
     #include <unistd.h>
 #else /* _WIN32 */
+    #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
+    /* C++17 の std::byte と Windows SDK (rpcndr.h 等) の byte 型の競合を解消する。
+     * using namespace std; がある状態で windows.h をインクルードすると、
+     * rpcndr.h の typedef unsigned char byte; と std::byte が ambiguous になる。 */
+    #ifdef byte
+        #undef byte
+    #endif
 #endif /* _WIN32 */
 
 #ifndef _WIN32
