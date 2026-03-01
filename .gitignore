@@ -14,3 +14,6 @@
 # 以下は管理対象外
 obj
 docs
+
+## Python cache
+__pycache__/
