@@ -25,10 +25,26 @@ BEGIN {
   check_semi_normal = 0; # 準正常系
   check_abnormal = 0;    # 異常系
   check_unspecified = 0; # カテゴリ未指定
+  # TEST_F 直前の // コメント行 (description)
+  desc_idx = 0; found_test = 0;
 }
 
 {
   buf[NR] = $0
+
+  # TEST_F 前の // コメントを description として収集
+  if (!found_test) {
+    if ($0 ~ /^[[:space:]]*(TEST(_[FP]*)?\s*\(|TEST\s*\()/) {
+      found_test = 1
+    } else if ($0 ~ /^[[:space:]]*\/\//) {
+      s = $0
+      sub(/^[[:space:]]*\/\/[[:space:]]*/, "", s)
+      sub(/[[:space:]]+$/, "", s)
+      if (s != "") desc[++desc_idx] = s
+    } else if ($0 !~ /^[[:space:]]*$/) {
+      desc_idx = 0; delete desc  # // でも空行でもない行でリセット
+    }
+  }
 
   # タグを検出（より具体的なパターンを先にチェック）
   if (match($0, /\[状態\]/)) {
@@ -93,20 +109,25 @@ BEGIN {
 
 END {
   # サマリ項目が 1 つでも存在するかチェック
-  has_summary = (s_idx > 0 || act_idx > 0 || pre_s_idx > 0 || pre_c_idx > 0 || as_c_idx > 0)
+  has_summary = (desc_idx > 0 || s_idx > 0 || act_idx > 0 || pre_s_idx > 0 || pre_c_idx > 0 || as_c_idx > 0)
 
   # 出力
   for (n=1; n<=NR; n++) {
     # 1 行目の直前にサマリ章を挿入 (項目がある場合のみ)
     if (n == 1 && has_summary) {
       print "## テスト項目"
+      # --- description (TEST_F 直前の // コメント) ---
+      if (desc_idx > 0) {
+        print ""
+        for (i=1; i<=desc_idx; i++) print desc[i]
+      }
       # --- 状態 ---
       print "\n### 状態\n"
       for (i=1; i<=s_idx; i++) print state[i]
 
       # --- 手順 (Act優先 → Pre-Assert) ---
-      # 状態がある場合のみ前改行を入れる
-      if (s_idx > 0) {
+      # 状態または description がある場合のみ前改行を入れる
+      if (s_idx > 0 || desc_idx > 0) {
         print "\n### 手順\n"
       } else {
         print "### 手順\n"
