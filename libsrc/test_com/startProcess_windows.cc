@@ -113,11 +113,18 @@ AsyncProcessHandle startProcessAsync(const string& path,
         env_ptr   = (LPVOID)env_block.data();
     }
 
+    DWORD creation_flags = CREATE_NEW_PROCESS_GROUP; /* SIGINT 用 */
+    if (opts.capture_debug_output) {
+        /* このプロセスがデバッガとなり OutputDebugString を受信できる。
+         * DEBUG_ONLY_THIS_PROCESS により孫プロセスには伝搬しない。 */
+        creation_flags |= DEBUG_ONLY_THIS_PROCESS;
+    }
+
     PROCESS_INFORMATION pi = {};
     BOOL created = CreateProcessA(
         nullptr, cmd_buf.data(), nullptr, nullptr,
-        TRUE,                       /* bInheritHandles */
-        CREATE_NEW_PROCESS_GROUP,   /* dwCreationFlags (SIGINT 用) */
+        TRUE,            /* bInheritHandles */
+        creation_flags,
         env_ptr, nullptr, &si, &pi);
 
     /* 子プロセス側のハンドルをクローズ */
@@ -134,13 +141,14 @@ AsyncProcessHandle startProcessAsync(const string& path,
     CloseHandle(pi.hThread); /* スレッドハンドルは不要 */
 
     auto proc = make_shared<AsyncProcess>();
-    proc->proc_handle = pi.hProcess;
-    proc->pid         = pi.dwProcessId;
-    proc->stdin_h     = stdin_w;
-    proc->stdout_h    = stdout_r;
-    proc->stderr_h    = stderr_r;
+    proc->proc_handle          = pi.hProcess;
+    proc->pid                  = pi.dwProcessId;
+    proc->stdin_h              = stdin_w;
+    proc->stdout_h             = stdout_r;
+    proc->stderr_h             = stderr_r;
+    proc->capture_debug_output = opts.capture_debug_output;
 
-    /* ReaderThread: stdout/stderr を別スレッドで並行読み取り */
+    /* ReaderThread: stdout/stderr/デバッグログを並行読み取り */
     AsyncProcess* p = proc.get();
     proc->reader_thread = thread([p]() {
         /* stdout 読み取りスレッド */
@@ -164,8 +172,86 @@ AsyncProcessHandle startProcessAsync(const string& path,
             }
         });
 
+        /* デバッグイベントループ: OutputDebugString を逐次キャプチャする。
+         * capture_debug_output が true の場合のみ起動する。
+         * EXIT_PROCESS_DEBUG_EVENT を受信したらループを終了する。 */
+        thread t_dbg;
+        if (p->capture_debug_output) {
+            t_dbg = thread([p]() {
+                DEBUG_EVENT de = {};
+                while (WaitForDebugEvent(&de, INFINITE)) {
+                    DWORD continue_status = DBG_CONTINUE;
+                    switch (de.dwDebugEventCode) {
+
+                    case OUTPUT_DEBUG_STRING_EVENT: {
+                        const auto& ods = de.u.DebugString;
+                        DWORD len = ods.nDebugStringLength;
+                        if (len > 0 && len <= 65536) {
+                            if (ods.fUnicode == 0) {
+                                /* ANSI 文字列 */
+                                vector<char> buf(len, '\0');
+                                SIZE_T nread = 0;
+                                if (ReadProcessMemory(p->proc_handle,
+                                        ods.lpDebugStringData,
+                                        buf.data(), len, &nread) && nread > 0) {
+                                    lock_guard<mutex> lk(p->buf_mutex);
+                                    p->debug_log_lines.push_back(string(buf.data()));
+                                }
+                            } else {
+                                /* Unicode 文字列 (UTF-16LE) → UTF-8 変換 */
+                                vector<wchar_t> wbuf(len, L'\0');
+                                SIZE_T nread = 0;
+                                if (ReadProcessMemory(p->proc_handle,
+                                        ods.lpDebugStringData,
+                                        wbuf.data(), len * sizeof(wchar_t),
+                                        &nread) && nread > 0) {
+                                    int u8len = WideCharToMultiByte(
+                                        CP_UTF8, 0, wbuf.data(), -1,
+                                        nullptr, 0, nullptr, nullptr);
+                                    if (u8len > 0) {
+                                        vector<char> u8buf(u8len, '\0');
+                                        WideCharToMultiByte(CP_UTF8, 0, wbuf.data(), -1,
+                                            u8buf.data(), u8len, nullptr, nullptr);
+                                        lock_guard<mutex> lk(p->buf_mutex);
+                                        p->debug_log_lines.push_back(string(u8buf.data()));
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+
+                    case LOAD_DLL_DEBUG_EVENT:
+                        /* DLL ロードハンドルをクローズしてリソースリークを防ぐ */
+                        if (de.u.LoadDll.hFile != nullptr) {
+                            CloseHandle(de.u.LoadDll.hFile);
+                        }
+                        break;
+
+                    case EXIT_PROCESS_DEBUG_EVENT:
+                        ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
+                        return; /* ループ脱出 */
+
+                    case EXCEPTION_DEBUG_EVENT:
+                        /* デバッグ開始時の初回ブレークポイント (INT 3) は DBG_CONTINUE で継続。
+                         * それ以外の例外はプロセス自身のハンドラに渡す。 */
+                        if (de.u.Exception.ExceptionRecord.ExceptionCode != EXCEPTION_BREAKPOINT &&
+                            de.u.Exception.ExceptionRecord.ExceptionCode != EXCEPTION_SINGLE_STEP) {
+                            continue_status = DBG_EXCEPTION_NOT_HANDLED;
+                        }
+                        break;
+
+                    default:
+                        break;
+                    }
+                    ContinueDebugEvent(de.dwProcessId, de.dwThreadId, continue_status);
+                }
+            });
+        }
+
         t_out.join();
         t_err.join();
+        if (t_dbg.joinable()) { t_dbg.join(); }
 
         lock_guard<mutex> lk(p->buf_mutex);
         p->process_done = true;
@@ -241,8 +327,6 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
             GetExitCodeProcess(handle->proc_handle, &ec);
             exit_code = (int)ec;
         }
-        CloseHandle(handle->proc_handle);
-        handle->proc_handle = nullptr;
         handle->pid = 0;
     }
 
@@ -250,9 +334,11 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
         handle->reader_thread.join();
     }
 
-    /* ハンドルをクローズ (reader_thread join 後に実施) */
-    if (handle->stdout_h != nullptr) { CloseHandle(handle->stdout_h); handle->stdout_h = nullptr; }
-    if (handle->stderr_h != nullptr) { CloseHandle(handle->stderr_h); handle->stderr_h = nullptr; }
+    /* ハンドルをクローズ (reader_thread join 後に実施)。
+     * proc_handle は t_dbg スレッドが ReadProcessMemory で使用するため join 後に閉じる。 */
+    if (handle->proc_handle != nullptr) { CloseHandle(handle->proc_handle); handle->proc_handle = nullptr; }
+    if (handle->stdout_h    != nullptr) { CloseHandle(handle->stdout_h);    handle->stdout_h    = nullptr; }
+    if (handle->stderr_h    != nullptr) { CloseHandle(handle->stderr_h);    handle->stderr_h    = nullptr; }
 
     handle->last_exit_code = exit_code;
     return exit_code;

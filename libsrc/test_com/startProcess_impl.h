@@ -72,6 +72,9 @@ struct AsyncProcess {
     HANDLE stderr_h    = nullptr;
     DWORD  pid         = 0;
 
+    /** OutputDebugString キャプチャが有効かどうか。 */
+    bool capture_debug_output = true;
+
     /** waitProcess() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;
 

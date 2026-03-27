@@ -32,6 +32,13 @@ struct ProcessOptions {
      *  testfw 提供: testfw/lib/$(TARGET_ARCH)/libmock_syslog.so */
     string preload_lib;
 #endif
+
+#ifdef _WIN32
+    /** OutputDebugString 出力をキャプチャする (Windows のみ)。
+     *  true にすると DEBUG_ONLY_THIS_PROCESS で起動し debug_log / getDebugLog() でキャプチャできる。
+     *  Linux の preload_lib に相当する。デフォルト true (Linux の常時収集に合わせた既定値)。 */
+    bool capture_debug_output = true;
+#endif
 };
 
 /** プロセス実行結果 (startProcess() の返値) */
@@ -39,8 +46,8 @@ struct ProcessResult {
     int exit_code;     ///< 終了コード (-1 = 起動失敗またはタイムアウト)
     string stdout_out; ///< 標準出力
     string stderr_out; ///< 標準エラー出力
-    /** Linux : LD_PRELOAD した syslog モックの出力 (preload_lib 指定時のみ)
-     *  Windows: 現在未対応 */
+    /** Linux  : LD_PRELOAD した syslog モックの出力 (preload_lib 指定時のみ)
+     *  Windows: OutputDebugString の出力 (capture_debug_output 指定時のみ) */
     string debug_log;
 };
 
@@ -127,9 +134,11 @@ extern string getStderr(AsyncProcessHandle& handle);
 /**
  * 現在の蓄積デバッグログの行数を返す。
  *
- * debug_log はプロセス終了後に waitProcess() によって一括収集されるため、
- * waitProcess() 呼び出し前は常に 0 を返す。
- * ProcessOptions.preload_lib を指定しない場合は常に 0 を返す。
+ * Linux では waitProcess() 後に一括収集されるため、waitProcess() 前は常に 0 を返す。
+ * Windows では OutputDebugString 受信時にリアルタイム収集されるが、
+ * 実用上は waitProcess() 後に参照することを推奨する。
+ * ProcessOptions.preload_lib (Linux) / capture_debug_output (Windows) を
+ * 指定しない場合は常に 0 を返す。
  */
 extern size_t getDebugLogCount(AsyncProcessHandle& handle);
 
@@ -138,7 +147,8 @@ extern size_t getDebugLogCount(AsyncProcessHandle& handle);
  *
  * Linux  : LD_PRELOAD した libmock_syslog.so が一時ファイルに書き込んだ内容。
  *          waitProcess() 後に一括収集される。
- * Windows: 現在未対応 (常に空のベクターを返す)。
+ * Windows: OutputDebugString でキャプチャした内容 (capture_debug_output 指定時)。
+ *          リアルタイム収集されるが、実用上は waitProcess() 後に参照することを推奨する。
  *
  * @param from_index  返却を開始する行インデックス (デフォルト 0 = 全件)。
  */
