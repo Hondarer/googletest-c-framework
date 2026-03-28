@@ -248,7 +248,7 @@ AsyncProcessHandle startProcessAsync(const string& path,
                     return;
                 }
 
-                HANDLE proc_h = p->proc_handle; /* waitProcess が閉じるまで有効 */
+                HANDLE proc_h = p->proc_handle; /* waitForExit が閉じるまで有効 */
 
                 SetEvent(hBufReady); /* バッファ受信準備完了を通知 */
 
@@ -340,9 +340,9 @@ void closeStdin(AsyncProcessHandle& handle)
     handle->stdin_h = nullptr;
 }
 
-/* -------- waitProcess -------- */
+/* -------- waitForExit -------- */
 
-int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
+int waitForExit(AsyncProcessHandle& handle, int timeout_ms)
 {
     if (!handle) { return -1; }
 
@@ -352,7 +352,7 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
     /* 二重呼び出し時は cached 終了コードを返す */
     if (handle->proc_handle == nullptr && !handle->reader_thread.joinable()) {
         if (_tl > TRACE_NONE) {
-            printf("  > waitProcess pid=%lu timeout=%dms", trace_pid, timeout_ms);
+            printf("  > waitForExit pid=%lu timeout=%dms", trace_pid, timeout_ms);
             if (_tl >= TRACE_DETAIL) {
                 printf(" -> exit_code=%d\n", handle->last_exit_code);
             } else {
@@ -363,7 +363,7 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
     }
 
     if (_tl > TRACE_NONE) {
-        printf("  > waitProcess pid=%lu timeout=%dms\n", trace_pid, timeout_ms);
+        printf("  > waitForExit pid=%lu timeout=%dms\n", trace_pid, timeout_ms);
     }
 
     /* stdin を閉じて子プロセスに EOF を通知 */
@@ -402,7 +402,7 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
     handle->last_exit_code = exit_code;
 
     if (_tl > TRACE_NONE) {
-        printf("  > waitProcess pid=%lu exit_code=%d\n", trace_pid, exit_code);
+        printf("  > waitForExit pid=%lu exit_code=%d\n", trace_pid, exit_code);
     }
     return exit_code;
 }

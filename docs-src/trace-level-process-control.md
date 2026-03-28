@@ -80,7 +80,7 @@ processController は全体で 1 つの機能であり、キーは `processContr
 | `closeStdin` | `"  > closeStdin"` | なし |
 | `interruptProcess` | `"  > interruptProcess pid=<N>"` | なし |
 | `killProcess` | `"  > killProcess pid=<N>"` | なし |
-| `waitProcess` | `"  > waitProcess timeout=<N>ms"` | `" -> waitProcess exit_code=<N>"` |
+| `waitForExit` | `"  > waitForExit timeout=<N>ms"` | `" -> waitForExit exit_code=<N>"` |
 | stdout キャプチャ時( `\n` 検出時)           | `"  > stdout   : \"<line>\""` | なし |
 | stderr キャプチャ時( `\n` 検出時)           | `"  > stderr   : \"<line>\""` | なし |
 | debug出力 キャプチャ時( `\n` 検出時) | なし | `"  > debug_log: \"<line>\""` |

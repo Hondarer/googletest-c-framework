@@ -32,7 +32,7 @@ struct AsyncProcess {
     /** パイプから受信した途中の行バッファ。 */
     std::string debug_log_buf;
 
-    /** waitProcess() が返した終了コード (-1 = 未取得)。 */
+    /** waitForExit() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;
 
     std::thread             reader_thread;
@@ -77,7 +77,7 @@ struct AsyncProcess {
     /** OutputDebugString キャプチャが有効かどうか。 */
     bool capture_debug_output = true;
 
-    /** waitProcess() が返した終了コード (-1 = 未取得)。 */
+    /** waitForExit() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;
 
     std::thread             reader_thread;

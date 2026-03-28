@@ -119,7 +119,7 @@ extern void killProcess(AsyncProcessHandle& handle);
  * @param timeout_ms タイムアウト (ms)。-1 で無制限。デフォルト 10000。
  * @return           終了コード。タイムアウト時は -1。
  */
-extern int waitProcess(AsyncProcessHandle& handle, int timeout_ms = 10000);
+extern int waitForExit(AsyncProcessHandle& handle, int timeout_ms = 10000);
 
 /**
  * これまでに受信した stdout 全体を返す (非破壊)。
@@ -134,9 +134,9 @@ extern string getStderr(AsyncProcessHandle& handle);
 /**
  * 現在の蓄積デバッグログの行数を返す。
  *
- * Linux では waitProcess() 後に一括収集されるため、waitProcess() 前は常に 0 を返す。
+ * Linux では waitForExit() 後に一括収集されるため、waitForExit() 前は常に 0 を返す。
  * Windows では OutputDebugString 受信時にリアルタイム収集されるが、
- * 実用上は waitProcess() 後に参照することを推奨する。
+ * 実用上は waitForExit() 後に参照することを推奨する。
  * ProcessOptions.preload_lib (Linux) / capture_debug_output (Windows) を
  * 指定しない場合は常に 0 を返す。
  */
@@ -146,9 +146,9 @@ extern size_t getDebugLogCount(AsyncProcessHandle& handle);
  * 蓄積デバッグログを行単位のコレクションで返す (非破壊)。
  *
  * Linux  : LD_PRELOAD した libmock_syslog.so が一時ファイルに書き込んだ内容。
- *          waitProcess() 後に一括収集される。
+ *          waitForExit() 後に一括収集される。
  * Windows: OutputDebugString でキャプチャした内容 (capture_debug_output 指定時)。
- *          リアルタイム収集されるが、実用上は waitProcess() 後に参照することを推奨する。
+ *          リアルタイム収集されるが、実用上は waitForExit() 後に参照することを推奨する。
  *
  * @param from_index  返却を開始する行インデックス (デフォルト 0 = 全件)。
  */
@@ -180,7 +180,7 @@ inline ProcessResult startProcess(const string& binary,
     for (const auto& line : stdin_lines) { writeLineStdin(h, line); }
     closeStdin(h);
     ProcessResult res;
-    res.exit_code  = waitProcess(h, timeout_ms);
+    res.exit_code  = waitForExit(h, timeout_ms);
     res.stdout_out = getStdout(h);
     res.stderr_out = getStderr(h);
     for (const auto& line : getDebugLog(h)) { res.debug_log += line; }

@@ -98,7 +98,7 @@ inline ProcessResult startProcess(
 1. `startProcessAsync()` でプロセスを起動
 2. `stdin_lines` を `writeLineStdin()` で順次書き込み
 3. `closeStdin()` で EOF を通知
-4. `waitProcess(handle, timeout_ms)` で終了待機
+4. `waitForExit(handle, timeout_ms)` で終了待機
 5. `getStdout()` / `getStderr()` / `getDebugLog()` で結果を収集して返す
 
 ### 非同期 API
@@ -178,16 +178,16 @@ extern void killProcess(AsyncProcessHandle& handle)
 - Linux: `kill(pid, SIGKILL)`
 - Windows: `TerminateProcess`
 
-#### waitProcess
+#### waitForExit
 
 ```cpp
-extern int waitProcess(AsyncProcessHandle& handle, int timeout_ms = 10000)
+extern int waitForExit(AsyncProcessHandle& handle, int timeout_ms = 10000)
 ```
 
 プロセス終了を待機し、終了コードを返します。
 タイムアウト時は `-1` を返します。
 
-Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitProcess()` 完了後には全ログが利用可能です。
+Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForExit()` 完了後には全ログが利用可能です。
 
 #### getStdout / getStderr
 
@@ -257,11 +257,11 @@ ASSERT_NO_THROW(waitForOutput(send_h, "圧縮送信しますか", 3000));
 ASSERT_TRUE(writeLineStdin(send_h, "N"));
 ASSERT_NO_THROW(waitForOutput(send_h, "続けて送信しますか", 3000));
 ASSERT_TRUE(writeLineStdin(send_h, "N"));
-EXPECT_EQ(0, waitProcess(send_h, 5000));
+EXPECT_EQ(0, waitForExit(send_h, 5000));
 
 // 常駐プロセスを SIGINT で停止する
 interruptProcess(recv_h);
-waitProcess(recv_h, 3000);
+waitForExit(recv_h, 3000);
 
 EXPECT_NE(string::npos, getStdout(recv_h).find("Hello Porter"));
 ```
@@ -273,8 +273,8 @@ EXPECT_NE(string::npos, getStdout(recv_h).find("Hello Porter"));
 
 ```cpp
 void TearDown() override {
-    if (send_h_) { killProcess(send_h_); waitProcess(send_h_, 1000); }
-    if (recv_h_) { killProcess(recv_h_); waitProcess(recv_h_, 1000); }
+    if (send_h_) { killProcess(send_h_); waitForExit(send_h_, 1000); }
+    if (recv_h_) { killProcess(recv_h_); waitForExit(recv_h_, 1000); }
 }
 ```
 
@@ -291,16 +291,16 @@ AsyncProcessHandle h = startProcessAsync(binary, args, opts);
 ASSERT_NO_THROW(waitForOutput(h, "起動完了", 5000));
 
 interruptProcess(h);
-waitProcess(h, 3000); // ← Linux はここでログが一括収集される
+waitForExit(h, 3000); // ← Linux はここでログが一括収集される
 
-// waitProcess() 後にログを検証
+// waitForExit() 後にログを検証
 auto logs = getDebugLog(h);
 EXPECT_TRUE(any_of(logs.begin(), logs.end(),
     [](const string& l) { return l.find("received message") != string::npos; }));
 ```
 
-> **注意**: Linux の `getDebugLogCount()` は `waitProcess()` 後にのみ意味のある値を返します。
-> ステップ別のログ分割は `waitProcess()` 後に `from_index` で行ってください。
+> **注意**: Linux の `getDebugLogCount()` は `waitForExit()` 後にのみ意味のある値を返します。
+> ステップ別のログ分割は `waitForExit()` 後に `from_index` で行ってください。
 
 ## 旧 API (runProcess) からの移行
 
