@@ -1,5 +1,5 @@
-#ifndef _START_PROCESS_H
-#define _START_PROCESS_H
+#ifndef _PROCESS_CONTROLLER_H
+#define _PROCESS_CONTROLLER_H
 
 #include <map>
 #include <memory>
@@ -193,4 +193,4 @@ inline ProcessResult startProcess(const string& binary,
 #pragma GCC diagnostic pop
 #endif /* _WIN32 */
 
-#endif // _START_PROCESS_H
+#endif // _PROCESS_CONTROLLER_H

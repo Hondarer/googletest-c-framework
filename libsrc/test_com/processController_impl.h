@@ -3,7 +3,7 @@
 /* AsyncProcess の内部実装定義。
  * このヘッダーは startProcess*.cc のみが include する非公開ヘッダー。 */
 
-#include <startProcess.h>
+#include <processController.h>
 #include <condition_variable>
 #include <mutex>
 #include <string>

@@ -2,7 +2,7 @@
 
 ## 概要
 
-`testfw/include/startProcess.h` が提供するプロセス制御 API です。
+`testfw/include/processController.h` が提供するプロセス制御 API です。
 テスト対象バイナリをサブプロセスとして起動し、
 stdin / stdout / stderr をパイプ経由で制御できます。
 

@@ -1,8 +1,8 @@
 /* プラットフォーム共通の非同期プロセス制御 API 実装。
  * プラットフォーム固有の関数 (startProcessAsync / writeStdin / closeStdin / waitProcess /
- * interruptProcess / killProcess) は startProcess_linux.cc / startProcess_windows.cc に実装。 */
+ * interruptProcess / killProcess) は processController_linux.cc / processController_windows.cc に実装。 */
 
-#include "startProcess_impl.h"
+#include "processController_impl.h"
 
 #include <chrono>
 #include <stdexcept>

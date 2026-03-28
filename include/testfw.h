@@ -13,7 +13,7 @@
 
 #include <format_attr.h>
 #include <test_com.h>
-#include <startProcess.h>
+#include <processController.h>
 #include <gtest_wrapmain.h>
 
 using namespace std;
