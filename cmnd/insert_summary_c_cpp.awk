@@ -122,8 +122,11 @@ END {
         for (i=1; i<=desc_idx; i++) print desc[i]
       }
       # --- 状態 ---
-      print "\n### 状態\n"
-      for (i=1; i<=s_idx; i++) print state[i]
+      print "\n### 状態"
+      if (s_idx > 0) {
+        print ""
+        for (i=1; i<=s_idx; i++) print state[i]
+      }
 
       # --- 手順 (Act優先 → Pre-Assert) ---
       # 状態または description がある場合のみ前改行を入れる

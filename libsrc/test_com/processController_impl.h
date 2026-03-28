@@ -99,3 +99,8 @@ struct AsyncProcess {
 } // namespace testing
 
 #endif /* _WIN32 */
+
+namespace testing {
+/** OS レベルの stdin 書き込み。トレースなし。writeStdin/writeLineStdin が呼び出す。 */
+bool writeStdinImpl(AsyncProcessHandle& handle, const string& data);
+} // namespace testing

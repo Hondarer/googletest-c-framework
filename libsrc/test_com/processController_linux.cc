@@ -1,6 +1,7 @@
 #ifndef _WIN32
 
 #include "processController_impl.h"
+#include <test_com.h>
 
 #include <algorithm>
 #include <array>
@@ -60,9 +61,20 @@ AsyncProcessHandle startProcessAsync(const string& path,
                                       const vector<string>& args,
                                       const ProcessOptions& opts)
 {
+    int _tl = _getTraceLevel("processController");
+    if (_tl > TRACE_NONE) {
+        printf("  > startProcessAsync \"%s\"", path.c_str());
+        for (const auto& a : args) { printf(" \"%s\"", a.c_str()); }
+    }
+
     if (!opts.preload_lib.empty() && access(opts.preload_lib.c_str(), F_OK) != 0) {
         fprintf(stderr, "startProcessAsync: preload_lib not found: %s\n",
                 opts.preload_lib.c_str());
+        if (_tl >= TRACE_DETAIL) {
+            printf(" -> nullptr\n");
+        } else if (_tl > TRACE_NONE) {
+            printf("\n");
+        }
         return nullptr;
     }
 
@@ -75,6 +87,11 @@ AsyncProcessHandle startProcessAsync(const string& path,
                        stdout_pipe[0], stdout_pipe[1],
                        stderr_pipe[0], stderr_pipe[1]}) {
             if (fd != -1) { close(fd); }
+        }
+        if (_tl >= TRACE_DETAIL) {
+            printf(" -> nullptr\n");
+        } else if (_tl > TRACE_NONE) {
+            printf("\n");
         }
         return nullptr;
     }
@@ -90,6 +107,11 @@ AsyncProcessHandle startProcessAsync(const string& path,
                             stderr_pipe[0], stderr_pipe[1]}) {
                 close(pfd);
             }
+            if (_tl >= TRACE_DETAIL) {
+                printf(" -> nullptr\n");
+            } else if (_tl > TRACE_NONE) {
+                printf("\n");
+            }
             return nullptr;
         }
     }
@@ -101,6 +123,11 @@ AsyncProcessHandle startProcessAsync(const string& path,
                        stderr_pipe[0], stderr_pipe[1],
                        debug_log_pipe[0], debug_log_pipe[1]}) {
             if (fd != -1) { close(fd); }
+        }
+        if (_tl >= TRACE_DETAIL) {
+            printf(" -> nullptr\n");
+        } else if (_tl > TRACE_NONE) {
+            printf("\n");
         }
         return nullptr;
     }
@@ -165,10 +192,19 @@ AsyncProcessHandle startProcessAsync(const string& path,
     proc->stderr_fd    = stderr_pipe[0];
     proc->debug_log_fd = debug_log_pipe[0];
 
+    if (_tl >= TRACE_DETAIL) {
+        printf(" -> pid=%d\n", (int)proc->pid);
+    } else if (_tl > TRACE_NONE) {
+        printf("\n");
+    }
+
     /* ReaderThread: select() で stdout/stderr/debug_log を多重監視 */
     AsyncProcess* p = proc.get();
     proc->reader_thread = thread([p]() {
         char buf[4096];
+        string stdout_trace_buf;
+        string stderr_trace_buf;
+        int reader_pid = (int)p->pid;
 
         while (true) {
             fd_set rfds;
@@ -194,9 +230,22 @@ AsyncProcessHandle startProcessAsync(const string& path,
             if (p->stdout_fd != -1 && FD_ISSET(p->stdout_fd, &rfds)) {
                 ssize_t n = read(p->stdout_fd, buf, sizeof(buf));
                 if (n > 0) {
-                    lock_guard<mutex> lk(p->buf_mutex);
-                    p->stdout_buf.append(buf, (size_t)n);
-                    p->buf_cv.notify_all();
+                    {
+                        lock_guard<mutex> lk(p->buf_mutex);
+                        p->stdout_buf.append(buf, (size_t)n);
+                        p->buf_cv.notify_all();
+                    }
+                    /* mutex 解放後にトレース出力 */
+                    int trace_lv = _getTraceLevel("processController");
+                    if (trace_lv > TRACE_NONE) {
+                        stdout_trace_buf.append(buf, (size_t)n);
+                        size_t pos;
+                        while ((pos = stdout_trace_buf.find('\n')) != string::npos) {
+                            printf("  > stdout    pid=%d: \"%s\"\n",
+                                   reader_pid, stdout_trace_buf.substr(0, pos).c_str());
+                            stdout_trace_buf.erase(0, pos + 1);
+                        }
+                    }
                 } else {
                     close(p->stdout_fd);
                     p->stdout_fd = -1;
@@ -205,9 +254,22 @@ AsyncProcessHandle startProcessAsync(const string& path,
             if (p->stderr_fd != -1 && FD_ISSET(p->stderr_fd, &rfds)) {
                 ssize_t n = read(p->stderr_fd, buf, sizeof(buf));
                 if (n > 0) {
-                    lock_guard<mutex> lk(p->buf_mutex);
-                    p->stderr_buf.append(buf, (size_t)n);
-                    p->buf_cv.notify_all();
+                    {
+                        lock_guard<mutex> lk(p->buf_mutex);
+                        p->stderr_buf.append(buf, (size_t)n);
+                        p->buf_cv.notify_all();
+                    }
+                    /* mutex 解放後にトレース出力 */
+                    int trace_lv = _getTraceLevel("processController");
+                    if (trace_lv > TRACE_NONE) {
+                        stderr_trace_buf.append(buf, (size_t)n);
+                        size_t pos;
+                        while ((pos = stderr_trace_buf.find('\n')) != string::npos) {
+                            printf("  > stderr    pid=%d: \"%s\"\n",
+                                   reader_pid, stderr_trace_buf.substr(0, pos).c_str());
+                            stderr_trace_buf.erase(0, pos + 1);
+                        }
+                    }
                 } else {
                     close(p->stderr_fd);
                     p->stderr_fd = -1;
@@ -216,14 +278,25 @@ AsyncProcessHandle startProcessAsync(const string& path,
             if (p->debug_log_fd != -1 && FD_ISSET(p->debug_log_fd, &rfds)) {
                 ssize_t n = read(p->debug_log_fd, buf, sizeof(buf));
                 if (n > 0) {
-                    lock_guard<mutex> lk(p->buf_mutex);
-                    p->debug_log_buf.append(buf, (size_t)n);
-                    /* 改行で分割して debug_log_lines に追記 */
-                    size_t pos;
-                    while ((pos = p->debug_log_buf.find('\n')) != string::npos) {
-                        p->debug_log_lines.push_back(
-                            p->debug_log_buf.substr(0, pos + 1));
-                        p->debug_log_buf.erase(0, pos + 1);
+                    vector<string> new_lines;
+                    {
+                        lock_guard<mutex> lk(p->buf_mutex);
+                        p->debug_log_buf.append(buf, (size_t)n);
+                        /* 改行で分割して debug_log_lines に追記 (\n は除去して格納) */
+                        size_t pos;
+                        while ((pos = p->debug_log_buf.find('\n')) != string::npos) {
+                            string line = p->debug_log_buf.substr(0, pos);
+                            p->debug_log_lines.push_back(line);
+                            new_lines.push_back(line);
+                            p->debug_log_buf.erase(0, pos + 1);
+                        }
+                    }
+                    /* mutex 解放後にトレース出力 */
+                    int trace_lv = _getTraceLevel("processController");
+                    if (trace_lv >= TRACE_DETAIL) {
+                        for (const auto& dl : new_lines) {
+                            printf("  > debug_log pid=%d: \"%s\"\n", reader_pid, dl.c_str());
+                        }
                     }
                 } else {
                     close(p->debug_log_fd);
@@ -247,6 +320,9 @@ AsyncProcessHandle startProcessAsync(const string& path,
 void interruptProcess(AsyncProcessHandle& handle)
 {
     if (!handle || handle->pid == -1) { return; }
+    if (_getTraceLevel("processController") > TRACE_NONE) {
+        printf("  > interruptProcess pid=%d\n", (int)handle->pid);
+    }
     kill(handle->pid, SIGINT);
 }
 
@@ -255,12 +331,15 @@ void interruptProcess(AsyncProcessHandle& handle)
 void killProcess(AsyncProcessHandle& handle)
 {
     if (!handle || handle->pid == -1) { return; }
+    if (_getTraceLevel("processController") > TRACE_NONE) {
+        printf("  > killProcess pid=%d\n", (int)handle->pid);
+    }
     kill(handle->pid, SIGKILL);
 }
 
-/* -------- writeStdin -------- */
+/* -------- writeStdinImpl -------- */
 
-bool writeStdin(AsyncProcessHandle& handle, const string& data)
+bool writeStdinImpl(AsyncProcessHandle& handle, const string& data)
 {
     if (!handle || handle->stdin_fd == -1) { return false; }
 
@@ -289,6 +368,9 @@ bool writeStdin(AsyncProcessHandle& handle, const string& data)
 void closeStdin(AsyncProcessHandle& handle)
 {
     if (!handle || handle->stdin_fd == -1) { return; }
+    if (_getTraceLevel("processController") > TRACE_NONE) {
+        printf("  > closeStdin pid=%d\n", (int)handle->pid);
+    }
     close(handle->stdin_fd);
     handle->stdin_fd = -1;
 }
@@ -299,9 +381,24 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
 {
     if (!handle) { return -1; }
 
+    int _tl = _getTraceLevel("processController");
+    int trace_pid = (int)handle->pid;
+
     /* 二重呼び出し時は cached 終了コードを返す */
     if (handle->pid == -1 && !handle->reader_thread.joinable()) {
+        if (_tl > TRACE_NONE) {
+            printf("  > waitProcess pid=%d timeout=%dms", trace_pid, timeout_ms);
+            if (_tl >= TRACE_DETAIL) {
+                printf(" -> exit_code=%d\n", handle->last_exit_code);
+            } else {
+                printf("\n");
+            }
+        }
         return handle->last_exit_code;
+    }
+
+    if (_tl > TRACE_NONE) {
+        printf("  > waitProcess pid=%d timeout=%dms\n", trace_pid, timeout_ms);
     }
 
     /* stdin を閉じて子プロセスに EOF を通知 */
@@ -346,6 +443,10 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
     /* debug_log_lines は reader_thread がパイプ経由でリアルタイム収集済み */
 
     handle->last_exit_code = exit_code;
+
+    if (_tl > TRACE_NONE) {
+        printf("  > waitProcess pid=%d exit_code=%d\n", (int)my_pid, exit_code);
+    }
     return exit_code;
 }
 

@@ -1,8 +1,9 @@
 /* プラットフォーム共通の非同期プロセス制御 API 実装。
- * プラットフォーム固有の関数 (startProcessAsync / writeStdin / closeStdin / waitProcess /
+ * プラットフォーム固有の関数 (startProcessAsync / writeStdinImpl / closeStdin / waitProcess /
  * interruptProcess / killProcess) は processController_linux.cc / processController_windows.cc に実装。 */
 
 #include "processController_impl.h"
+#include <test_com.h>
 
 #include <chrono>
 #include <stdexcept>
@@ -11,11 +12,26 @@
 
 namespace testing {
 
+/* -------- writeStdin -------- */
+
+bool writeStdin(AsyncProcessHandle& handle, const string& data)
+{
+    if (_getTraceLevel("processController") > TRACE_NONE) {
+        int pid = handle ? (int)handle->pid : -1;
+        printf("  > writeStdin pid=%d \"%s\"\n", pid, data.c_str());
+    }
+    return writeStdinImpl(handle, data);
+}
+
 /* -------- writeLineStdin -------- */
 
 bool writeLineStdin(AsyncProcessHandle& handle, const string& line)
 {
-    return writeStdin(handle, line + "\n");
+    if (_getTraceLevel("processController") > TRACE_NONE) {
+        int pid = handle ? (int)handle->pid : -1;
+        printf("  > writeLineStdin pid=%d \"%s\"\n", pid, line.c_str());
+    }
+    return writeStdinImpl(handle, line + "\n");
 }
 
 /* -------- waitForOutput -------- */
@@ -26,6 +42,12 @@ string waitForOutput(AsyncProcessHandle& handle,
 {
     if (!handle) {
         throw runtime_error("waitForOutput: null handle");
+    }
+
+    int _tl = _getTraceLevel("processController");
+    int pid = (int)handle->pid;
+    if (_tl > TRACE_NONE) {
+        printf("  > waitForOutput pid=%d \"%s\" timeout=%dms\n", pid, pattern.c_str(), timeout_ms);
     }
 
     unique_lock<mutex> lk(handle->buf_mutex);
@@ -43,10 +65,16 @@ string waitForOutput(AsyncProcessHandle& handle,
 
     size_t pos = handle->stdout_buf.find(pattern);
     if (pos == string::npos) {
+        if (_tl > TRACE_NONE) {
+            printf("  > waitForOutput pid=%d \"%s\" timeout\n", pid, pattern.c_str());
+        }
         throw runtime_error(
             "waitForOutput: timeout or EOF before pattern: \"" + pattern + "\"");
     }
 
+    if (_tl > TRACE_NONE) {
+        printf("  > waitForOutput pid=%d \"%s\" matched\n", pid, pattern.c_str());
+    }
     return handle->stdout_buf.substr(0, pos + pattern.size());
 }
 
