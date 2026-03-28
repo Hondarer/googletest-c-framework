@@ -126,11 +126,6 @@ AsyncProcessHandle startProcessAsync(const string& path,
     }
 
     DWORD creation_flags = CREATE_NEW_PROCESS_GROUP; /* SIGINT 用 */
-    if (opts.capture_debug_output) {
-        /* このプロセスがデバッガとなり OutputDebugString を受信できる。
-         * DEBUG_ONLY_THIS_PROCESS により孫プロセスには伝搬しない。 */
-        creation_flags |= DEBUG_ONLY_THIS_PROCESS;
-    }
 
     PROCESS_INFORMATION pi = {};
     BOOL created = CreateProcessA(
@@ -225,90 +220,67 @@ AsyncProcessHandle startProcessAsync(const string& path,
             }
         });
 
-        /* デバッグイベントループ: OutputDebugString を逐次キャプチャする。
-         * capture_debug_output が true の場合のみ起動する。
-         * EXIT_PROCESS_DEBUG_EVENT を受信したらループを終了する。 */
+        /* dbwin 方式で OutputDebugString をキャプチャするスレッド。
+         * WaitForDebugEvent は CreateProcess を呼び出したスレッドからのみ呼び出し可能であり、
+         * 別スレッドから呼び出すとプロセスがデバッグ初期状態で永久に凍結する。
+         * そのため DEBUG_ONLY_THIS_PROCESS を使用せず、共有メモリ経由でキャプチャする。
+         * capture_debug_output が true の場合のみ起動する。 */
         thread t_dbg;
         if (p->capture_debug_output) {
             t_dbg = thread([p, reader_pid]() {
-                DEBUG_EVENT de = {};
-                while (WaitForDebugEvent(&de, INFINITE)) {
-                    DWORD continue_status = DBG_CONTINUE;
-                    switch (de.dwDebugEventCode) {
+                HANDLE hBufReady = CreateEventA(nullptr, FALSE, FALSE, "DBWIN_BUFFER_READY");
+                HANDLE hDataReady = CreateEventA(nullptr, FALSE, FALSE, "DBWIN_DATA_READY");
+                HANDLE hMapping   = CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr,
+                                        PAGE_READWRITE, 0, 4096, "DBWIN_BUFFER");
+                if (!hBufReady || !hDataReady || !hMapping) {
+                    if (hBufReady)  { CloseHandle(hBufReady);  }
+                    if (hDataReady) { CloseHandle(hDataReady); }
+                    if (hMapping)   { CloseHandle(hMapping);   }
+                    return;
+                }
+                struct DbwinView { DWORD pid; char msg[4096 - sizeof(DWORD)]; };
+                DbwinView* view = static_cast<DbwinView*>(
+                    MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0));
+                if (!view) {
+                    CloseHandle(hBufReady);
+                    CloseHandle(hDataReady);
+                    CloseHandle(hMapping);
+                    return;
+                }
 
-                    case OUTPUT_DEBUG_STRING_EVENT: {
-                        const auto& ods = de.u.DebugString;
-                        DWORD len = ods.nDebugStringLength;
-                        string captured_line;
-                        if (len > 0 && len <= 65536) {
-                            if (ods.fUnicode == 0) {
-                                /* ANSI 文字列 */
-                                vector<char> buf(len, '\0');
-                                SIZE_T nread = 0;
-                                if (ReadProcessMemory(p->proc_handle,
-                                        ods.lpDebugStringData,
-                                        buf.data(), len, &nread) && nread > 0) {
-                                    captured_line = string(buf.data());
-                                    lock_guard<mutex> lk(p->buf_mutex);
-                                    p->debug_log_lines.push_back(captured_line);
-                                }
-                            } else {
-                                /* Unicode 文字列 (UTF-16LE) → UTF-8 変換 */
-                                vector<wchar_t> wbuf(len, L'\0');
-                                SIZE_T nread = 0;
-                                if (ReadProcessMemory(p->proc_handle,
-                                        ods.lpDebugStringData,
-                                        wbuf.data(), len * sizeof(wchar_t),
-                                        &nread) && nread > 0) {
-                                    int u8len = WideCharToMultiByte(
-                                        CP_UTF8, 0, wbuf.data(), -1,
-                                        nullptr, 0, nullptr, nullptr);
-                                    if (u8len > 0) {
-                                        vector<char> u8buf(u8len, '\0');
-                                        WideCharToMultiByte(CP_UTF8, 0, wbuf.data(), -1,
-                                            u8buf.data(), u8len, nullptr, nullptr);
-                                        captured_line = string(u8buf.data());
-                                        lock_guard<mutex> lk(p->buf_mutex);
-                                        p->debug_log_lines.push_back(captured_line);
-                                    }
-                                }
+                HANDLE proc_h = p->proc_handle; /* waitProcess が閉じるまで有効 */
+
+                SetEvent(hBufReady); /* バッファ受信準備完了を通知 */
+
+                for (;;) {
+                    DWORD dr = WaitForSingleObject(hDataReady, 200);
+                    if (dr == WAIT_OBJECT_0) {
+                        if (view->pid == (DWORD)reader_pid) {
+                            string captured_line(view->msg);
+                            {
+                                lock_guard<mutex> lk(p->buf_mutex);
+                                p->debug_log_lines.push_back(captured_line);
                             }
-                        }
-                        /* mutex 解放後にトレース出力 */
-                        if (!captured_line.empty()) {
                             int _tl = _getTraceLevel("processController");
                             if (_tl >= TRACE_DETAIL) {
-                                printf("  > debug_log pid=%lu: \"%s\"\n", reader_pid, captured_line.c_str());
+                                printf("  > debug_log pid=%lu: \"%s\"\n",
+                                       reader_pid, captured_line.c_str());
                             }
                         }
-                        break;
-                    }
-
-                    case LOAD_DLL_DEBUG_EVENT:
-                        /* DLL ロードハンドルをクローズしてリソースリークを防ぐ */
-                        if (de.u.LoadDll.hFile != nullptr) {
-                            CloseHandle(de.u.LoadDll.hFile);
+                        SetEvent(hBufReady); /* 次のメッセージを受信可能にする */
+                    } else {
+                        /* タイムアウト: プロセス終了チェック */
+                        if (proc_h == nullptr ||
+                            WaitForSingleObject(proc_h, 0) == WAIT_OBJECT_0) {
+                            break;
                         }
-                        break;
-
-                    case EXIT_PROCESS_DEBUG_EVENT:
-                        ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
-                        return; /* ループ脱出 */
-
-                    case EXCEPTION_DEBUG_EVENT:
-                        /* デバッグ開始時の初回ブレークポイント (INT 3) は DBG_CONTINUE で継続。
-                         * それ以外の例外はプロセス自身のハンドラに渡す。 */
-                        if (de.u.Exception.ExceptionRecord.ExceptionCode != EXCEPTION_BREAKPOINT &&
-                            de.u.Exception.ExceptionRecord.ExceptionCode != EXCEPTION_SINGLE_STEP) {
-                            continue_status = DBG_EXCEPTION_NOT_HANDLED;
-                        }
-                        break;
-
-                    default:
-                        break;
                     }
-                    ContinueDebugEvent(de.dwProcessId, de.dwThreadId, continue_status);
                 }
+
+                UnmapViewOfFile(view);
+                CloseHandle(hMapping);
+                CloseHandle(hDataReady);
+                CloseHandle(hBufReady);
             });
         }
 
