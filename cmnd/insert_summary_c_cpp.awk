@@ -129,12 +129,7 @@ END {
       }
 
       # --- 手順 (Act優先 → Pre-Assert) ---
-      # 状態または description がある場合のみ前改行を入れる
-      if (s_idx > 0 || desc_idx > 0) {
-        print "\n### 手順\n"
-      } else {
-        print "### 手順\n"
-      }
+      print "\n### 手順\n"
       for (i=1; i<=act_idx; i++) print act[i]
       for (i=1; i<=pre_s_idx; i++) print pre_step[i]
 
@@ -175,12 +170,7 @@ END {
         check_header = check_header ")\n"
       }
 
-      # 手順がある場合のみ前改行を入れる
-      if (act_idx > 0 || pre_s_idx > 0) {
-        print "\n" check_header
-      } else {
-        print check_header
-      }
+      print "\n" check_header
       for (i=1; i<=pre_c_idx; i++) print pre_chk[i]
       for (i=1; i<=as_c_idx; i++) print asrt_chk[i]
 
