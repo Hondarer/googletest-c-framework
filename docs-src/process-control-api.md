@@ -142,6 +142,8 @@ stdout に指定パターン (部分一致) が出現するまで待機します
 stdout の読み取りはバックグラウンドスレッドが常時行っているため、
 `writeLineStdin()` と同時に呼び出してもデッドロックは発生しません。
 
+Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForOutput()` 完了後にはその時点までの全ログが利用可能です。
+
 > **テスト対象側の要件**: stdout / stderr はパイプ経由で受け渡されるため、
 > テストが待機するパターンを出力した直後にテスト対象側で `fflush(stdout)` を呼ぶ必要があります。
 > 呼ばれていない場合、出力が stdio の内部バッファに滞留し、タイムアウトまでパターンが届きません。
@@ -185,8 +187,7 @@ extern int waitProcess(AsyncProcessHandle& handle, int timeout_ms = 10000)
 プロセス終了を待機し、終了コードを返します。
 タイムアウト時は `-1` を返します。
 
-Linux で `preload_lib` を指定している場合、syslog モック出力の収集はここで一括して行われます。
-Windows の `capture_debug_output` はリアルタイム収集ですが、実用上は `waitProcess()` 後に参照することを推奨します。
+Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitProcess()` 完了後には全ログが利用可能です。
 
 #### getStdout / getStderr
 
@@ -206,8 +207,8 @@ extern vector<string>  getDebugLog     (AsyncProcessHandle& handle, size_t from_
 
 デバッグログを行単位で返します (非破壊)。
 
-- **Linux**: `preload_lib` を指定した場合に有効。syslog モック出力が対象。`waitProcess()` 後に一括収集されるため、`waitProcess()` 前は常に 0 / 空を返します。
-- **Windows**: `capture_debug_output = true` を指定した場合に有効。OutputDebugString 出力が対象。リアルタイム収集されますが、実用上は `waitProcess()` 後に参照することを推奨します。
+- **Linux**: `preload_lib` を指定した場合に有効。syslog モック出力が対象。
+- **Windows**: `capture_debug_output = true` を指定した場合に有効。OutputDebugString 出力が対象。
 - `from_index` に `getDebugLogCount()` で記録したインデックスを渡すと、
   その時点以降のログのみを取り出せます。
 

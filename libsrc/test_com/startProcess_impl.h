@@ -27,8 +27,10 @@ struct AsyncProcess {
     int   stdout_fd   = -1;
     int   stderr_fd   = -1;
 
-    /** syslog キャプチャ用一時ファイルパス。空文字列 = preload_lib 未使用。 */
-    std::string debug_log_tmp;
+    /** syslog キャプチャ用パイプ read 端 (-1 = preload_lib 未使用)。 */
+    int         debug_log_fd  = -1;
+    /** パイプから受信した途中の行バッファ。 */
+    std::string debug_log_buf;
 
     /** waitProcess() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;

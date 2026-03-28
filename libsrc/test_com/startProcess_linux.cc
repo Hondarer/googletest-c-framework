@@ -47,10 +47,10 @@ AsyncProcess::~AsyncProcess()
         waitpid(my_pid, nullptr, 0);
     }
     /* stdout_fd / stderr_fd は reader_thread が close 済み。
-     * debug_log_tmp はプロセス起動失敗時に残る場合があるので削除。 */
-    if (!debug_log_tmp.empty()) {
-        unlink(debug_log_tmp.c_str());
-        debug_log_tmp.clear();
+     * debug_log_fd はプロセス起動失敗時や reader_thread 未起動時に残る場合がある。 */
+    if (debug_log_fd != -1) {
+        close(debug_log_fd);
+        debug_log_fd = -1;
     }
 }
 
@@ -81,11 +81,10 @@ AsyncProcessHandle startProcessAsync(const string& path,
 
     auto proc = make_shared<AsyncProcess>();
 
-    /* syslog キャプチャ用一時ファイル */
+    /* syslog キャプチャ用パイプ */
+    int debug_log_pipe[2] = {-1, -1};
     if (!opts.preload_lib.empty()) {
-        char tmp[] = "/tmp/syslog_XXXXXX";
-        int fd = mkstemp(tmp);
-        if (fd == -1) {
+        if (pipe(debug_log_pipe) != 0) {
             for (int pfd : {stdin_pipe[0], stdin_pipe[1],
                             stdout_pipe[0], stdout_pipe[1],
                             stderr_pipe[0], stderr_pipe[1]}) {
@@ -93,19 +92,15 @@ AsyncProcessHandle startProcessAsync(const string& path,
             }
             return nullptr;
         }
-        close(fd);
-        proc->debug_log_tmp = tmp;
     }
 
     pid_t pid = fork();
     if (pid == -1) {
         for (int fd : {stdin_pipe[0], stdin_pipe[1],
                        stdout_pipe[0], stdout_pipe[1],
-                       stderr_pipe[0], stderr_pipe[1]}) {
-            close(fd);
-        }
-        if (!proc->debug_log_tmp.empty()) {
-            unlink(proc->debug_log_tmp.c_str());
+                       stderr_pipe[0], stderr_pipe[1],
+                       debug_log_pipe[0], debug_log_pipe[1]}) {
+            if (fd != -1) { close(fd); }
         }
         return nullptr;
     }
@@ -124,12 +119,20 @@ AsyncProcessHandle startProcessAsync(const string& path,
         close(stdout_pipe[1]);
         close(stderr_pipe[1]);
 
+        /* debug_log パイプ: read 端を閉じ、write 端の番号を環境変数で渡す */
+        if (debug_log_pipe[0] != -1) { close(debug_log_pipe[0]); }
+        if (debug_log_pipe[1] != -1) {
+            char fd_str[16];
+            snprintf(fd_str, sizeof(fd_str), "%d", debug_log_pipe[1]);
+            setenv("SYSLOG_MOCK_FD", fd_str, 1);
+            /* write 端は exec 後も継承 (FD_CLOEXEC 設定なし) */
+        }
+
         for (const auto& kv : opts.env_set) {
             setenv(kv.first.c_str(), kv.second.c_str(), 1);
         }
 
         if (!opts.preload_lib.empty()) {
-            setenv("SYSLOG_MOCK_FILE", proc->debug_log_tmp.c_str(), 1);
             const char* existing = getenv("LD_PRELOAD");
             string preload_val = opts.preload_lib;
             if (existing != nullptr && existing[0] != '\0') {
@@ -153,13 +156,16 @@ AsyncProcessHandle startProcessAsync(const string& path,
     close(stdin_pipe[0]);
     close(stdout_pipe[1]);
     close(stderr_pipe[1]);
+    /* debug_log パイプ: write 端を閉じ、read 端を proc に格納 */
+    if (debug_log_pipe[1] != -1) { close(debug_log_pipe[1]); }
 
-    proc->pid       = pid;
-    proc->stdin_fd  = stdin_pipe[1];
-    proc->stdout_fd = stdout_pipe[0];
-    proc->stderr_fd = stderr_pipe[0];
+    proc->pid          = pid;
+    proc->stdin_fd     = stdin_pipe[1];
+    proc->stdout_fd    = stdout_pipe[0];
+    proc->stderr_fd    = stderr_pipe[0];
+    proc->debug_log_fd = debug_log_pipe[0];
 
-    /* ReaderThread: select() で stdout/stderr を多重監視 */
+    /* ReaderThread: select() で stdout/stderr/debug_log を多重監視 */
     AsyncProcess* p = proc.get();
     proc->reader_thread = thread([p]() {
         char buf[4096];
@@ -175,6 +181,10 @@ AsyncProcessHandle startProcessAsync(const string& path,
             if (p->stderr_fd != -1) {
                 FD_SET(p->stderr_fd, &rfds);
                 maxfd = std::max(maxfd, p->stderr_fd);
+            }
+            if (p->debug_log_fd != -1) {
+                FD_SET(p->debug_log_fd, &rfds);
+                maxfd = std::max(maxfd, p->debug_log_fd);
             }
             if (maxfd == -1) { break; }
 
@@ -201,6 +211,23 @@ AsyncProcessHandle startProcessAsync(const string& path,
                 } else {
                     close(p->stderr_fd);
                     p->stderr_fd = -1;
+                }
+            }
+            if (p->debug_log_fd != -1 && FD_ISSET(p->debug_log_fd, &rfds)) {
+                ssize_t n = read(p->debug_log_fd, buf, sizeof(buf));
+                if (n > 0) {
+                    lock_guard<mutex> lk(p->buf_mutex);
+                    p->debug_log_buf.append(buf, (size_t)n);
+                    /* 改行で分割して debug_log_lines に追記 */
+                    size_t pos;
+                    while ((pos = p->debug_log_buf.find('\n')) != string::npos) {
+                        p->debug_log_lines.push_back(
+                            p->debug_log_buf.substr(0, pos + 1));
+                        p->debug_log_buf.erase(0, pos + 1);
+                    }
+                } else {
+                    close(p->debug_log_fd);
+                    p->debug_log_fd = -1;
                 }
             }
         }
@@ -316,19 +343,7 @@ int waitProcess(AsyncProcessHandle& handle, int timeout_ms)
         }
     }
 
-    /* syslog 一時ファイルを読み込んで debug_log_lines に格納 */
-    if (!handle->debug_log_tmp.empty()) {
-        FILE* f = fopen(handle->debug_log_tmp.c_str(), "r");
-        if (f != nullptr) {
-            char line_buf[4096];
-            while (fgets(line_buf, (int)sizeof(line_buf), f) != nullptr) {
-                handle->debug_log_lines.push_back(string(line_buf));
-            }
-            fclose(f);
-        }
-        unlink(handle->debug_log_tmp.c_str());
-        handle->debug_log_tmp.clear();
-    }
+    /* debug_log_lines は reader_thread がパイプ経由でリアルタイム収集済み */
 
     handle->last_exit_code = exit_code;
     return exit_code;
