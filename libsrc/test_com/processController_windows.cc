@@ -12,6 +12,7 @@
 
 #include <evntrace.h>
 #include <evntcons.h>
+#pragma comment(lib, "Advapi32.lib")
 
 #ifndef INVALID_PROCESSTRACE_HANDLE
 #define INVALID_PROCESSTRACE_HANDLE ((TRACEHANDLE)INVALID_HANDLE_VALUE)
