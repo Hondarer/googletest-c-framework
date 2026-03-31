@@ -10,6 +10,13 @@
 #include <thread>
 #include <vector>
 
+#include <evntrace.h>
+#include <evntcons.h>
+
+#ifndef INVALID_PROCESSTRACE_HANDLE
+#define INVALID_PROCESSTRACE_HANDLE ((TRACEHANDLE)INVALID_HANDLE_VALUE)
+#endif
+
 namespace testing {
 
 /* -------- ユーティリティ -------- */
@@ -48,6 +55,238 @@ static string buildEnvBlock(const map<string, string>& overrides)
     block += '\0';
     return block;
 }
+
+/* -------- ETW キャプチャ ヘルパー -------- */
+
+/** GUID 文字列 "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" をパースする。成功 0 / 失敗 -1。 */
+static int parseGuid(const char *str, GUID *guid)
+{
+    unsigned int d[11];
+    if (str == nullptr || guid == nullptr) { return -1; }
+    int n = sscanf_s(str,
+        "%8x-%4x-%4x-%2x%2x-%2x%2x%2x%2x%2x%2x",
+        &d[0], &d[1], &d[2], &d[3], &d[4],
+        &d[5], &d[6], &d[7], &d[8], &d[9], &d[10]);
+    if (n != 11) { return -1; }
+    guid->Data1    = (ULONG)d[0];
+    guid->Data2    = (USHORT)d[1];
+    guid->Data3    = (USHORT)d[2];
+    guid->Data4[0] = (UCHAR)d[3];
+    guid->Data4[1] = (UCHAR)d[4];
+    guid->Data4[2] = (UCHAR)d[5];
+    guid->Data4[3] = (UCHAR)d[6];
+    guid->Data4[4] = (UCHAR)d[7];
+    guid->Data4[5] = (UCHAR)d[8];
+    guid->Data4[6] = (UCHAR)d[9];
+    guid->Data4[7] = (UCHAR)d[10];
+    return 0;
+}
+
+/** GUID 一致判定。 */
+static bool guidEqual(const GUID *a, const GUID *b)
+{
+    return a->Data1 == b->Data1 &&
+           a->Data2 == b->Data2 &&
+           a->Data3 == b->Data3 &&
+           a->Data4[0] == b->Data4[0] &&
+           a->Data4[1] == b->Data4[1] &&
+           a->Data4[2] == b->Data4[2] &&
+           a->Data4[3] == b->Data4[3] &&
+           a->Data4[4] == b->Data4[4] &&
+           a->Data4[5] == b->Data4[5] &&
+           a->Data4[6] == b->Data4[6] &&
+           a->Data4[7] == b->Data4[7];
+}
+
+/** ETW コールバックに渡すコンテキスト。 */
+struct EtwCallbackData {
+    AsyncProcess* proc;
+    DWORD         target_pid;
+    GUID          provider_guid;
+    string        service_filter;
+};
+
+/** UserData から Service と Message を抽出する。
+ *  TraceLogging 形式:
+ *    2フィールド (Service あり): "Service\0Message\0"
+ *    1フィールド (Service なし): "Message\0"
+ *  戻り値: message (空文字列の場合はイベントにデータなし)。 */
+static void parseUserData(const void *userData, USHORT userDataLength,
+                          string &out_service, string &out_message)
+{
+    out_service.clear();
+    out_message.clear();
+
+    if (userData == nullptr || userDataLength == 0) { return; }
+
+    const char *data = static_cast<const char *>(userData);
+    const char *end  = data + userDataLength;
+
+    /* null 終端文字列を順番に抽出 */
+    vector<string> fields;
+    while (data < end) {
+        string field(data);
+        data += field.size() + 1;
+        fields.push_back(std::move(field));
+    }
+
+    if (fields.size() >= 2) {
+        out_service = fields[0];
+        out_message = fields[1];
+    } else if (fields.size() == 1) {
+        out_message = fields[0];
+    }
+}
+
+/** ETW イベントレコードコールバック (ProcessTrace から呼ばれる)。 */
+static VOID WINAPI etwEventCallback(PEVENT_RECORD pEvent)
+{
+    if (pEvent == nullptr) { return; }
+
+    auto *ctx = static_cast<EtwCallbackData *>(pEvent->UserContext);
+    if (ctx == nullptr || ctx->proc == nullptr) { return; }
+
+    /* プロバイダ GUID フィルタ */
+    if (!guidEqual(&pEvent->EventHeader.ProviderId, &ctx->provider_guid)) { return; }
+
+    /* PID フィルタ */
+    if (pEvent->EventHeader.ProcessId != ctx->target_pid) { return; }
+
+    /* UserData パース */
+    string service, message;
+    parseUserData(pEvent->UserData, pEvent->UserDataLength, service, message);
+
+    /* Service フィルタ */
+    if (!ctx->service_filter.empty() && service != ctx->service_filter) { return; }
+
+    if (message.empty()) { return; }
+
+    /* debug_log_lines に追加 */
+    {
+        lock_guard<mutex> lk(ctx->proc->buf_mutex);
+        ctx->proc->debug_log_lines.push_back(message);
+    }
+
+    int _tl = _getTraceLevel("processController");
+    if (_tl >= TRACE_DETAIL) {
+        printf("  > etw_log   pid=%lu: \"%s\"\n",
+               (unsigned long)ctx->target_pid, message.c_str());
+    }
+}
+
+/** ProcessTrace ワーカースレッド関数。 */
+static DWORD WINAPI etwTraceThreadProc(LPVOID param)
+{
+    TRACEHANDLE *pTraceHandle = static_cast<TRACEHANDLE *>(param);
+    ProcessTrace(pTraceHandle, 1, NULL, NULL);
+    return 0;
+}
+
+/** ETW セッション管理構造体 (スレッドローカル)。 */
+struct EtwSession {
+    TRACEHANDLE              session_handle = 0;
+    TRACEHANDLE              trace_handle   = INVALID_PROCESSTRACE_HANDLE;
+    HANDLE                   thread_handle  = nullptr;
+    EVENT_TRACE_PROPERTIES  *properties     = nullptr;
+    wchar_t                 *session_name_w = nullptr;
+    EtwCallbackData          callback_data  = {};
+
+    ~EtwSession() { stop(); }
+
+    /** セッション開始。成功時 true。 */
+    bool start(AsyncProcess *proc, DWORD target_pid,
+               const string &provider_guid_str, const string &service_filter)
+    {
+        GUID guid;
+        if (parseGuid(provider_guid_str.c_str(), &guid) != 0) { return false; }
+
+        callback_data.proc           = proc;
+        callback_data.target_pid     = target_pid;
+        callback_data.provider_guid  = guid;
+        callback_data.service_filter = service_filter;
+
+        /* セッション名: "testfw_<テストPID>_<子PID>" */
+        char name_buf[64];
+        snprintf(name_buf, sizeof(name_buf), "testfw_%lu_%lu",
+                 (unsigned long)GetCurrentProcessId(), (unsigned long)target_pid);
+
+        int name_len_w = MultiByteToWideChar(CP_UTF8, 0, name_buf, -1, NULL, 0);
+        if (name_len_w <= 0) { return false; }
+
+        session_name_w = static_cast<wchar_t *>(malloc((size_t)name_len_w * sizeof(wchar_t)));
+        if (session_name_w == nullptr) { return false; }
+        MultiByteToWideChar(CP_UTF8, 0, name_buf, -1, session_name_w, name_len_w);
+
+        size_t props_size = sizeof(EVENT_TRACE_PROPERTIES) + ((size_t)name_len_w * sizeof(wchar_t));
+        properties = static_cast<EVENT_TRACE_PROPERTIES *>(malloc(props_size));
+        if (properties == nullptr) { stop(); return false; }
+
+        ZeroMemory(properties, props_size);
+        properties->Wnode.BufferSize    = (ULONG)props_size;
+        properties->Wnode.Flags         = WNODE_FLAG_TRACED_GUID;
+        properties->Wnode.ClientContext = 1; /* QPC */
+        properties->LogFileMode         = EVENT_TRACE_REAL_TIME_MODE;
+        properties->LoggerNameOffset    = sizeof(EVENT_TRACE_PROPERTIES);
+        properties->FlushTimer          = 1;
+
+        ULONG status = StartTraceW(&session_handle, session_name_w, properties);
+        if (status != ERROR_SUCCESS) {
+            session_handle = 0;
+            stop();
+            return false;
+        }
+
+        /* プロバイダを有効化 */
+        ENABLE_TRACE_PARAMETERS etp = {};
+        etp.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
+        status = EnableTraceEx2(session_handle, &guid,
+                                EVENT_CONTROL_CODE_ENABLE_PROVIDER,
+                                TRACE_LEVEL_VERBOSE,
+                                0xFFFFFFFFFFFFFFFF, 0, 0, &etp);
+        if (status != ERROR_SUCCESS) { stop(); return false; }
+
+        /* トレースをオープン */
+        EVENT_TRACE_LOGFILEW trace_logfile = {};
+        trace_logfile.LoggerName          = session_name_w;
+        trace_logfile.ProcessTraceMode    = PROCESS_TRACE_MODE_REAL_TIME | PROCESS_TRACE_MODE_EVENT_RECORD;
+        trace_logfile.EventRecordCallback = etwEventCallback;
+        trace_logfile.Context             = &callback_data;
+
+        trace_handle = OpenTraceW(&trace_logfile);
+        if (trace_handle == INVALID_PROCESSTRACE_HANDLE) { stop(); return false; }
+
+        /* ProcessTrace ワーカースレッドを起動 */
+        thread_handle = CreateThread(NULL, 0, etwTraceThreadProc, &trace_handle, 0, NULL);
+        if (thread_handle == nullptr) { stop(); return false; }
+
+        return true;
+    }
+
+    /** セッション停止とリソース解放。 */
+    void stop()
+    {
+        if (session_handle != 0 && properties != nullptr) {
+            ControlTraceW(session_handle, NULL, properties, EVENT_TRACE_CONTROL_STOP);
+            session_handle = 0;
+        }
+        if (thread_handle != nullptr) {
+            WaitForSingleObject(thread_handle, INFINITE);
+            CloseHandle(thread_handle);
+            thread_handle = nullptr;
+        }
+        if (trace_handle != INVALID_PROCESSTRACE_HANDLE) {
+            CloseTrace(trace_handle);
+            trace_handle = INVALID_PROCESSTRACE_HANDLE;
+        }
+        free(session_name_w);  session_name_w = nullptr;
+        free(properties);      properties     = nullptr;
+    }
+
+    /* コピー禁止 */
+    EtwSession(const EtwSession&)            = delete;
+    EtwSession& operator=(const EtwSession&) = delete;
+    EtwSession() = default;
+};
 
 /* -------- AsyncProcess デストラクタ -------- */
 
@@ -159,6 +398,8 @@ AsyncProcessHandle startProcessAsync(const string& path,
     proc->stdout_h             = stdout_r;
     proc->stderr_h             = stderr_r;
     proc->capture_debug_output = opts.capture_debug_output;
+    proc->etw_provider_guid    = opts.etw_provider_guid;
+    proc->etw_service_filter   = opts.etw_service_filter;
 
     if (_tl >= TRACE_DETAIL) {
         printf(" -> pid=%lu\n", (unsigned long)proc->pid);
@@ -284,9 +525,27 @@ AsyncProcessHandle startProcessAsync(const string& path,
             });
         }
 
+        /* ETW イベントをキャプチャするスレッド。
+         * etw_provider_guid が非空の場合のみ起動する。
+         * ProcessTrace はブロッキング呼び出しのため専用スレッドで実行し、
+         * プロセス終了後にセッションを停止して ProcessTrace を終了させる。 */
+        EtwSession etw_session;
+        if (!p->etw_provider_guid.empty()) {
+            bool ok = etw_session.start(p, (DWORD)reader_pid,
+                                        p->etw_provider_guid, p->etw_service_filter);
+            int _tl = _getTraceLevel("processController");
+            if (_tl >= TRACE_DETAIL) {
+                printf("  > etw_session pid=%lu: %s\n",
+                       reader_pid, ok ? "started" : "skipped (start failed)");
+            }
+        }
+
         t_out.join();
         t_err.join();
         if (t_dbg.joinable()) { t_dbg.join(); }
+
+        /* ETW セッション停止 (ProcessTrace 終了 → スレッド join) */
+        etw_session.stop();
 
         lock_guard<mutex> lk(p->buf_mutex);
         p->process_done = true;

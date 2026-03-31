@@ -77,6 +77,11 @@ struct AsyncProcess {
     /** OutputDebugString キャプチャが有効かどうか。 */
     bool capture_debug_output = true;
 
+    /** ETW プロバイダ GUID 文字列 (空 = ETW キャプチャ無効)。 */
+    std::string etw_provider_guid;
+    /** ETW Service フィールドフィルタ (空 = フィルタなし)。 */
+    std::string etw_service_filter;
+
     /** waitForExit() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;
 

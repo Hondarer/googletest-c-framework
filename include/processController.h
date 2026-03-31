@@ -38,6 +38,21 @@ struct ProcessOptions {
      *  true にすると DEBUG_ONLY_THIS_PROCESS で起動し debug_log / getDebugLog() でキャプチャできる。
      *  Linux の preload_lib に相当する。デフォルト true (Linux の常時収集に合わせた既定値)。 */
     bool capture_debug_output = true;
+
+    /** ETW (Event Tracing for Windows) イベントをキャプチャする (Windows のみ)。
+     *  プロバイダ GUID 文字列を "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 形式で指定する。
+     *  空文字列の場合 ETW キャプチャは無効 (デフォルト)。
+     *  キャプチャした ETW イベントは OutputDebugString と同じ debug_log_lines に
+     *  到着順でマージされ、getDebugLog() で取得できる。
+     *  ETW セッションの開始には Administrators または Performance Log Users
+     *  グループのメンバーシップが必要。権限不足の場合はサイレントにスキップする。 */
+    string etw_provider_guid;
+
+    /** ETW イベントの Service フィールドでフィルタする (Windows のみ)。
+     *  空文字列の場合はフィルタなし (指定プロバイダの全イベントを取得)。
+     *  非空の場合、etw_provider_write の service 引数と一致するイベントのみ取得する。
+     *  etw_provider_guid が空の場合は無視される。 */
+    string etw_service_filter;
 #endif
 };
 
@@ -47,7 +62,9 @@ struct ProcessResult {
     string stdout_out; ///< 標準出力
     string stderr_out; ///< 標準エラー出力
     /** Linux  : LD_PRELOAD した syslog モックの出力 (preload_lib 指定時のみ)
-     *  Windows: OutputDebugString の出力 (capture_debug_output 指定時のみ) */
+     *  Windows: OutputDebugString の出力 (capture_debug_output 指定時) および
+     *           ETW イベントの Message フィールド (etw_provider_guid 指定時) を
+     *           到着順にマージした内容。 */
     string debug_log;
 };
 
@@ -135,9 +152,9 @@ extern string getStderr(AsyncProcessHandle& handle);
  * 現在の蓄積デバッグログの行数を返す。
  *
  * Linux では waitForExit() 後に一括収集されるため、waitForExit() 前は常に 0 を返す。
- * Windows では OutputDebugString 受信時にリアルタイム収集されるが、
+ * Windows では OutputDebugString 受信時および ETW イベント受信時にリアルタイム収集されるが、
  * 実用上は waitForExit() 後に参照することを推奨する。
- * ProcessOptions.preload_lib (Linux) / capture_debug_output (Windows) を
+ * ProcessOptions.preload_lib (Linux) / capture_debug_output / etw_provider_guid (Windows) を
  * 指定しない場合は常に 0 を返す。
  */
 extern size_t getDebugLogCount(AsyncProcessHandle& handle);
@@ -147,7 +164,9 @@ extern size_t getDebugLogCount(AsyncProcessHandle& handle);
  *
  * Linux  : LD_PRELOAD した libmock_syslog.so が一時ファイルに書き込んだ内容。
  *          waitForExit() 後に一括収集される。
- * Windows: OutputDebugString でキャプチャした内容 (capture_debug_output 指定時)。
+ * Windows: OutputDebugString でキャプチャした内容 (capture_debug_output 指定時) と
+ *          ETW イベントの Message フィールド (etw_provider_guid 指定時) を
+ *          到着順にマージした内容。
  *          リアルタイム収集されるが、実用上は waitForExit() 後に参照することを推奨する。
  *
  * @param from_index  返却を開始する行インデックス (デフォルト 0 = 全件)。
