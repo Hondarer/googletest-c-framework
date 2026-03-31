@@ -148,7 +148,7 @@ function run_test() {
     local result=$(<"$temp_exit_code")
     rm -f $temp_exit_code
     if [ $result -eq 0 ]; then
-        if grep -q "WARNING" $temp_file; then
+        if grep -qE "\[ *WARNING *\]" $temp_file; then
             #                echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment"
             test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment")"$'\n'
             echo -e "$test_id\tWARNING\t$test_comment" >> results/all_tests/summary.log

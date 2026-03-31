@@ -141,7 +141,7 @@ function run_all_tests_batch() {
 
         # 結果を判定
         if [ "$test_result" = "Passed" ]; then
-            if grep -q "WARNING" "$temp_file"; then
+            if grep -qE "\[ *WARNING *\]" "$temp_file"; then
                 test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m")"$'\n'
                 echo -e "$test_id\tWARNING" >> "$RESULTS_DIR/all_tests/summary.log"
                 WARNING_COUNT=$((WARNING_COUNT + 1))
