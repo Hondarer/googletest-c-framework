@@ -151,7 +151,7 @@ AsyncProcessHandle startProcessAsync(const string& path,
         if (debug_log_pipe[1] != -1) {
             char fd_str[16];
             snprintf(fd_str, sizeof(fd_str), "%d", debug_log_pipe[1]);
-            setenv("SYSLOG_MOCK_FD", fd_str, 1);
+            setenv("SYSLOG_TEST_FD", fd_str, 1);
             /* write 端は exec 後も継承 (FD_CLOEXEC 設定なし) */
         }
 
