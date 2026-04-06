@@ -14,8 +14,6 @@
 /* syslog() の差し替え実装 */
 void syslog(int priority, const char *fmt, ...)
 {
-    (void)priority;
-
     va_list ap;
     va_start(ap, fmt);
 
@@ -25,16 +23,31 @@ void syslog(int priority, const char *fmt, ...)
         int fd = atoi(fd_str);
         if (fd >= 0)
         {
+            /* スタックバッファに <priority>message\n を 1 度に書き込む。
+             * 複数スレッドからの write() 呼び出しが interleave しないよう
+             * 単一の write() で完結させる。 */
             char buf[4096];
-            int n = vsnprintf(buf, sizeof(buf) - 1, fmt, ap);
+
+            /* 先頭に <priority> プレフィックスを書く */
+            int prefix_len = snprintf(buf, sizeof(buf), "<%d>", priority);
+            if (prefix_len < 0 || (size_t)prefix_len >= sizeof(buf) - 2)
+            {
+                prefix_len = 0;
+            }
+
+            /* 残り領域にメッセージ本体を展開する */
+            char *msg     = buf + prefix_len;
+            size_t msg_sz = sizeof(buf) - (size_t)prefix_len - 1; /* \n 用に 1 バイト確保 */
+            int n         = vsnprintf(msg, msg_sz, fmt, ap);
             if (n > 0)
             {
-                if ((size_t)n >= sizeof(buf) - 1) {
-                    n = (int)(sizeof(buf) - 2);
+                if ((size_t)n >= msg_sz)
+                {
+                    n = (int)(msg_sz - 1);
                 }
-                buf[n]     = '\n';
-                buf[n + 1] = '\0';
-                write(fd, buf, (size_t)(n + 1));
+                msg[n]     = '\n';
+                msg[n + 1] = '\0';
+                write(fd, buf, (size_t)(prefix_len + n + 1));
             }
         }
     }
