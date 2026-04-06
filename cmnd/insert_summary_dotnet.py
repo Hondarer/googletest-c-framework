@@ -60,7 +60,6 @@ def insert_summary():
 
     # 確認内容のカテゴリ別カウンター
     check_normal = 0
-    check_semi_normal = 0
     check_abnormal = 0
     check_unspecified = 0
 
@@ -120,26 +119,6 @@ def insert_summary():
                 asrt_chk.append(s)
                 if is_list_item(s):
                     check_normal += 1
-            continue
-
-        # [Pre-Assert確認_準正常系]
-        match = re.search(r'\[Pre-Assert確認_準正常系\]', line)
-        if match:
-            s = trim(line[match.end():])
-            if s:
-                pre_chk.append(s)
-                if is_list_item(s):
-                    check_semi_normal += 1
-            continue
-
-        # [確認_準正常系]
-        match = re.search(r'\[確認_準正常系\]', line)
-        if match:
-            s = trim(line[match.end():])
-            if s:
-                asrt_chk.append(s)
-                if is_list_item(s):
-                    check_semi_normal += 1
             continue
 
         # [Pre-Assert確認_異常系]
@@ -207,7 +186,7 @@ def insert_summary():
 
         # --- 確認内容 (Pre-Assert → Assert) ---
         # カテゴリ未指定のみかどうかを判定
-        has_categorized = check_normal > 0 or check_semi_normal > 0 or check_abnormal > 0
+        has_categorized = check_normal > 0 or check_abnormal > 0
 
         if not has_categorized:
             # 後方互換モード: カテゴリ未指定のみの場合
@@ -224,12 +203,6 @@ def insert_summary():
                     categories.append(f"正常系:{check_normal} * {param_count}")
                 else:
                     categories.append(f"正常系:{check_normal}")
-
-            if check_semi_normal > 0:
-                if is_theory and param_count > 1:
-                    categories.append(f"準正常系:{check_semi_normal} * {param_count}")
-                else:
-                    categories.append(f"準正常系:{check_semi_normal}")
 
             if check_abnormal > 0:
                 if is_theory and param_count > 1:

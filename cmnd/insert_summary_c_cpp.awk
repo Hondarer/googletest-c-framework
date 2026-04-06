@@ -22,7 +22,6 @@ BEGIN {
   s_idx = 0; act_idx = 0; pre_s_idx = 0; pre_c_idx = 0; as_c_idx = 0;
   # 確認内容のカテゴリ別リスト項目数
   check_normal = 0;      # 正常系
-  check_semi_normal = 0; # 準正常系
   check_abnormal = 0;    # 異常系
   check_unspecified = 0; # カテゴリ未指定
   # TEST_F 直前の // コメント行 (description)
@@ -67,18 +66,6 @@ BEGIN {
     if (s != "") {
       asrt_chk[++as_c_idx] = s
       if (is_list_item(s)) check_normal++
-    }
-  } else if (match($0, /\[Pre-Assert確認_準正常系\]/)) {
-    s = trim(substr($0, RSTART + RLENGTH))
-    if (s != "") {
-      pre_chk[++pre_c_idx] = s
-      if (is_list_item(s)) check_semi_normal++
-    }
-  } else if (match($0, /\[確認_準正常系\]/)) {
-    s = trim(substr($0, RSTART + RLENGTH))
-    if (s != "") {
-      asrt_chk[++as_c_idx] = s
-      if (is_list_item(s)) check_semi_normal++
     }
   } else if (match($0, /\[Pre-Assert確認_異常系\]/)) {
     s = trim(substr($0, RSTART + RLENGTH))
@@ -135,7 +122,7 @@ END {
 
       # --- 確認内容 (Pre-Assert → Assert) ---
       # カテゴリ未指定のみかどうかを判定
-      has_categorized = (check_normal > 0 || check_semi_normal > 0 || check_abnormal > 0)
+      has_categorized = (check_normal > 0 || check_abnormal > 0)
 
       # ヘッダー文字列を生成
       if (!has_categorized) {
@@ -149,11 +136,6 @@ END {
         if (check_normal > 0) {
           if (!first) check_header = check_header ", "
           check_header = check_header "正常系:" check_normal
-          first = 0
-        }
-        if (check_semi_normal > 0) {
-          if (!first) check_header = check_header ", "
-          check_header = check_header "準正常系:" check_semi_normal
           first = 0
         }
         if (check_abnormal > 0) {
