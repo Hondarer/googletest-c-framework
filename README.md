@@ -15,7 +15,7 @@ A common modules to test existing C programs using googletest.
 - lib モックのアーカイブ
 - libsrc モックのソース
 
-※ 全体が プロジェクトフォルダの testfw/ に配置される前提。
+※ この統合プロジェクトでは `framework/testfw/` に配置される前提。
 
 ### cmnd 内のスクリプト
 
@@ -45,7 +45,7 @@ A common modules to test existing C programs using googletest.
 
 ## ビルド
 
-親階層で、`make clean; make`
+親プロジェクトルートで `make -C framework/testfw clean; make -C framework/testfw`、または `cd framework/testfw && make clean && make`
 
 ## 依存コンポーネント
 

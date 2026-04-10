@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# このスクリプトのパス (dirname "$0" 相当)
-SCRIPT_DIR=${0%/*}
+# このスクリプトの絶対パス
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ワークスペースのディレクトリ
-WORKSPACE_FOLDER=$SCRIPT_DIR/../../
+WORKSPACE_FOLDER=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
 # プロジェクト名 (カレントディレクトリ名から取得)
 PROJECT_NAME=$(basename "$(pwd)")

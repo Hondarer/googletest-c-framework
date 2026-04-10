@@ -7,11 +7,11 @@ else
     IS_WINDOWS=0
 fi
 
-# このスクリプトのパス (dirname "$0" 相当)
-SCRIPT_DIR=${0%/*}
+# このスクリプトの絶対パス
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ワークスペースのディレクトリ
-WORKSPACE_FOLDER=$SCRIPT_DIR/../../
+WORKSPACE_FOLDER=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
 # ソースファイルのエンコード指定から LANG を得る
 FILES_LANG=$(sh "$WORKSPACE_FOLDER/makefw/cmnd/get_files_lang.sh" "$WORKSPACE_FOLDER")

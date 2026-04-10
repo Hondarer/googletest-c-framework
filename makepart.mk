@@ -24,7 +24,7 @@ else
 endif
 
 INCDIR += \
-    $(WORKSPACE_FOLDER)/testfw/gtest/include \
-    $(WORKSPACE_FOLDER)/testfw/include
+    $(WORKSPACE_FOLDER)/framework/testfw/gtest/include \
+    $(WORKSPACE_FOLDER)/framework/testfw/include
 
 LIBSDIR     =

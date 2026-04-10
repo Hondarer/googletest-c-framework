@@ -29,7 +29,7 @@ struct ProcessOptions {
 #ifndef _WIN32
     /** LD_PRELOAD に追加するライブラリの絶対パス (Linux のみ)。
      *  設定すると syslog モックが有効になり debug_log / getDebugLog() でキャプチャできる。
-     *  testfw 提供: testfw/lib/$(TARGET_ARCH)/libmock_syslog.so */
+     *  testfw 提供: framework/testfw/lib/$(TARGET_ARCH)/libmock_syslog.so */
     string preload_lib;
 #endif
 

@@ -2,7 +2,7 @@
 
 ## 背景
 
-`testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`
+`framework/testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`
 でコンソール出力を制御する仕組みを提供している。
 現在この仕組みはモック関数（`mock_calcHandler` 等）にのみ使われており、
 プロセス制御関数群（`startProcessAsync`, `waitForOutput` 等）には適用されていない。
@@ -110,7 +110,7 @@ void SetUp() override
 
 ## 実装後の検証方法
 
-1. `make -C testfw` でビルドエラーがないことを確認
+1. `make -C framework/testfw` でビルドエラーがないことを確認
 2. `test/override-sample/src/override-sampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
 3. `test/porter/src/integration/porterSendRecvTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
 4. テスト出力に `  > startProcessAsync ...` 等のトレースが表示されることを確認

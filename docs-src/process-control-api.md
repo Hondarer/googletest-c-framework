@@ -2,7 +2,7 @@
 
 ## 概要
 
-`testfw/include/processController.h` が提供するプロセス制御 API です。
+`framework/testfw/include/processController.h` が提供するプロセス制御 API です。
 テスト対象バイナリをサブプロセスとして起動し、
 stdin / stdout / stderr をパイプ経由で制御できます。
 
@@ -47,7 +47,7 @@ struct ProcessOptions {
 | フィールド | 説明 |
 |---|---|
 | `env_set` | 追加または上書きする環境変数 |
-| `preload_lib` | LD_PRELOAD に追加するライブラリの絶対パス **(Linux のみ)**。`testfw/lib/$(TARGET_ARCH)/libmock_syslog.so` を指定すると syslog 出力を `getDebugLog()` でキャプチャできる |
+| `preload_lib` | LD_PRELOAD に追加するライブラリの絶対パス **(Linux のみ)**。`framework/testfw/lib/$(TARGET_ARCH)/libmock_syslog.so` を指定すると syslog 出力を `getDebugLog()` でキャプチャできる |
 | `capture_debug_output` | OutputDebugString 出力をキャプチャする **(Windows のみ)**。`true` にすると `getDebugLog()` でキャプチャできる。Linux の `preload_lib` に相当する。**デフォルト `true`** |
 
 ### ProcessResult
@@ -283,7 +283,7 @@ void TearDown() override {
 ```cpp
 ProcessOptions opts = makeOpts();
 #ifndef _WIN32
-opts.preload_lib = ws + "/testfw/lib/" + TARGET_ARCH + "/libmock_syslog.so";
+opts.preload_lib = ws + "/framework/testfw/lib/" + TARGET_ARCH + "/libmock_syslog.so";
 #endif
 /* Windows は capture_debug_output がデフォルト true のため追加設定不要 */
 
