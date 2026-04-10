@@ -23,8 +23,15 @@ else
     LDFLAGS     =
 endif
 
+ifeq ($(strip $(TESTFW_DIR)),)
+    $(error $(TESTFW_DIR_ERROR))
+endif
+ifeq ($(wildcard $(TESTFW_DIR)),)
+    $(error $(TESTFW_DIR_ERROR))
+endif
+
 INCDIR += \
-    $(WORKSPACE_FOLDER)/framework/testfw/gtest/include \
-    $(WORKSPACE_FOLDER)/framework/testfw/include
+    $(TESTFW_DIR)/gtest/include \
+    $(TESTFW_DIR)/include
 
 LIBSDIR     =
