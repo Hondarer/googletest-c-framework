@@ -78,4 +78,4 @@ A common modules to test existing C programs using googletest.
 
 ## ドキュメント
 
-テストフレームワークの詳細な機能説明は、`docs-src/` ディレクトリにあります。
+テストフレームワークの詳細な機能説明は、`docs/` ディレクトリにあります。
