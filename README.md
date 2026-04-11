@@ -9,7 +9,7 @@ A common modules to test existing C programs using googletest.
 
 ## フォルダ構成
 
-- cmnd テスト支援コマンド類
+- bin テスト支援コマンド類
 - include モックの include
 - include_override テスト対象コードをビルドする際に、注入したい差分 include
 - lib モックのアーカイブ
@@ -22,7 +22,7 @@ A common modules to test existing C programs using googletest.
 
 必要に応じて `TESTFW_DIR=/path/to/testfw` を make 変数で明示指定できる。
 
-### cmnd 内のスクリプト
+### bin 内のスクリプト
 
 #### C/C++ テスト用
 
