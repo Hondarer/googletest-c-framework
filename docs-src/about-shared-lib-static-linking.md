@@ -247,11 +247,11 @@ This feature is only active when `LIB_TYPE=shared`. The behavior of `LIB_TYPE=st
 
 ## 実装ファイル / Implementation File
 
-**ファイル**: `makefw/makefiles/makelibsrc.mk`
+**ファイル**: `framework/makefw/makefiles/makelibsrc.mk`
 
 **変更行**: 162-210行目（共有ライブラリビルドルール部分）
 
-**File**: `makefw/makefiles/makelibsrc.mk`
+**File**: `framework/makefw/makefiles/makelibsrc.mk`
 
 **Modified lines**: Lines 162-210 (shared library build rules)
 

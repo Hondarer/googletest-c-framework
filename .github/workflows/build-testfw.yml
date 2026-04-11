@@ -34,19 +34,19 @@ jobs:
       - name: Checkout testfw repository
         uses: actions/checkout@v4
         with:
-          path: testfw
+          path: framework/testfw
           submodules: recursive
 
       - name: Checkout makefw repository
         uses: actions/checkout@v4
         with:
           repository: Hondarer/make-framework
-          path: makefw
+          path: framework/makefw
 
       - name: Configure git safe directory
         run: |
-          git config --global --add safe.directory "$GITHUB_WORKSPACE/testfw"
-          git config --global --add safe.directory "$GITHUB_WORKSPACE/makefw"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/framework/testfw"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/framework/makefw"
 
       - name: Create workspace root marker
         run: touch .workspaceRoot
@@ -55,19 +55,19 @@ jobs:
         run: |
           # lib ディレクトリをクリーンアップ (古いファイルを削除)
           # Clean lib directory to remove old files from previous commits
-          rm -rf testfw/lib
-          mkdir -p testfw/lib
+          rm -rf framework/testfw/lib
+          mkdir -p framework/testfw/lib
 
       - name: Build libraries
         run: |
-          cd testfw
+          cd framework/testfw
           make
 
       - name: Upload Linux libraries
         uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.distro }}-libraries
-          path: testfw/lib/linux-${{ matrix.distro }}-*
+          path: framework/testfw/lib/linux-${{ matrix.distro }}-*
           if-no-files-found: error
 
   build-windows:
@@ -77,14 +77,14 @@ jobs:
       - name: Checkout testfw repository
         uses: actions/checkout@v4
         with:
-          path: testfw
+          path: framework/testfw
           submodules: recursive
 
       - name: Checkout makefw repository
         uses: actions/checkout@v4
         with:
           repository: Hondarer/make-framework
-          path: makefw
+          path: framework/makefw
 
       - name: Create workspace root marker
         run: New-Item -ItemType File -Path .workspaceRoot -Force
@@ -94,20 +94,20 @@ jobs:
         run: |
           # lib ディレクトリをクリーンアップ (古いファイルを削除)
           # Clean lib directory to remove old files from previous commits
-          if (Test-Path testfw\lib) {
-            Remove-Item -Recurse -Force testfw\lib
+          if (Test-Path framework\testfw\lib) {
+            Remove-Item -Recurse -Force framework\testfw\lib
           }
-          New-Item -ItemType Directory -Force -Path testfw\lib
+          New-Item -ItemType Directory -Force -Path framework\testfw\lib
         shell: pwsh
 
       - name: Setup MSVC environment
         run: |
-          & "${{ github.workspace }}\testfw\.github\scripts\Add-VSBT-Env-x64.ps1"
+          & "${{ github.workspace }}\framework\testfw\.github\scripts\Add-VSBT-Env-x64.ps1"
         shell: pwsh
 
       - name: Build libraries
         run: |
-          cd testfw
+          cd framework/testfw
           make
         shell: bash
 
@@ -115,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-libraries
-          path: testfw/lib/windows-*
+          path: framework/testfw/lib/windows-*
           if-no-files-found: error
 
   commit-changes:

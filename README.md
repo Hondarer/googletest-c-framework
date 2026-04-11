@@ -18,7 +18,7 @@ A common modules to test existing C programs using googletest.
 配置は以下のどちらでも動作するようにしている。
 
 - 統合プロジェクト: `framework/testfw/`
-- 単独 CI / sibling 配置: `.workspaceRoot` と同階層の `testfw/`
+- 単独 CI: `.workspaceRoot` 配下に `framework/testfw/` と `framework/makefw/` を作る統合配置相当
 
 必要に応じて `TESTFW_DIR=/path/to/testfw` を make 変数で明示指定できる。
 
@@ -51,7 +51,7 @@ A common modules to test existing C programs using googletest.
 ## ビルド
 
 - 統合プロジェクト: `make -C framework/testfw clean; make -C framework/testfw`
-- 単独リポジトリ: `cd testfw && make clean && make`
+- 単独リポジトリ CI: `cd framework/testfw && make clean && make`
 - 任意配置: `make -C "$TESTFW_DIR" clean; make -C "$TESTFW_DIR"`
 
 ## 依存コンポーネント
