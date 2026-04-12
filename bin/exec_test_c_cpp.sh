@@ -241,14 +241,32 @@ function main() {
 
     # TEST_SRCS が空の場合、サブフォルダの makepart.mk から TEST_SRCS を収集
     if [ -z "$TEST_SRCS" ]; then
+        # カレントディレクトリから app 名を抽出 (MYAPP_FOLDER 置換用)
+        # Extract app name from current directory for MYAPP_FOLDER substitution
+        local current_app=""
+        local rel_from_ws="${PWD#$WORKSPACE_FOLDER/}"
+        if [[ "$rel_from_ws" == app/* ]]; then
+            current_app="${rel_from_ws#app/}"
+            current_app="${current_app%%/*}"
+        fi
+
         for makepart in $(find . -mindepth 2 -name "makepart.mk" 2>/dev/null); do
             # makepart.mk から TEST_SRCS の値を抽出 (複数行対応)
             # TEST_SRCS を含む行とその後の継続行からソースファイルパスを取得
             subdir_test_srcs=$(grep -A10 "^TEST_SRCS" "$makepart" 2>/dev/null | \
                 grep -v "^TEST_SRCS" | grep -v "^#" | grep -v "^--$" | \
-                sed "s|\\\$(WORKSPACE_FOLDER)|$WORKSPACE_FOLDER|g" | \
+                sed -e "s|\\\$(WORKSPACE_FOLDER)|$WORKSPACE_FOLDER|g" \
+                    -e "s|\\\$(MYAPP_FOLDER)|$WORKSPACE_FOLDER/app/$current_app|g" | \
                 xargs 2>/dev/null)
-            TEST_SRCS="$TEST_SRCS $subdir_test_srcs"
+            # 各パスを realpath -m で正規化 (.. を除去)
+            # Normalize each path with realpath -m to resolve ..
+            if [ -n "$subdir_test_srcs" ]; then
+                local normalized=""
+                for src in $subdir_test_srcs; do
+                    normalized="$normalized $(realpath -m "$src" 2>/dev/null || echo "$src")"
+                done
+                TEST_SRCS="$TEST_SRCS $normalized"
+            fi
         done
         TEST_SRCS=$(echo "$TEST_SRCS" | xargs)  # トリム
     fi
