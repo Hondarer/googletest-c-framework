@@ -40,6 +40,40 @@ function safe_tput() {
     fi
 }
 
+# 表示用に TEST_SRCS のパスをワークスペース相対へ正規化
+function format_src_path_for_display() {
+    local src="$1"
+    local normalized_src
+    local normalized_workspace
+
+    normalized_src=$(realpath -m "$src" 2>/dev/null || printf '%s\n' "$src")
+    normalized_workspace=$(realpath -m "$WORKSPACE_DIR" 2>/dev/null || printf '%s\n' "$WORKSPACE_DIR")
+
+    if [ $IS_WINDOWS -eq 1 ]; then
+        normalized_src=$(cygpath -u "$normalized_src" 2>/dev/null || printf '%s\n' "$normalized_src")
+        normalized_workspace=$(cygpath -u "$normalized_workspace" 2>/dev/null || printf '%s\n' "$normalized_workspace")
+    fi
+
+    normalized_src=${normalized_src//\\//}
+    normalized_workspace=${normalized_workspace//\\//}
+
+    case "$normalized_src" in
+        "$normalized_workspace"/*)
+            printf '%s\n' "${normalized_src#"$normalized_workspace"/}"
+            ;;
+        *)
+            printf '%s\n' "$normalized_src"
+            ;;
+    esac
+}
+
+# md5sum の出力差異に依存せず、チェックサム値だけを取得
+function get_md5_checksum() {
+    local src="$1"
+
+    md5sum "$src" 2>/dev/null | awk 'NR == 1 { print $1 }'
+}
+
 # テスト一覧を取得
 function list_tests() {
     ./$TEST_BINARY --gtest_list_tests | awk '
@@ -304,7 +338,18 @@ function main() {
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
         safe_tput cr
         for src in $TEST_SRCS; do
-            md5sum "$src" | sed -e "s#$(realpath "$WORKSPACE_DIR")/##g" | tee -a results/all_tests/summary.log
+            local checksum
+            local display_src
+
+            checksum=$(get_md5_checksum "$src")
+            if [ -z "$checksum" ]; then
+                echo -e "\e[31mError: Failed to calculate MD5: $src\e[0m" | tee -a results/all_tests/summary.log
+                bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+                return 1
+            fi
+
+            display_src=$(format_src_path_for_display "$src")
+            printf '%s  %s\n' "$checksum" "$display_src" | tee -a results/all_tests/summary.log
             safe_tput cr
         done
         echo "----" | tee -a results/all_tests/summary.log
