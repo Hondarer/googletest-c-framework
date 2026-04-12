@@ -53,5 +53,5 @@ $(SUBDIRS) :
 		echo $(MAKE) -C $@ $(filter-out $(SUBDIRS),$(MAKECMDGOALS)); \
 		$(MAKE) -C $@ $(filter-out $(SUBDIRS),$(MAKECMDGOALS)) || exit 1; \
 	else \
-		echo "Skipping directory '$@' (no makefile)"; \
+		:; # echo "Skipping directory '$@' (no makefile)"; \
 	fi
