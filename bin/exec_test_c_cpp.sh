@@ -35,7 +35,7 @@ test_summary=""
 
 # tput を安全に実行するヘルパー関数
 function safe_tput() {
-    if [[ -n "$TERM" && "$TERM" != "dumb" ]]; then
+    if [[ -t 1 && -n "$TERM" && "$TERM" != "dumb" ]]; then
         tput "$@" 2>/dev/null || true
     fi
 }
