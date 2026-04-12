@@ -112,7 +112,7 @@ def extract_test_code(file_path, class_name, method_name):
         # 空行でバッファをクリア (メソッド検出前のみ、複数行コメント中を除く)
         if re.match(r'^\s*$', line):
             if not in_method and not in_multiline_comment:
-                # 属性が既にバッファにある場合はクリアしない
+                # 属性がすでにバッファにある場合はクリアしない
                 # (属性とメソッド定義の間に空行がある場合に対応)
                 has_attribute = any(re.match(r'^\s*\[', buf_line) for buf_line in buffer)
                 if not has_attribute:
