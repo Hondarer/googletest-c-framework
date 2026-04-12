@@ -137,19 +137,19 @@ jobs:
           mkdir -p lib/
 
       - name: Download Linux EL8 libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-el8-libraries
           path: lib/
 
       - name: Download Linux EL10 libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: linux-el10-libraries
           path: lib/
 
       - name: Download Windows libraries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: windows-libraries
           path: lib/
