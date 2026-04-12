@@ -11,10 +11,10 @@ fi
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ワークスペースのディレクトリ
-WORKSPACE_FOLDER=$(cd "$SCRIPT_DIR/../../.." && pwd)
+WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
 # ソースファイルのエンコード指定から LANG を得る
-FILES_LANG=$(bash "$WORKSPACE_FOLDER/framework/makefw/bin/get_files_lang.sh" "$WORKSPACE_FOLDER")
+FILES_LANG=$(bash "$WORKSPACE_DIR/framework/makefw/bin/get_files_lang.sh" "$WORKSPACE_DIR")
 
 # テストバイナリのパス (basename `pwd` 相当)
 TEST_BINARY=bin/${PWD##*/}
@@ -241,10 +241,10 @@ function main() {
 
     # TEST_SRCS が空の場合、サブフォルダの makepart.mk から TEST_SRCS を収集
     if [ -z "$TEST_SRCS" ]; then
-        # カレントディレクトリから app 名を抽出 (MYAPP_FOLDER 置換用)
-        # Extract app name from current directory for MYAPP_FOLDER substitution
+        # カレントディレクトリから app 名を抽出 (MYAPP_DIR 置換用)
+        # Extract app name from current directory for MYAPP_DIR substitution
         local current_app=""
-        local rel_from_ws="${PWD#$WORKSPACE_FOLDER/}"
+        local rel_from_ws="${PWD#$WORKSPACE_DIR/}"
         if [[ "$rel_from_ws" == app/* ]]; then
             current_app="${rel_from_ws#app/}"
             current_app="${current_app%%/*}"
@@ -255,8 +255,8 @@ function main() {
             # TEST_SRCS を含む行とその後の継続行からソースファイルパスを取得
             subdir_test_srcs=$(grep -A10 "^TEST_SRCS" "$makepart" 2>/dev/null | \
                 grep -v "^TEST_SRCS" | grep -v "^#" | grep -v "^--$" | \
-                sed -e "s|\\\$(WORKSPACE_FOLDER)|$WORKSPACE_FOLDER|g" \
-                    -e "s|\\\$(MYAPP_FOLDER)|$WORKSPACE_FOLDER/app/$current_app|g" | \
+                sed -e "s|\\\$(WORKSPACE_DIR)|$WORKSPACE_DIR|g" \
+                    -e "s|\\\$(MYAPP_DIR)|$WORKSPACE_DIR/app/$current_app|g" | \
                 xargs 2>/dev/null)
             # 各パスを realpath -m で正規化 (.. を除去)
             # Normalize each path with realpath -m to resolve ..
@@ -304,7 +304,7 @@ function main() {
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
         safe_tput cr
         for src in $TEST_SRCS; do
-            md5sum "$src" | sed -e "s#$(realpath "$WORKSPACE_FOLDER")/##g" | tee -a results/all_tests/summary.log
+            md5sum "$src" | sed -e "s#$(realpath "$WORKSPACE_DIR")/##g" | tee -a results/all_tests/summary.log
             safe_tput cr
         done
         echo "----" | tee -a results/all_tests/summary.log

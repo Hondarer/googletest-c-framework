@@ -4,7 +4,7 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ワークスペースのディレクトリ
-WORKSPACE_FOLDER=$(cd "$SCRIPT_DIR/../../.." && pwd)
+WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
 # プロジェクト名 (カレントディレクトリ名から取得)
 PROJECT_NAME=$(basename "$(pwd)")

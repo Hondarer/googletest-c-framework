@@ -72,12 +72,12 @@ Libraries specified with `-l` are searched for `.a` files in the following order
 
 1. `LIBSDIR` で指定されたパス
 2. `LIBS` 内の `-L` オプションで指定されたパス
-3. `$(WORKSPACE_FOLDER)/test/lib`
+3. `$(WORKSPACE_DIR)/test/lib`
 4. システムライブラリパス (`/usr/lib`, `/usr/local/lib`, `/lib`, etc.)
 
 1. Paths specified in `LIBSDIR`
 2. Paths specified with `-L` option in `LIBS`
-3. `$(WORKSPACE_FOLDER)/test/lib`
+3. `$(WORKSPACE_DIR)/test/lib`
 4. System library paths (`/usr/lib`, `/usr/local/lib`, `/lib`, etc.)
 
 最初に見つかった `.a` ファイルが使用されます。見つからない場合は `-l` オプションとして動的リンクされます。
@@ -121,7 +121,7 @@ stop
 
 ```makefile
 # makefile
-LIBSDIR = $(WORKSPACE_FOLDER)/prod/calc/lib
+LIBSDIR = $(WORKSPACE_DIR)/prod/calc/lib
 LIBS = -lcalcbase -lm
 LIB_TYPE = shared
 ```
@@ -143,7 +143,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm
 
 ```makefile
 # makefile
-LIBS = -L$(WORKSPACE_FOLDER)/test/lib -lcalcbase -lm
+LIBS = -L$(WORKSPACE_DIR)/test/lib -lcalcbase -lm
 LIB_TYPE = shared
 ```
 
