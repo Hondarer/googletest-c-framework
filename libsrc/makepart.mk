@@ -8,9 +8,9 @@ ifeq ($(wildcard $(TESTFW_DIR)),)
 endif
 
 ifneq ($(OS),Windows_NT)
-    # Linux: TARGET_ARCH (e.g., linux-el8-x64)
+    # Linux: TARGET_ARCH (e.g., linux_el8_x64)
     OUTPUT_DIR := $(TESTFW_DIR)/lib/$(TARGET_ARCH)
 else
-    # Windows: TARGET_ARCH/MSVC_CRT_SUBDIR (e.g., windows-x64/md)
+    # Windows: TARGET_ARCH/MSVC_CRT_SUBDIR (e.g., windows_x64/md)
     OUTPUT_DIR := $(TESTFW_DIR)/lib/$(TARGET_ARCH)/$(MSVC_CRT_SUBDIR)
 endif
