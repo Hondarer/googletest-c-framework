@@ -67,7 +67,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: linux-${{ matrix.distro }}-libraries
-          path: framework/testfw/lib/linux-${{ matrix.distro }}-*
+          path: framework/testfw/lib/linux_${{ matrix.distro }}_*
           if-no-files-found: error
 
   build-windows:
@@ -115,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: windows-libraries
-          path: framework/testfw/lib/windows-*
+          path: framework/testfw/lib/windows_*
           if-no-files-found: error
 
   commit-changes:
