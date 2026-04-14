@@ -281,9 +281,14 @@ void TearDown() override {
 ### デバッグログのキャプチャ
 
 ```cpp
+// TARGET_ARCH は識別子として定義される。文字列化には TOSTRING を使う
+// TARGET_ARCH is defined as an identifier token; use TOSTRING to stringify it
+#define _STRINGIFY(x) #x
+#define TOSTRING(x) _STRINGIFY(x)
+
 ProcessOptions opts = makeOpts();
 #ifndef _WIN32
-opts.preload_lib = ws + "/framework/testfw/lib/" + TARGET_ARCH + "/libmock_syslog.so";
+opts.preload_lib = ws + "/framework/testfw/lib/" TOSTRING(TARGET_ARCH) "/libmock_syslog.so";
 #endif
 /* Windows は capture_debug_output がデフォルト true のため追加設定不要 */
 
