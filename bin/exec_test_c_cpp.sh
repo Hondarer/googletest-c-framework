@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # プラットフォーム検出
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "mingw"* ]]; then
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "mingw"* || "$OSTYPE" == "cygwin"* ]]; then
     IS_WINDOWS=1
 else
     IS_WINDOWS=0
@@ -244,7 +244,9 @@ function run_test() {
             mv *.gcov gcov/. 1> /dev/null 2>&1
         else
             # Windows
-            python $SCRIPT_DIR/cobertura2gcov.py coverage/coverage.xml gcov/ 1> /dev/null 2>&1
+            if [ -f coverage/coverage.xml ]; then
+                python $SCRIPT_DIR/cobertura2gcov.py coverage/coverage.xml gcov/ 1> /dev/null 2>&1
+            fi
         fi
 
         if ls gcov/*.gcov 1> /dev/null 2>&1; then
@@ -254,7 +256,11 @@ function run_test() {
         fi
 
         # 各回のテスト結果を積み上げ
-        python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+        if [ -f coverage/coverage.xml ]; then
+            python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+        else
+            echo -e "\e[33m[ WARNING ]\e[0m Coverage file was not generated: coverage/coverage.xml" | tee -a results/all_tests/summary.log
+        fi
     fi
 
     # 各テストの coverage.xml を退避 (デバッグ用)
@@ -409,7 +415,7 @@ function main() {
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
 
-    if [ -n "$TEST_SRCS" ]; then
+    if [ -n "$TEST_SRCS" ] && [ -f coverage/accumulated_coverage.xml ]; then
         # TEST_SRCS が指定されている場合のみカバレッジレポートを生成
         # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
         python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
@@ -464,6 +470,8 @@ function main() {
 
         # 全体カバレッジ計測用に、カバレッジ xml を保持
         cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
+    elif [ -n "$TEST_SRCS" ]; then
+        echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a results/all_tests/summary.log
     fi
 
     # Clean (サブフォルダを含めて gcda ファイルをクリア)
