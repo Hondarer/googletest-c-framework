@@ -3,6 +3,13 @@
 #ifndef _MOCK_WINDOWS_H
 #define _MOCK_WINDOWS_H
 
+// In C++17 mode, std::byte conflicts with the Windows SDK's typedef unsigned char byte;
+// in rpcndr.h. Setting _HAS_STD_BYTE to 0 suppresses the conflicting using-declaration
+// in the Windows SDK headers.
+#ifndef _HAS_STD_BYTE
+#define _HAS_STD_BYTE 0
+#endif
+
 #include <windows.h>
 
 #ifdef __cplusplus
