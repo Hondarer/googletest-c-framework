@@ -1,26 +1,79 @@
 # How to mock
 
-モックライブラリを作成済の場合に、モック関数を追加する手順を示す。
+mock 関数を追加するときの共通ルールを示します。
 
-ここで指すモックとは、テストダブルの一般名としての意味であり、実装内容によってダミー、スタブ、スパイ、モック、フェイクなど詳細は決定される。 参考: [これで迷わないテストダブルの分類(ダミー、スタブ、スパイ、モック、フェイク)](https://qiita.com/marchin_1989/items/3abaf7d57c501bb2c5a6)
+## 用語
 
-## ヘッダを作成
+- mock
+  - ここではテストダブル全般を指す総称として扱います。
+- override ヘッダー
+  - 本物のヘッダーを読み込んだ後に、関数呼び出しを mock へ差し替えるためのヘッダーです。
+- Mock クラス
+  - Google Mock の `MOCK_METHOD` を並べたクラスです。テスト中の振る舞いはここで定義します。
+- mock 関数本体
+  - 置換マクロの着地点になる関数です。グローバルポインター経由で Mock クラスへ委譲します。
 
-- モックライブラリのヘッダ [(サンプルファイル)](test/include/mock_sample.h) に、メソッド定義 (コンパイル時に google mock によって関数定義に変換される) を追加。
-- 必要に応じ、呼び出し時の stdio 出力などをテストモジュールから制御するための変数定義を追加。
+## 流れ
+
+1. Mock クラスへ `MOCK_METHOD` を追加します。
+2. Mock クラスのコンストラクター、または切り替えメソッドへ `ON_CALL` の既定動作を追加します。
+3. 関数本体を実装し、Mock クラスまたは既定処理へ流れる経路を作ります。
+
+## 命名規則
+
+- mock ヘッダー: `mock_<module>.h` または `mock_<lib>.h`
+- override ヘッダー: 本物と同じヘッダー名
+- 置換先関数名: 対象ライブラリの既存パターンに従います
+- 既定処理: `delegate_real_<func>` / `delegate_fake_<func>` など
+- グローバルポインター: `_mock_<lib>`
+- Mock クラス: `Mock_<lib>`
+
+命名は既存ライブラリと揃えます。新規命名を持ち込まず、同一ライブラリ内の既存パターンに合わせてください。
+
+## Mock クラスの追加
+
+`MOCK_METHOD` に、テストから制御したい関数を追加します。
 
 ```cpp
-MOCK_METHOD(int, samplelogger, (int, const char *));
+MOCK_METHOD(int, sample_func, (int, const char *));
 ```
 
-## mock 関数を作成
+- 引数なし関数は空の `()` を使います。
+- 可変長引数は、Mock クラスで直接扱える形へ変換して宣言します。
 
-- モックライブラリのクラスの実装に、デフォルトの呼び出しに対する処理内容を実装。
-  デフォルトの呼び出しに対する処理内容は記載を省略したり各テストで定義することも可能だが、きちんと実装するほうが好ましい。
-- モックライブラリフォルダに、関数本体 [(サンプルファイル)](test/libsrc/mocksample/mock_samplelogger.cc) を作成。
+## 注入ライフサイクル
+
+テスト Fixture やテスト本体で `Mock_<lib>` を生成すると、そのコンストラクターで `_mock_<lib>` が現在のオブジェクトを指します。
+スコープを抜けるとデストラクターで `nullptr` に戻ります。
 
 ```cpp
-ON_CALL(*this, samplelogger(_, _))
-    .WillByDefault(Invoke([](Unused, const char *str)
-                            { return strlen(str); })); // NOTE: Unused を使うと未使用パラメータの警告を避け、かつ、未使用である旨が明確になる
+TEST_F(MyTest, example)
+{
+    Mock_sample mock;
+
+    EXPECT_CALL(mock, sample_func(_, _)).Times(1);
+
+    /* テスト対象コード */
+}
 ```
+
+この構造により、テストコードは mock の注入と解放を明示的に管理できます。
+
+## 実装時の共通確認項目
+
+- 置換対象の関数と `MOCK_METHOD` のシグネチャが一致していること
+- `ON_CALL` の既定動作が追加されていること
+- `_mock_<lib>` の設定と解除がコンストラクター / デストラクターで行われていること
+- トレース出力の形式が同一ライブラリ内の既存実装と揃っていること
+- 新しい mock が既存のテストビルド経路で参照される配置に置かれていること
+
+## 参照例
+
+- Mock クラス
+  - `../include/mock_stdio.h`
+  - `../include/mock_unistd.h`
+- override ヘッダー
+  - `../include_override/stdio.h`
+  - `../include_override/unistd.h`
+- 関数実装
+  - `../libsrc/mock_libc/`
