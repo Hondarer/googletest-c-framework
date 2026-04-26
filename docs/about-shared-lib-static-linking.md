@@ -127,7 +127,7 @@ LIB_TYPE = shared
 ```
 
 **動作:**
-- `libcalcbase.a` が `prod/calc/lib` に存在 → 静的リンク
+- `libcalcbase.a` が `app/calc/prod/lib` に存在 → 静的リンク
 - `-lm` → 動的リンク
 
 **結果:**
@@ -136,7 +136,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm
 ```
 
 **Operation:**
-- `libcalcbase.a` found in `prod/calc/lib` → static linking
+- `libcalcbase.a` found in `app/calc/prod/lib` → static linking
 - `-lm` → dynamic linking
 
 ### 例2: -L オプションを使用 / Example 2: Using -L option
@@ -148,7 +148,7 @@ LIB_TYPE = shared
 ```
 
 **動作:**
-- `libcalcbase.a` が `test/lib` に存在 → 静的リンク
+- `libcalcbase.a` が `app/calc/test/lib` に存在 → 静的リンク
 - `-lm` → 動的リンク
 - `-L` オプションもリンクコマンドに渡される
 
@@ -158,7 +158,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm -L/path/to/test/lib
 ```
 
 **Operation:**
-- `libcalcbase.a` found in `test/lib` → static linking
+- `libcalcbase.a` found in `app/calc/test/lib` → static linking
 - `-lm` → dynamic linking
 - `-L` option is also passed to link command
 
@@ -229,9 +229,9 @@ Only `.a` files are searched. Even if both `.so` and `.a` exist with the same na
 
 ### 2. 検索パスの順序
 
-最初に見つかった `.a` ファイルが使用されます。複数のパスに同名のライブラリがある場合は、検索パスの順序（`LIBSDIR` → `-L` → `test/lib` → システムパス）に注意してください。
+最初に見つかった `.a` ファイルが使用されます。複数のパスに同名のライブラリがある場合は、検索パスの順序（`LIBSDIR` → `-L` → `app/calc/test/lib` → システムパス）に注意してください。
 
-The first found `.a` file is used. When multiple paths contain libraries with the same name, be aware of the search order (`LIBSDIR` → `-L` → `test/lib` → system paths).
+The first found `.a` file is used. When multiple paths contain libraries with the same name, be aware of the search order (`LIBSDIR` → `-L` → `app/calc/test/lib` → system paths).
 
 ### 3. アーキテクチャ依存パス
 

@@ -122,7 +122,7 @@ EXPECT_EQ(myObject.GetState(), ExpectedState); // [確認_正常系] - 状態が
 **例**:
 
 ```text
-test/porter/src/libporter/potrDisconnectPeerTest/results/potrDisconnectPeerTest.normal_health_dead/results.log
+app/porter/test/src/libporter/potrDisconnectPeerTest/results/potrDisconnectPeerTest.normal_health_dead/results.log
 ```
 
 ### ファイル構成

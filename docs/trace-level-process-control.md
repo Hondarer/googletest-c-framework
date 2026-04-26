@@ -111,7 +111,7 @@ void SetUp() override
 ## 実装後の検証方法
 
 1. `make -C framework/testfw` でビルドエラーがないことを確認
-2. `test/override-sample/src/override-sampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
-3. `test/porter/src/integration/porterSendRecvTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
+2. `app/override-sample/test/src/override-sampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
+3. `app/porter/test/src/integration/porterSendRecvTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
 4. テスト出力に `  > startProcessAsync ...` 等のトレースが表示されることを確認
 5. `resetTraceLevel()` のみの状態（デフォルト）でトレース出力が出ないことを確認
