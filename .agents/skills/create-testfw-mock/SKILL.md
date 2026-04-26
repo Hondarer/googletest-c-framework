@@ -14,6 +14,17 @@ when_to_use: |
 このスキルは testfw 配下の mock を対象にします。
 共通ルールは `docs/how-to-mock.md` を参照し、この文書では testfw 固有の構成と実装形を扱います。
 
+## testfw mock の目的
+
+testfw 配下の mock は、標準ライブラリ（libc 等）の関数をモック化します。目的は次の 2 つです。
+
+- テストコードが標準関数（`printf`, `fopen`, `access` 等）を呼び出したかどうかを検証する
+- テスト中に意図的な失敗を注入する（`fopen` が `NULL` を返す、`malloc` が失敗する など）
+
+testfw mock は mock 未注入時に本物の関数へ委譲（`delegate_real_`）するため、モックが注入されていないテストでもプログラムが正常に動作します。
+
+規範実装は `libsrc/mock_libc/` を参照します。
+
 ## 方針
 
 - testfw 向け mock は、mock 未注入時に `delegate_real_` で本物へ委譲します。
@@ -278,7 +289,7 @@ int delegate_real_fprintf(const char *file, const int line, const char *func, FI
 ```c
 #ifndef _WIN32
     /* Linux 専用 */
-#else
+#else /* !_WIN32 */
     /* Windows 専用 */
 #endif /* _WIN32 */
 ```
