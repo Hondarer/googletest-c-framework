@@ -13,6 +13,7 @@ extern "C"
 
     extern int mock_access(const char *, const int, const char *, const char *, int);
     extern pid_t mock_fork(const char *, const int, const char *);
+    extern int mock_mkstemp(const char *, const int, const char *, char *);
 
 #ifdef __cplusplus
 }
@@ -22,6 +23,7 @@ extern "C"
 
 #define access(path, amode) mock_access(__FILE__, __LINE__, __func__, path, amode)
 #define fork() mock_fork(__FILE__, __LINE__, __func__)
+#define mkstemp(tmpl) mock_mkstemp(__FILE__, __LINE__, __func__, tmpl)
 
 #else // _IN_OVERRIDE_HEADER_UNISTD_H
 
@@ -32,12 +34,14 @@ extern "C"
 
 extern int delegate_real_access(const char *, const int, const char *, const char *, int);
 extern pid_t delegate_real_fork(const char *, const int, const char *);
+extern int delegate_real_mkstemp(const char *, const int, const char *, char *);
 
 class Mock_unistd
 {
 public:
     MOCK_METHOD(int, access, (const char *, const int, const char *, const char *, int));
     MOCK_METHOD(pid_t, fork, (const char *, const int, const char *));
+    MOCK_METHOD(int, mkstemp, (const char *, const int, const char *, char *));
 
     Mock_unistd();
     ~Mock_unistd();

@@ -31,6 +31,8 @@ void Mock_stdio::switch_to_mock_fileio()
 #ifdef _WIN32
     ON_CALL(*this, fopen_s(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_fake_fopen_s));
+    ON_CALL(*this, _wfopen_s(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake__wfopen_s));
 #endif
 
     ON_CALL(*this, fprintf(_, _, _, _, _))
@@ -57,6 +59,8 @@ void Mock_stdio::switch_to_real_fileio()
 #ifdef _WIN32
     ON_CALL(*this, fopen_s(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_fopen_s));
+    ON_CALL(*this, _wfopen_s(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real__wfopen_s));
 #endif
 
     ON_CALL(*this, fprintf(_, _, _, _, _))

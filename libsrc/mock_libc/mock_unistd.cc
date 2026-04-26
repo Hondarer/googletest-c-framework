@@ -12,6 +12,8 @@ Mock_unistd::Mock_unistd()
         .WillByDefault(Invoke(delegate_real_access));
     ON_CALL(*this, fork(_, _, _))
         .WillByDefault(Invoke(delegate_real_fork));
+    ON_CALL(*this, mkstemp(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_mkstemp));
 
     _mock_unistd = this;
 }

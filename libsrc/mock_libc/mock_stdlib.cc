@@ -8,6 +8,8 @@ Mock_stdlib::Mock_stdlib()
 {
     ON_CALL(*this, calloc(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_calloc));
+    ON_CALL(*this, getenv(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_getenv));
 
     _mock_stdlib = this;
 }
