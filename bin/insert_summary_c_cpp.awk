@@ -121,6 +121,7 @@ END {
       for (i=1; i<=pre_s_idx; i++) print pre_step[i]
 
       # --- 確認内容 (Pre-Assert → Assert) ---
+      has_step = (act_idx > 0 || pre_s_idx > 0)
       # カテゴリ未指定のみかどうかを判定
       has_categorized = (check_normal > 0 || check_abnormal > 0)
 
@@ -152,7 +153,11 @@ END {
         check_header = check_header ")\n"
       }
 
-      print "\n" check_header
+      if (has_step) {
+        print "\n" check_header
+      } else {
+        print check_header
+      }
       for (i=1; i<=pre_c_idx; i++) print pre_chk[i]
       for (i=1; i<=as_c_idx; i++) print asrt_chk[i]
 

@@ -185,6 +185,7 @@ def insert_summary():
             sys.stdout.write(s + "\n")
 
         # --- 確認内容 (Pre-Assert → Assert) ---
+        has_step = len(act) > 0 or len(pre_step) > 0
         # カテゴリ未指定のみかどうかを判定
         has_categorized = check_normal > 0 or check_abnormal > 0
 
@@ -219,7 +220,7 @@ def insert_summary():
             check_header = f"### 確認内容 ({', '.join(categories)})\n\n"
 
         # 手順がある場合のみ前改行を入れる
-        if len(act) > 0 or len(pre_step) > 0:
+        if has_step:
             sys.stdout.write("\n" + check_header)
         else:
             sys.stdout.write(check_header)
