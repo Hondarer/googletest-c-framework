@@ -68,8 +68,14 @@ function format_src_path_for_display() {
 }
 
 # md5sum の出力差異に依存せず、チェックサム値だけを取得
+# Windows では _MD5_CACHE を参照し、未登録の場合は md5sum にフォールバックする
 function get_md5_checksum() {
     local src="$1"
+
+    if [ $IS_WINDOWS -eq 1 ] && declare -p _MD5_CACHE &>/dev/null && [[ -v _MD5_CACHE["$src"] ]]; then
+        printf '%s\n' "${_MD5_CACHE[$src]}"
+        return
+    fi
 
     md5sum "$src" 2>/dev/null | awk 'NR == 1 { print $1 }'
 }
@@ -340,6 +346,39 @@ function main() {
     echo -e "----" | tee -a results/all_tests/summary.log
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
+
+        # Windows では全ファイルのハッシュを1回の powershell.exe 呼び出しで一括取得しキャッシュする
+        if [ $IS_WINDOWS -eq 1 ]; then
+            local _ps_cmd=""
+            if command -v powershell.exe &>/dev/null; then
+                _ps_cmd="powershell.exe"
+            elif [ -f "/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" ]; then
+                _ps_cmd="/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+            fi
+            if [ -n "$_ps_cmd" ]; then
+                declare -gA _MD5_CACHE
+                local _src_keys=()
+                local ps_script=""
+                for src in $TEST_SRCS; do
+                    local win_path
+                    win_path=$(cygpath -w "$src" 2>/dev/null || printf '%s\n' "$src")
+                    ps_script+="(Get-FileHash -LiteralPath '${win_path//\'/\'\'}' -Algorithm MD5).Hash.ToLower();"
+                    _src_keys+=("$src")
+                done
+                local ps_output
+                ps_output=$("$_ps_cmd" -NoProfile -Command "$ps_script" 2>/dev/null)
+                local _i=0
+                while IFS= read -r _line; do
+                    # PowerShell の出力は CRLF のため末尾の \r を除去する
+                    _line="${_line%$'\r'}"
+                    if [ -n "$_line" ] && [ $_i -lt ${#_src_keys[@]} ]; then
+                        _MD5_CACHE["${_src_keys[$_i]}"]="$_line"
+                    fi
+                    ((_i++))
+                done <<< "$ps_output"
+            fi
+        fi
+
         safe_tput cr
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
         safe_tput cr
