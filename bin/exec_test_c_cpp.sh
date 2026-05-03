@@ -509,7 +509,7 @@ function main() {
 
         # 全体カバレッジ計測用に、カバレッジ xml を保持
         cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
-    elif [ -n "$TEST_SRCS" ]; then
+    elif [ -n "$TEST_SRCS" ] && [ "$test_count" -gt 0 ]; then
         echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a results/all_tests/summary.log
     fi
 
