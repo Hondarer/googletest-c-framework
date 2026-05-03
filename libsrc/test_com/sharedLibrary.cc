@@ -20,9 +20,27 @@ namespace testing {
 
 namespace {
 
-std::mutex shared_library_mutex;
-std::map<std::string, void *> shared_library_handles;
-std::map<std::string, void *> shared_library_symbols;
+// Meyers singleton pattern to avoid static initialization order fiasco.
+// These may be accessed during shared library initialization (before global
+// constructors of the executable have run), so they must be initialized on
+// first use rather than as plain global objects.
+std::mutex& getSharedLibraryMutex()
+{
+    static std::mutex mtx;
+    return mtx;
+}
+
+std::map<std::string, void *>& getSharedLibraryHandles()
+{
+    static std::map<std::string, void *> handles;
+    return handles;
+}
+
+std::map<std::string, void *>& getSharedLibrarySymbols()
+{
+    static std::map<std::string, void *> symbols;
+    return symbols;
+}
 
 #ifdef _WIN32
 static bool utf8_to_utf16(const std::string& src, std::wstring *dst)
@@ -117,19 +135,19 @@ SharedSymbolResult tryResolveSharedSymbol(const std::string& lib_name,
     const std::string symbol_key = lib_name + "\n" + symbol_name;
     void *handle = nullptr;
 
-    std::lock_guard<std::mutex> lock(shared_library_mutex);
+    std::lock_guard<std::mutex> lock(getSharedLibraryMutex());
 
     {
-        const auto cached_symbol = shared_library_symbols.find(symbol_key);
-        if (cached_symbol != shared_library_symbols.end()) {
+        const auto cached_symbol = getSharedLibrarySymbols().find(symbol_key);
+        if (cached_symbol != getSharedLibrarySymbols().end()) {
             result.symbol = cached_symbol->second;
             return result;
         }
     }
 
     {
-        const auto cached_handle = shared_library_handles.find(lib_name);
-        if (cached_handle != shared_library_handles.end()) {
+        const auto cached_handle = getSharedLibraryHandles().find(lib_name);
+        if (cached_handle != getSharedLibraryHandles().end()) {
             handle = cached_handle->second;
         }
     }
@@ -158,7 +176,7 @@ SharedSymbolResult tryResolveSharedSymbol(const std::string& lib_name,
             return result;
         }
 #endif
-        shared_library_handles[lib_name] = handle;
+        getSharedLibraryHandles()[lib_name] = handle;
     }
 
 #ifndef _WIN32
@@ -180,7 +198,7 @@ SharedSymbolResult tryResolveSharedSymbol(const std::string& lib_name,
     }
 #endif
 
-    shared_library_symbols[symbol_key] = result.symbol;
+    getSharedLibrarySymbols()[symbol_key] = result.symbol;
     return result;
 }
 
