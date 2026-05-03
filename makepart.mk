@@ -32,6 +32,7 @@ endif
 
 INCDIR += \
     $(TESTFW_DIR)/gtest/include \
-    $(TESTFW_DIR)/include
+    $(TESTFW_DIR)/include \
+    $(TESTFW_DIR)/include_internal
 
 LIBSDIR     =

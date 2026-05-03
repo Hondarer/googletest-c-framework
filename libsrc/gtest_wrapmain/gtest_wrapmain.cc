@@ -8,12 +8,14 @@
 #endif // _WIN32
 
 #include <gtest_wrapmain.h>
+#include <testfw/console/console_internal.h>
 
 using namespace testing;
 
 // -Wl,--wrap=main を利用して main() を wrap した際のエントリーポイント
 int __wrap_main(int argc, char **argv)
 {
+  ScopedConsoleUtf8 scoped_console_utf8;
   printf("Running main() from %s\n", __FILE__);
   InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
