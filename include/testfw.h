@@ -14,6 +14,7 @@
 #include <format_attr.h>
 #include <test_com.h>
 #include <processController.h>
+#include <sharedLibrary.h>
 #include <gtest_wrapmain.h>
 
 using namespace std;
