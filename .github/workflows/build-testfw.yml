@@ -118,56 +118,56 @@ jobs:
           path: framework/testfw/lib/windows_*
           if-no-files-found: error
 
-  commit-changes:
-    needs: [build-linux, build-windows]
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Checkout testfw repository
-        uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Clean lib directory
-        run: |
-          # lib ディレクトリをクリーンアップ
-          # Clean lib directory before downloading new artifacts
-          rm -rf lib/
-          mkdir -p lib/
-
-      - name: Download Linux EL8 libraries
-        uses: actions/download-artifact@v8
-        with:
-          name: linux-el8-libraries
-          path: lib/
-
-      - name: Download Linux EL10 libraries
-        uses: actions/download-artifact@v8
-        with:
-          name: linux-el10-libraries
-          path: lib/
-
-      - name: Download Windows libraries
-        uses: actions/download-artifact@v8
-        with:
-          name: windows-libraries
-          path: lib/
-
-      - name: Configure git
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit and push changes
-        run: |
-          # lib ディレクトリの変更を確認
-          # Check for changes in lib directory
-          if [ -n "$(git status --porcelain lib/)" ]; then
-            echo "Library changes detected"
-            git add -A lib/
-            git commit -m "ビルド済みライブラリを更新"
-            git push
-          else
-            echo "No library changes to commit"
-          fi
+  # commit-changes:
+  #   needs: [build-linux, build-windows]
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+  #
+  #   steps:
+  #     - name: Checkout testfw repository
+  #       uses: actions/checkout@v6
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #
+  #     - name: Clean lib directory
+  #       run: |
+  #         # lib ディレクトリをクリーンアップ
+  #         # Clean lib directory before downloading new artifacts
+  #         rm -rf lib/
+  #         mkdir -p lib/
+  #
+  #     - name: Download Linux EL8 libraries
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         name: linux-el8-libraries
+  #         path: lib/
+  #
+  #     - name: Download Linux EL10 libraries
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         name: linux-el10-libraries
+  #         path: lib/
+  #
+  #     - name: Download Windows libraries
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         name: windows-libraries
+  #         path: lib/
+  #
+  #     - name: Configure git
+  #       run: |
+  #         git config --global user.name "github-actions[bot]"
+  #         git config --global user.email "github-actions[bot]@users.noreply.github.com"
+  #
+  #     - name: Commit and push changes
+  #       run: |
+  #         # lib ディレクトリの変更を確認
+  #         # Check for changes in lib directory
+  #         if [ -n "$(git status --porcelain lib/)" ]; then
+  #           echo "Library changes detected"
+  #           git add -A lib/
+  #           git commit -m "ビルド済みライブラリを更新"
+  #           git push
+  #         else
+  #           echo "No library changes to commit"
+  #         fi

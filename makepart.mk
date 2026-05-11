@@ -23,16 +23,16 @@ else
     LDFLAGS     =
 endif
 
-ifeq ($(strip $(TESTFW_DIR)),)
-    $(error $(TESTFW_DIR_ERROR))
+ifeq ($(strip $(TESTFW_HOME)),)
+    $(error $(TESTFW_HOME_ERROR))
 endif
-ifeq ($(wildcard $(TESTFW_DIR)),)
-    $(error $(TESTFW_DIR_ERROR))
+ifeq ($(wildcard $(TESTFW_HOME)),)
+    $(error $(TESTFW_HOME_ERROR))
 endif
 
 INCDIR += \
-    $(TESTFW_DIR)/gtest/include \
-    $(TESTFW_DIR)/include \
-    $(TESTFW_DIR)/include_internal
+    $(TESTFW_HOME)/gtest/include \
+    $(TESTFW_HOME)/include \
+    $(TESTFW_HOME)/include_internal
 
 LIBSDIR     =
