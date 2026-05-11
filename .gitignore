@@ -13,7 +13,7 @@
 
 # 以下は管理対象外
 obj
-docs
+pages
 
 ## Python cache
 __pycache__/
