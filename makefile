@@ -7,7 +7,46 @@ BUILD_LOG = $(CURDIR)/make_build.log
 
 .PHONY: default
 ifeq ($(OS),Windows_NT)
-default : $(SUBDIRS)
+default :
+	@git_hash=$$(git -C "$(CURDIR)" rev-parse HEAD 2>/dev/null); \
+	git_dirty=$$(git -C "$(CURDIR)" status --porcelain --untracked-files=no 2>/dev/null); \
+	msvc_crt="$(MSVC_CRT_SUBDIR)"; \
+	if [ -f "$(BUILD_LOG)" ] && [ -n "$$msvc_crt" ]; then \
+		prev_line=$$(sed -n '2p' "$(BUILD_LOG)"); \
+		prev_crt=$$(printf '%s' "$$prev_line" | sed -n 's/^MSVC_CRT=//p'); \
+		if [ -n "$$prev_crt" ] && [ "$$prev_crt" != "$$msvc_crt" ]; then \
+			echo "ERROR: MSVC runtime mismatch detected. Run 'make clean' first, then rebuild.  Previous build: $$prev_crt  Current request: $$msvc_crt" >&2; \
+			exit 1; \
+		fi; \
+	fi; \
+	if [ -n "$$git_hash" ] && [ -z "$$git_dirty" ] && [ -f "$(BUILD_LOG)" ]; then \
+		prev_hash=$$(sed -n '1p' "$(BUILD_LOG)"); \
+		if [ -n "$$msvc_crt" ]; then \
+			prev_crt=$$(sed -n 's/^MSVC_CRT=//p' "$(BUILD_LOG)"); \
+			if [ "$$prev_hash" = "$$git_hash" ] && [ "$$prev_crt" = "$$msvc_crt" ]; then \
+				echo "INFO: Skipping testfw build (already built at $$git_hash with $$msvc_crt)"; \
+				exit 0; \
+			fi; \
+		else \
+			if [ "$$prev_hash" = "$$git_hash" ]; then \
+				echo "INFO: Skipping testfw build (already built at $$git_hash)"; \
+				exit 0; \
+			fi; \
+		fi; \
+	fi; \
+	rm -f "$(BUILD_LOG)"; \
+	make_exit=0; \
+	if [ -f libsrc/makefile ]; then \
+		echo $(MAKE) -C libsrc; \
+		$(MAKE) -C libsrc || make_exit=$$?; \
+	fi; \
+	if [ $$make_exit -eq 0 ] && [ -n "$$git_hash" ] && [ -z "$$git_dirty" ]; then \
+		printf '%s\n' "$$git_hash" > "$(BUILD_LOG)"; \
+		if [ -n "$$msvc_crt" ]; then \
+			printf 'MSVC_CRT=%s\n' "$$msvc_crt" >> "$(BUILD_LOG)"; \
+		fi; \
+	fi; \
+	if [ $$make_exit -ne 0 ]; then exit $$make_exit; fi
 else
 default :
 	@git_hash=$$(git -C "$(CURDIR)" rev-parse HEAD 2>/dev/null); \

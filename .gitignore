@@ -13,7 +13,6 @@
 
 # 以下は管理対象外
 obj
-lib
 pages
 
 ## ビルドスキップ用ログ
@@ -21,3 +20,7 @@ make_build.log
 
 ## Python cache
 __pycache__/
+
+## 成果物
+lib
+*.warn
