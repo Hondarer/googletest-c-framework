@@ -3,6 +3,28 @@ SUBDIRS = \
 
 BUILD_LOG = $(CURDIR)/make_build.log
 
+# Windows の場合、MSVC_CRT_SUBDIR が未設定なら計算する
+# Calculate MSVC_CRT_SUBDIR if not set (for standalone builds)
+ifeq ($(OS),Windows_NT)
+    MSVC_CRT ?= shared
+    CONFIG ?= RelWithDebInfo
+    ifeq ($(MSVC_CRT_SUBDIR),)
+        ifeq ($(CONFIG),Debug)
+            ifeq ($(MSVC_CRT),shared)
+                MSVC_CRT_SUBDIR := mdd
+            else
+                MSVC_CRT_SUBDIR := mtd
+            endif
+        else
+            ifeq ($(MSVC_CRT),shared)
+                MSVC_CRT_SUBDIR := md
+            else
+                MSVC_CRT_SUBDIR := mt
+            endif
+        endif
+    endif
+endif
+
 .DEFAULT_GOAL := default
 
 .PHONY: default
