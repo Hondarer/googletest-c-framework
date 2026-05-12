@@ -31,7 +31,7 @@ endif
 ifeq ($(OS),Windows_NT)
 default :
 	@git_hash=$$(git -C "$(CURDIR)" rev-parse HEAD 2>/dev/null); \
-	git_dirty=$$(git -C "$(CURDIR)" status --porcelain --untracked-files=no 2>/dev/null); \
+	git_dirty=$$(git -C "$(CURDIR)" status --porcelain 2>/dev/null); \
 	msvc_crt="$(MSVC_CRT_SUBDIR)"; \
 	if [ -f "$(BUILD_LOG)" ] && [ -n "$$msvc_crt" ]; then \
 		prev_line=$$(sed -n '2p' "$(BUILD_LOG)"); \
@@ -72,7 +72,7 @@ default :
 else
 default :
 	@git_hash=$$(git -C "$(CURDIR)" rev-parse HEAD 2>/dev/null); \
-	git_dirty=$$(git -C "$(CURDIR)" status --porcelain --untracked-files=no 2>/dev/null); \
+	git_dirty=$$(git -C "$(CURDIR)" status --porcelain 2>/dev/null); \
 	if [ -n "$$git_hash" ] && [ -z "$$git_dirty" ] && \
 	   [ -f "$(BUILD_LOG)" ] && [ "$$(cat '$(BUILD_LOG)')" = "$$git_hash" ]; then \
 		echo "INFO: Skipping build (already built at $$git_hash)"; \
