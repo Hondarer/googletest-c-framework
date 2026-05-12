@@ -10,6 +10,9 @@ on:
 permissions:
   contents: write
 
+env:
+  MAKEFW_HOME: ${{ github.workspace }}/framework/makefw
+
 jobs:
   build-linux:
     runs-on: ubuntu-latest
@@ -104,6 +107,11 @@ jobs:
         run: |
           & "${{ github.workspace }}\framework\testfw\.github\scripts\Add-VSBT-Env-x64.ps1"
         shell: pwsh
+
+      - name: Normalize MAKEFW_HOME for bash
+        run: |
+          echo "MAKEFW_HOME=${MAKEFW_HOME//\\//}" >> "$GITHUB_ENV"
+        shell: bash
 
       - name: Build libraries
         run: |
