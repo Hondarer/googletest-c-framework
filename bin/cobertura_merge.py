@@ -75,8 +75,8 @@ def get_common_source_prefix(sources):
     if len(sources) == 1:
         return sources[0]
 
-    # パスを分割して共通部分を見つける
-    split_paths = [s.rstrip('/').split('/') for s in sources]
+    # パスを分割して共通部分を見つける (Windows バックスラッシュをフォワードスラッシュに統一)
+    split_paths = [Path(s).as_posix().rstrip('/').split('/') for s in sources]
     common_parts = []
 
     for parts in zip(*split_paths):
@@ -104,7 +104,11 @@ def normalize_filename(source, filename, common_source):
     if filename.startswith('/'):
         full_path = filename
     else:
-        full_path = os.path.join(source, filename)
+        # ドライブレターのみ ("D:") の場合 os.path.join がセパレータを省くため補完する
+        effective_source = source
+        if len(source) == 2 and source[1] == ':':
+            effective_source = source + '/'
+        full_path = os.path.join(effective_source, filename)
 
     # 共通 source からの相対パスを取得
     if common_source and full_path.startswith(common_source):
@@ -426,8 +430,7 @@ def main():
     try:
         sys.stdout.reconfigure(encoding='utf-8')
         sys.stderr.reconfigure(encoding='utf-8')
-    except AttributeError:
-        # Python 3.7 未満では reconfigure が存在しない
+    except Exception:
         pass
 
     if len(sys.argv) < 2 or len(sys.argv) > 3:
@@ -483,7 +486,11 @@ def main():
     indent_xml(merged_tree.getroot())
 
     # 結果を保存
-    merged_tree.write(output_path, encoding='utf-8', xml_declaration=True)
+    try:
+        merged_tree.write(output_path, encoding='utf-8', xml_declaration=True)
+    except Exception as e:
+        print(f"Error: Failed to write {output_path}: {e}", file=sys.stderr)
+        sys.exit(1)
     print(f"Merged coverage written to: {output_path}")
 
 

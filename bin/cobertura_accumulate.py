@@ -129,7 +129,11 @@ def accumulate_coverage(current_path, accumulated_path):
     recalculate_coverage_stats(accumulated_root)
 
     # 結果を保存
-    accumulated_tree.write(accumulated_path, encoding='utf-8', xml_declaration=True)
+    try:
+        accumulated_tree.write(accumulated_path, encoding='utf-8', xml_declaration=True)
+    except Exception as e:
+        print(f"Error: Failed to write {accumulated_path}: {e}", file=sys.stderr)
+        sys.exit(1)
     print(f"Updated: {accumulated_path}")
 
 
@@ -224,8 +228,7 @@ def main():
     try:
         sys.stdout.reconfigure(encoding='utf-8')
         sys.stderr.reconfigure(encoding='utf-8')
-    except AttributeError:
-        # Python 3.7 未満では reconfigure が存在しない
+    except Exception:
         pass
 
     if len(sys.argv) != 3:
