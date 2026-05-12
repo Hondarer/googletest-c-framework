@@ -46,12 +46,12 @@ default :
 		if [ -n "$$msvc_crt" ]; then \
 			prev_crt=$$(sed -n 's/^MSVC_CRT=//p' "$(BUILD_LOG)"); \
 			if [ "$$prev_hash" = "$$git_hash" ] && [ "$$prev_crt" = "$$msvc_crt" ]; then \
-				echo "INFO: Skipping testfw build (already built at $$git_hash with $$msvc_crt)"; \
+				echo "INFO: Skipping build (already built at $$git_hash with $$msvc_crt)"; \
 				exit 0; \
 			fi; \
 		else \
 			if [ "$$prev_hash" = "$$git_hash" ]; then \
-				echo "INFO: Skipping testfw build (already built at $$git_hash)"; \
+				echo "INFO: Skipping build (already built at $$git_hash)"; \
 				exit 0; \
 			fi; \
 		fi; \
@@ -75,7 +75,7 @@ default :
 	git_dirty=$$(git -C "$(CURDIR)" status --porcelain --untracked-files=no 2>/dev/null); \
 	if [ -n "$$git_hash" ] && [ -z "$$git_dirty" ] && \
 	   [ -f "$(BUILD_LOG)" ] && [ "$$(cat '$(BUILD_LOG)')" = "$$git_hash" ]; then \
-		echo "INFO: Skipping testfw build (already built at $$git_hash)"; \
+		echo "INFO: Skipping build (already built at $$git_hash)"; \
 	else \
 		rm -f "$(BUILD_LOG)"; \
 		make_exit=0; \
