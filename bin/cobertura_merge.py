@@ -179,7 +179,7 @@ def merge_coverage_files(coverage_files):
             # filename を正規化されたものに更新
             cls.set('filename', norm_filename)
             merged_classes[(pkg_name, norm_filename)] = cls
-            for line in cls.findall('.//line'):
+            for line in cls.findall('./lines/line'):
                 line_num = line.get('number')
                 key = (pkg_name, norm_filename, line_num)
                 merged_lines[key] = line
@@ -240,7 +240,7 @@ def merge_coverage_files(coverage_files):
 
                     merged_classes[cls_key] = new_cls
 
-                for line in cls.findall('.//line'):
+                for line in cls.findall('./lines/line'):
                     line_num = line.get('number')
                     hits = int(line.get('hits'))
                     key = (pkg_name, filename, line_num)
@@ -257,8 +257,8 @@ def merge_coverage_files(coverage_files):
                             acc_cov = parse_condition_coverage(existing_line.get('condition-coverage'))
 
                             if curr_cov[1] > 0 and acc_cov[1] > 0:
-                                # 同じ valid 数を想定し、covered は最大値を取る
-                                new_covered = max(curr_cov[0], acc_cov[0])
+                                # 同じ valid 数を想定し、covered は合計を上限で切る
+                                new_covered = min(curr_cov[0] + acc_cov[0], acc_cov[1])
                                 valid = acc_cov[1]
                                 if valid > 0:
                                     pct = int(100 * new_covered / valid)
@@ -275,7 +275,7 @@ def merge_coverage_files(coverage_files):
                                             try:
                                                 acc_pct = int(acc_pct_str)
                                                 curr_pct = int(curr_pct_str)
-                                                acc_cond.set('coverage', f"{max(acc_pct, curr_pct)}%")
+                                                acc_cond.set('coverage', f"{min(acc_pct + curr_pct, 100)}%")
                                             except ValueError:
                                                 pass
                                             break
@@ -359,7 +359,7 @@ def recalculate_coverage_stats(root):
             cls_branches_valid = 0
             cls_branches_covered = 0
 
-            for line in cls.findall('.//line'):
+            for line in cls.findall('./lines/line'):
                 cls_lines += 1
                 if int(line.get('hits')) > 0:
                     cls_hits += 1

@@ -64,7 +64,7 @@ def parse_cobertura(xml_path):
             total_branches = 0
             exec_branches = 0
 
-            for line in cls.findall('.//line'):
+            for line in cls.findall('./lines/line'):
                 line_num = int(line.get('number'))
                 hits = int(line.get('hits'))
                 total_lines += 1
