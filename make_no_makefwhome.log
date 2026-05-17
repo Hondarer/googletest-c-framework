@@ -1,3 +1,0 @@
-/home/user/c-modernization-kit/framework/makefw/makefiles/prepare.mk:26: *** MAKEFW_HOME is required. Export MAKEFW_HOME before running make.  中止.
-make[1]: *** [makefile:52: wrapmain/] エラー 1
-make: *** [makefile:74: default] エラー 2
