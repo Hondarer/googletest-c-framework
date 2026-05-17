@@ -32,3 +32,5 @@ make test
 - スクリプト名は `bin/` が正本です。旧 `cmnd/` 前提の説明に戻さないこと。
 - `lib/` には Linux と Windows の配布済み成果物が入る。命名規則や配置を変える場合はスクリプト、README、CI をまとめて確認すること。
 - `gtest/` は別 repo 扱いです。GoogleTest 配布物の変更はその直下の `AGENTS.md` と `README.md` に従うこと。
+- `TEST_SRCS` / `ADD_SRCS` に指定したソースファイルは、`make test` 時にビルドディレクトリへシンボリックリンクまたはコピーとして取り込まれる。ビルドディレクトリ内のファイルを直接変更しても次回 `make test` で上書きされるため、`prod/` の実体ファイルを変更すること。
+  see: `framework/makefw/docs/makeparts.md` の「TEST_SRCS / ADD_SRCS の留意事項」
