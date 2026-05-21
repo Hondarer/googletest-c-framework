@@ -15,8 +15,8 @@
 obj
 pages
 
-## ビルドスキップ用ログ
-make_build.log
+## ビルドスキップ用スタンプ
+make_build.stamp
 
 ## Python cache
 __pycache__/
