@@ -226,7 +226,7 @@ int mock_<func>(const char *file, const int line, const char *func, <args>)
 
 ## 可変長引数
 
-### `printf` 系
+### printf 系
 
 - mock 関数は元の `(..., const char *fmt, ...)` を保持します。
 - Mock クラスと delegate では、展開済みの `const char *str` を受け取ります。
@@ -247,7 +247,7 @@ int delegate_real_fprintf(const char *file, const int line, const char *func, FI
 - `libsrc/mock_libc/mock_fprintf.cc`
 - `libsrc/mock_libc/mock_vfprintf.cc`
 
-### `scanf` 系
+### scanf 系
 
 - mock 関数は `va_list` を生成または受け取り、そのまま Mock クラスまたは `delegate_real_` へ渡します。
 - `va_list` を複数回使う場合は `va_copy` を使います。

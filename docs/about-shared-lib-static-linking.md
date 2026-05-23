@@ -221,7 +221,7 @@ When a static library is updated, the shared library is automatically rebuilt.
 
 ## 制限事項 / Limitations
 
-### 1. 検索対象は `.a` のみ
+### 1. 検索対象は .a のみ
 
 `.a` ファイルのみを検索します。同名の `.so` と `.a` が存在する場合でも、`.a` が優先されます。
 

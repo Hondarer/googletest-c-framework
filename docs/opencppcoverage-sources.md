@@ -20,7 +20,7 @@ OpenCppCoverage の `--sources` オプションには **終端記号や完全一
 
 これで `src\a.cc` は除外されます。
 
-### 方法 2: `--excluded_sources` で除外する
+### 方法 2: --excluded_sources で除外する
 
 `a.c` を含めつつ、`a.cc` を明示的に除外します。
 
