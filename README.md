@@ -29,7 +29,7 @@ make clean
 
 ## 依存関係
 
-- gcc
+- GCC
 - g++
 - make
 - Python 3
