@@ -2,7 +2,7 @@
 
 ## 概要
 
-本レポジトリでは、既存の C プログラムを変更することなく、標準ライブラリ関数（`stdio.h`, `stdlib.h`, `string.h` など）の呼び出しをモック関数に置き換える高度なテクニックを採用しています。
+本リポジトリでは、既存の C プログラムを変更することなく、標準ライブラリ関数 (`stdio.h`, `stdlib.h`, `string.h` など) の呼び出しをモック関数に置き換える高度なテクニックを採用しています。
 
 これにより、以下が実現できます：
 
@@ -11,9 +11,9 @@
 - **デバッグ情報の自動取得**: 呼び出し元のファイル名、行番号、関数名を自動的に記録
 - **実行時の切り替え**: テスト中でも本物の実装とモックを柔軟に切り替え可能
 
-## 全体アーキテクチャ
+## 全体アーキテクチャー
 
-モック注入は以下の3層構造で実現されています：
+モック注入は以下の 3 層構造で実現されています：
 
 ```
 [テスト対象Cコード]
@@ -29,12 +29,13 @@
 
 ## 主要テクニック
 
-### 1. ヘッダーインターセプション
+### ヘッダーインターセプション
 
 `include_override/` ディレクトリに標準ライブラリと同名のヘッダーを配置し、コンパイル時に `-I include_override` を指定することで、標準ライブラリより優先的にインクルードさせます。
 
 **ディレクトリ構成:**
-```
+
+```text
 include_override/
 ├── stdio.h       # stdio.h のインターセプター
 ├── stdlib.h      # stdlib.h のインターセプター
@@ -45,11 +46,12 @@ include_override/
     └── wait.h    # sys/wait.h のインターセプター
 ```
 
-### 2. #include_next による本物のインクルード
+### #include_next による本物のインクルード
 
-`#include_next` ディレクティブを使用して、インクルードパスの次の階層にある本物の標準ライブラリヘッダーをインクルードします。
+`#include_next` ディレクティブを使用して、インクルード パスの次の階層にある本物の標準ライブラリ ヘッダーをインクルードします。
 
 **include_override/stdio.h の例:**
+
 ```c
 #ifndef _OVERRIDE_STDIO_H
 #define _OVERRIDE_STDIO_H
@@ -76,15 +78,17 @@ include_override/
 ```
 
 **ポイント:**
+
 - Linux/Unix: `#include_next` で本物の `<stdio.h>` をインクルード
-- Windows: UCRT（Universal C Runtime）から直接インクルード
+- Windows: UCRT(Universal C Runtime) から直接インクルード
 - 警告抑制のための `#pragma` ディレクティブを使用
 
-### 3. マクロによる関数置き換え
+### マクロによる関数置き換え
 
 `mock_stdio.h` 内で、標準関数をマクロでモック関数に置き換えます。この際、`__FILE__`, `__LINE__`, `__func__` を自動的に付加します。
 
 **include/mock_stdio.h の例:**
+
 ```c
 #ifdef _IN_OVERRIDE_HEADER_STDIO_H
 
@@ -99,21 +103,23 @@ include_override/
 ```
 
 **効果:**
+
 - テスト対象コードで `fopen("test.txt", "r")` と書くと、自動的に `mock_fopen(__FILE__, __LINE__, __func__, "test.txt", "r")` に展開される
 - 呼び出し元のファイル名、行番号、関数名が自動的に記録される
 
-### 4. 二重定義の回避
+### 二重定義の回避
 
-`_IN_OVERRIDE_HEADER_*` マクロを使用して、Cコードとテストコード（C++）で異なる定義を使い分けます。
+`_IN_OVERRIDE_HEADER_*` マクロを使用して、C コードとテスト コード (C++) で異なる定義を使い分けます。
 
 **役割分担:**
 
 | コンテキスト | マクロ定義 | 効果 |
 |------------|-----------|-----|
-| テスト対象Cコード | `_IN_OVERRIDE_HEADER_STDIO_H` が定義される | マクロによる関数置き換えが有効 |
-| テストコード（C++） | `_IN_OVERRIDE_HEADER_STDIO_H` が未定義 | Google Mock のクラス定義が有効 |
+| テスト対象 C コード | `_IN_OVERRIDE_HEADER_STDIO_H` が定義される | マクロによる関数置き換えが有効 |
+| テスト コード (C++) | `_IN_OVERRIDE_HEADER_STDIO_H` が未定義 | Google Mock のクラス定義が有効 |
 
 **include/mock_stdio.h の構造:**
+
 ```c
 #ifdef _IN_OVERRIDE_HEADER_STDIO_H
 
@@ -145,15 +151,16 @@ extern Mock_stdio *_mock_stdio;
 #endif // _IN_OVERRIDE_HEADER_STDIO_H
 ```
 
-### 5. Delegate パターンによる実装の切り替え
+### Delegate パターンによる実装の切り替え
 
-各モック関数には、以下の3つの実装が用意されています：
+各モック関数には、以下の 3 つの実装が用意されています：
 
-1. **mock_xxx**: エントリーポイント（グローバルモックインスタンスの有無で分岐）
+1. **mock_xxx**: エントリ ポイント (グローバル モック インスタンスの有無で分岐)
 2. **delegate_real_xxx**: 本物の実装を呼び出す
-3. **delegate_fake_xxx**: フェイク実装（簡易的なスタブ）
+3. **delegate_fake_xxx**: フェイク実装 (簡易的なスタブ)
 
 **libsrc/mock_libc/mock_fopen.cc の例:**
+
 ```cpp
 FILE *mock_fopen(const char *file, const int line, const char *func,
                  const char *filename, const char *modes)
@@ -214,11 +221,12 @@ FILE *delegate_fake_fopen(const char *file, const int line, const char *func,
 }
 ```
 
-### 6. グローバルモックインスタンスによる制御
+### グローバル モック インスタンスによる制御
 
 グローバル変数 `_mock_stdio` などを使用して、モックの有効/無効を制御します。
 
 **制御フロー:**
+
 ```cpp
 // テストフィクスチャのSetUp()で生成
 Mock_stdio *_mock_stdio = nullptr;
@@ -243,7 +251,7 @@ void TearDown() override
 
 ## ビルド設定
 
-モック注入を有効にするためには、以下のコンパイルオプションが必要です：
+モック注入を有効にするためには、以下のコンパイル オプションが必要です：
 
 ```makefile
 # include_override を最優先のインクルードパスに追加
@@ -255,13 +263,14 @@ LDFLAGS += -L$(TESTFW_DIR)/lib
 LDLIBS += -lmock_libc
 ```
 
-**重要:** `-I$(TESTFW_DIR)/include_override` は、システムの標準インクルードパスよりも前に指定する必要があります。
+**重要:** `-I$(TESTFW_DIR)/include_override` は、システムの標準インクルード パスよりも前に指定する必要があります。
 
 ## 実装例
 
 ### 完全な例：stdio.h のモック化
 
-**1. include_override/stdio.h（インターセプター）**
+**1. include_override/stdio.h (インターセプター)**
+
 ```c
 #ifndef _OVERRIDE_STDIO_H
 #define _OVERRIDE_STDIO_H
@@ -281,7 +290,8 @@ LDLIBS += -lmock_libc
 #endif
 ```
 
-**2. include/mock_stdio.h（モック定義）**
+**2. include/mock_stdio.h (モック定義)**
+
 ```c
 #ifndef _MOCK_STDIO_H
 #define _MOCK_STDIO_H
@@ -326,7 +336,8 @@ extern Mock_stdio *_mock_stdio;
 #endif
 ```
 
-**3. libsrc/mock_libc/mock_stdio.cc（モッククラス実装）**
+**3. libsrc/mock_libc/mock_stdio.cc (モック クラス実装)**
+
 ```cpp
 #include <mock_stdio.h>
 
@@ -349,7 +360,8 @@ Mock_stdio::~Mock_stdio()
 }
 ```
 
-**4. libsrc/mock_libc/mock_fopen.cc（モック関数実装）**
+**4. libsrc/mock_libc/mock_fopen.cc (モック関数実装)**
+
 ```cpp
 #include <mock_stdio.h>
 
@@ -379,7 +391,8 @@ FILE *delegate_real_fopen(const char *file, const int line, const char *func,
 }
 ```
 
-**5. テストコード（使用例）**
+**5. テスト コード (使用例)**
+
 ```cpp
 #include <gtest/gtest.h>
 #include <mock_stdio.h>
@@ -427,27 +440,31 @@ TEST_F(MyTest, TestFopenSuccess)
 
 ## 利点
 
-### 1. 非侵襲的
-- テスト対象のCコードを一切変更する必要がない
-- 依存性注入などのデザインパターンを強制しない
+### 非侵襲的
+
+- テスト対象の C コードを一切変更する必要がない
+- 依存性注入などのデザイン パターンを強制しない
 - レガシーコードにも適用可能
 
-### 2. 詳細なトレース
+### 詳細なトレース
+
 - 呼び出し元のファイル名、行番号、関数名を自動的に記録
 - デバッグ時に呼び出し元を特定しやすい
 
-### 3. 柔軟性
+### 柔軟性
+
 - テスト中でも本物の実装とモックを切り替え可能
 - 一部の関数だけモック化、他は本物を使用、といった柔軟な設定が可能
 
-### 4. Google Mock との統合
-- Google Mock の強力な機能（EXPECT_CALL, WillOnce, WillRepeatedly など）をそのまま利用可能
+### Google Mock との統合
 
-## 注意点とベストプラクティス
+- Google Mock の強力な機能 (EXPECT_CALL, WillOnce, WillRepeatedly など) をそのまま利用可能
 
-### 1. インクルードパスの順序
+## 注意点とベスト プラクティス
 
-**必須:** `-I include_override` は最も優先度の高いインクルードパスに設定すること。
+### インクルード パスの順序
+
+**必須:** `-I include_override` は最も優先度の高いインクルード パスに設定すること。
 
 ```makefile
 # 正しい例
@@ -457,11 +474,11 @@ CFLAGS = -I./include_override -I./include -I/usr/include
 CFLAGS = -I/usr/include -I./include_override
 ```
 
-### 2. マクロの衝突
+### マクロの衝突
 
 標準関数をマクロで置き換えるため、以下の点に注意：
 
-- 関数ポインタとして使用する場合は、マクロ展開を避ける必要がある
+- 関数ポインターとして使用する場合は、マクロ展開を避ける必要がある
 - `#undef` で一時的にマクロを無効化することも可能
 
 ```c
@@ -474,18 +491,18 @@ void (*fp)(const char *) = printf;
 #define printf(format, ...) mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
 ```
 
-### 3. Windows と Linux の差異
+### Windows と Linux の差異
 
-- `#include_next` は GCC/Clang 拡張機能（MSVC では使用不可）
+- `#include_next` は GCC/Clang 拡張機能 (MSVC では使用不可)
 - Windows では UCRT のパスを直接指定する必要がある
 - プラットフォーム固有の条件コンパイルを適切に使用すること
 
-### 4. モックインスタンスのライフサイクル
+### モック インスタンスのライフサイクル
 
-- `_mock_stdio` などのグローバル変数は、テストフィクスチャの SetUp/TearDown で適切に管理すること
-- テスト間でモックインスタンスが残らないように注意
+- `_mock_stdio` などのグローバル変数は、テスト フィクスチャの SetUp/TearDown で適切に管理すること
+- テスト間でモック インスタンスが残らないように注意
 
-### 5. 可変長引数関数
+### 可変長引数関数
 
 `printf` や `scanf` などの可変長引数関数をモック化する場合：
 
@@ -494,17 +511,17 @@ void (*fp)(const char *) = printf;
 
 ## まとめ
 
-本レポジトリで採用している標準ライブラリへのモック注入テクニックは、以下の技術を組み合わせて実現されています：
+本リポジトリで採用している標準ライブラリへのモック注入テクニックは、以下の技術を組み合わせて実現されています：
 
-1. **ヘッダーインターセプション**: インクルードパスの優先順位を利用
+1. **ヘッダーインターセプション**: インクルード パスの優先順位を利用
 2. **#include_next**: 本物のヘッダーをインクルード
 3. **マクロ置き換え**: 標準関数をモック関数に自動変換
 4. **デバッグ情報の自動付加**: `__FILE__`, `__LINE__`, `__func__` の活用
-5. **条件付きコンパイル**: CコードとC++テストコードの使い分け
-6. **Delegateパターン**: 本物とフェイクの実装を動的に切り替え
-7. **グローバルインスタンス**: モックの有効/無効を実行時制御
+5. **条件付きコンパイル**: C コードと C++テスト コードの使い分け
+6. **Delegate パターン**: 本物とフェイクの実装を動的に切り替え
+7. **グローバル インスタンス**: モックの有効/無効を実行時制御
 
-このテクニックにより、既存のCコードを一切変更することなく、標準ライブラリ関数の動作を完全に制御できます。これは、レガシーコードのテスタビリティを劇的に向上させる強力な手法です。
+このテクニックにより、既存の C コードを一切変更することなく、標準ライブラリ関数の動作を完全に制御できます。これは、レガシーコードのテスタビリティを劇的に向上させる強力な手法です。
 
 ## 関連ドキュメント
 

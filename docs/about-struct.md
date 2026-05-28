@@ -39,11 +39,11 @@ CC=g++
 }
 ```
 
-**特定フォルダに適用したい場合**
+**特定フォルダーに適用したい場合**
 
 ** はサブディレクトリも含めて .c ファイルを検索するワイルドカード。
 
-files.associations の設定は絶対パスのパターンマッチであり、${workspaceFolder} が利用できない。そのため、先頭に **/ を付与する必要がある。(see [issue](https://github.com/microsoft/vscode/issues/12805))
+files.associations の設定は絶対パスのパターン マッチであり、${workspaceFolder} が利用できない。そのため、先頭に **/ を付与する必要がある。(see [issue](https://github.com/microsoft/vscode/issues/12805))
 
 以下により、samplesubdir 配下の *.c を c++ として解釈できる。
 

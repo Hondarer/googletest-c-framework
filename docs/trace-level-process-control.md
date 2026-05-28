@@ -1,14 +1,14 @@
-# プロセス制御関数への traceLevel サポート追加（設計検討資料）
+# プロセス制御関数への traceLevel サポート追加 (設計検討資料)
 
 ## 背景
 
-`framework/testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`
-でコンソール出力を制御する仕組みを提供している。
-現在この仕組みはモック関数（`mock_calcHandler` 等）にのみ使われており、
-プロセス制御関数群（`startProcessAsync`, `waitForOutput` 等）には適用されていない。
+`framework/testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`  
+でコンソール出力を制御する仕組みを提供している。  
+現在この仕組みはモック関数 (`mock_calcHandler` 等) にのみ使われており、  
+プロセス制御関数群 (`startProcessAsync`, `waitForOutput` 等) には適用されていない。
 
-インテグレーションテスト（porter の `porterSendRecvTest` 等）では複数プロセスを起動・対話させるため、
-テスト失敗時にどの操作がどのタイミングで行われたかを追跡しにくい。
+インテグレーション テスト (porter の `porterSendRecvTest` 等) では複数プロセスを起動・対話させるため、  
+テスト失敗時にどの操作がどのタイミングで行われたかを追跡しにくい。  
 traceLevel をプロセス制御関数にも対応させることで、テスト失敗時の原因調査を容易にする。
 
 ### traceLevel 機構の概要
@@ -16,15 +16,15 @@ traceLevel をプロセス制御関数にも対応させることで、テスト
 | 関数 | 役割 |
 |---|---|
 | `resetTraceLevel()` | 辞書をクリアしてデフォルト値を `TRACE_NONE` にリセット |
-| `setTraceLevel(const char* func, int level)` | 指定関数名のトレースレベルを設定 |
-| `setDefaultTraceLevel(int level)` | 全関数共通のデフォルトレベルを設定 |
+| `setTraceLevel(const char* func, int level)` | 指定関数名のトレース レベルを設定 |
+| `setDefaultTraceLevel(int level)` | 全関数共通のデフォルト レベルを設定 |
 | `getTraceLevel()` | 現在の関数名 (`__func__`) をキーにしてレベルを取得するマクロ |
 
 レベル定数:
 
 | 定数 | 値 | 意味 |
 |---|---|---|
-| `TRACE_NONE` | 0 | 出力なし（デフォルト） |
+| `TRACE_NONE` | 0 | 出力なし (デフォルト) |
 | `TRACE_INFO` | 1 | 関数呼び出しと主要引数を出力 |
 | `TRACE_DETAIL` | 2 | 戻り値・結果を追加出力 |
 
@@ -81,9 +81,9 @@ processController は全体で 1 つの機能であり、キーは `processContr
 | `interruptProcess` | `"  > interruptProcess pid=<N>"` | なし |
 | `killProcess` | `"  > killProcess pid=<N>"` | なし |
 | `waitForExit` | `"  > waitForExit timeout=<N>ms"` | `" -> waitForExit exit_code=<N>"` |
-| stdout キャプチャ時( `\n` 検出時)           | `"  > stdout   : \"<line>\""` | なし |
-| stderr キャプチャ時( `\n` 検出時)           | `"  > stderr   : \"<line>\""` | なし |
-| debug出力 キャプチャ時( `\n` 検出時) | なし | `"  > debug_log: \"<line>\""` |
+| stdout キャプチャ時 (`\n` 検出時)           | `"  > stdout   : \"<line>\""` | なし |
+| stderr キャプチャ時 (`\n` 検出時)           | `"  > stderr   : \"<line>\""` | なし |
+| debug 出力 キャプチャ時 (`\n` 検出時) | なし | `"  > debug_log: \"<line>\""` |
 
 ※ `writeStdin` は `writeLineStdin` からも呼ばれるため、最終出力処理を別関数 `writeStdinImpl` に逃がしてトレースさせる。
 
@@ -94,7 +94,7 @@ processController は全体で 1 つの機能であり、キーは `processContr
 | `getStdout` / `getStderr` | 単純ゲッター。呼び出し頻度が高く、トレース出力の価値が低い |
 | `getDebugLogCount` / `getDebugLog` | 同上 |
 
-## テストコードでの使用例
+## テスト コードでの使用例
 
 ### 基本的な使い方
 
@@ -110,8 +110,8 @@ void SetUp() override
 
 ## 実装後の検証方法
 
-1. `make -C framework/testfw` でビルドエラーがないことを確認
+1. `make -C framework/testfw` でビルド エラーがないことを確認
 2. `app/override-sample/test/src/override-sampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
 3. `app/porter/test/src/integration/porterSendRecvTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
-4. テスト出力に `  > startProcessAsync ...` 等のトレースが表示されることを確認
-5. `resetTraceLevel()` のみの状態（デフォルト）でトレース出力が出ないことを確認
+4. テスト出力に `> startProcessAsync ...` 等のトレースが表示されることを確認
+5. `resetTraceLevel()` のみの状態 (デフォルト) でトレース出力が出ないことを確認

@@ -24,7 +24,7 @@ GoogleTest の内部では、以下の 4 つの色が定義されています。
 | 見出し | 色 | 意味 |
 |---|---|---|
 | `[==========]` | 緑 | テスト全体の開始・終了 |
-| `[----------]` | 緑 | テストスイートの開始・終了 |
+| `[----------]` | 緑 | テスト スイートの開始・終了 |
 | `[ RUN      ]` | 緑 | 個別テストの開始 |
 
 ### テスト結果
@@ -32,8 +32,8 @@ GoogleTest の内部では、以下の 4 つの色が定義されています。
 | 見出し | 色 | 意味 |
 |---|---|---|
 | `[       OK ]` | 緑 | 個別テストの成功 |
-| `[  PASSED  ]` | 緑 | テスト全体の成功サマリ |
-| `[  FAILED  ]` | 赤 | 個別テストの失敗、または失敗サマリ |
+| `[  PASSED  ]` | 緑 | テスト全体の成功サマリー |
+| `[  FAILED  ]` | 赤 | 個別テストの失敗、または失敗サマリー |
 | `[ SKIPPED  ]` | 黄 | テストのスキップ (GTEST_SKIP 使用時) |
 
 ### その他の情報出力
@@ -75,7 +75,7 @@ GoogleTest の内部では、以下の 4 つの色が定義されています。
 
 色の有効・無効は、以下の方法で制御できます。
 
-### コマンドラインオプション
+### コマンド ライン オプション
 
 ```bash
 ./test_binary --gtest_color=yes   # 常に色を使用
@@ -98,7 +98,7 @@ export GTEST_COLOR=0    # 色を無効化
 - UNIX 系 OS の場合、環境変数 `TERM` が `xterm` または `xterm-color` に設定されている
 - Windows の場合、コンソールがカラー出力をサポートしている
 
-## ソースコード上の実装
+## ソース コード上の実装
 
 着色は `gtest.cc` 内の `PrettyUnitTestResultPrinter` クラスで実装されています。主要なメソッドを以下に示します。
 
@@ -112,7 +112,7 @@ export GTEST_COLOR=0    # 色を無効化
 
 ## 着色フィルターの使用
 
-Windows 環境などでエスケープシーケンスなしの出力に色を付けるフィルタースクリプトについて説明します。
+Windows 環境などでエスケープ シーケンスなしの出力に色を付けるフィルター スクリプトについて説明します。
 
 ```bash
 test.exe | python add_gtest_color.py
@@ -128,7 +128,7 @@ test.exe | python add_gtest_color.py
 
 ### 可逆である部分
 
-標準的なテスト実行で出力されるすべての見出しは、テキストパターンから一意に色を復元できます。
+標準的なテスト実行で出力されるすべての見出しは、テキスト パターンから一意に色を復元できます。
 
 | 見出しテキスト | 色 | 可逆性 |
 |---|---|---|
@@ -142,7 +142,7 @@ test.exe | python add_gtest_color.py
 
 ### 可逆性の技術的根拠
 
-元の GoogleTest ソースコード (`gtest.cc`) では、`PrettyUnitTestResultPrinter` クラスが以下のように着色を行っています。
+元の GoogleTest ソース コード (`gtest.cc`) では、`PrettyUnitTestResultPrinter` クラスが以下のように着色を行っています。
 
 ```cpp
 // OnTestStart - テスト開始時
@@ -168,7 +168,7 @@ if (result.Skipped()) {
 
 2. **将来の GoogleTest バージョン**: 新しい見出しが追加された場合は、フィルターの更新が必要
 
-3. **サードパーティツールの出力**: GoogleTest 互換のフォーマットでも、微妙に異なるスペーシングを使用している場合
+3. **サード パーティー ツールの出力**: GoogleTest 互換のフォーマットでも、微妙に異なるスペーシングを使用している場合
 
 ### 検証方法
 
@@ -188,5 +188,5 @@ diff colored.txt filtered.txt
 ## 参考リンク
 
 - [GoogleTest Advanced Topics - Colored Terminal Output](https://google.github.io/googletest/advanced.html)
-- [GoogleTest ソースコード (gtest.cc)](https://github.com/google/googletest/blob/main/googletest/src/gtest.cc)
-- [GTEST_SKIP によるテストスキップ機能 (PR #1544)](https://github.com/google/googletest/pull/1544)
+- [GoogleTest ソース コード (gtest.cc)](https://github.com/google/googletest/blob/main/googletest/src/gtest.cc)
+- [GTEST_SKIP によるテスト スキップ機能 (PR #1544)](https://github.com/google/googletest/pull/1544)

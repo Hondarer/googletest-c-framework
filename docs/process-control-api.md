@@ -2,8 +2,8 @@
 
 ## 概要
 
-`framework/testfw/include/processController.h` が提供するプロセス制御 API です。
-テスト対象バイナリをサブプロセスとして起動し、
+`framework/testfw/include/processController.h` が提供するプロセス制御 API です。  
+テスト対象バイナリをサブプロセスとして起動し、  
 stdin / stdout / stderr をパイプ経由で制御できます。
 
 2 つのモードがあります。
@@ -13,7 +13,7 @@ stdin / stdout / stderr をパイプ経由で制御できます。
 | 同期 | `startProcess()` | 短命プロセス (起動 → 終了まで待機) |
 | 非同期 | `startProcessAsync()` + 各操作関数 | 常駐プロセス・対話プロセスの制御 |
 
-`startProcess()` は `startProcessAsync()` のラッパーとして実装されており、
+`startProcess()` は `startProcessAsync()` のラッパーとして実装されており、  
 実質的な処理はすべて非同期 API 側に集約されています。
 
 ## 型・構造体
@@ -25,8 +25,8 @@ struct AsyncProcess;
 using AsyncProcessHandle = shared_ptr<AsyncProcess>;
 ```
 
-非同期プロセスのハンドルです。内部実装は非公開です。
-`shared_ptr` であるため、スコープアウト時にデストラクタで自動的にリソースが解放されます。
+非同期プロセスのハンドルです。内部実装は非公開です。  
+`shared_ptr` であるため、スコープ アウト時にデストラクターで自動的にリソースが解放されます。
 
 ### ProcessOptions
 
@@ -88,7 +88,7 @@ inline ProcessResult startProcess(
 | 引数 | 説明 |
 |---|---|
 | `binary` | 実行するバイナリの絶対パス |
-| `args` | コマンドライン引数 (argv[1] 以降) |
+| `args` | コマンド ライン引数 (argv[1] 以降) |
 | `opts` | 実行オプション |
 | `stdin_lines` | stdin に渡す行リスト。各要素末尾に `\n` を付加して順次書き込む |
 | `timeout_ms` | タイムアウト (ms)。デフォルト 30000 |
@@ -112,8 +112,8 @@ extern AsyncProcessHandle startProcessAsync(
     const ProcessOptions& opts = ProcessOptions{})
 ```
 
-プロセスを非同期で起動します。
-stdin / stdout / stderr はすべてパイプ経由で制御されます。
+プロセスを非同期で起動します。  
+stdin / stdout / stderr はすべてパイプ経由で制御されます。  
 起動失敗時は `nullptr` を返します。
 
 #### writeStdin / writeLineStdin
@@ -123,8 +123,8 @@ extern bool writeStdin    (AsyncProcessHandle& handle, const string& data)
 extern bool writeLineStdin(AsyncProcessHandle& handle, const string& line)
 ```
 
-プロセスの stdin に書き込みます。
-`writeStdin` は改行を付加しません。`writeLineStdin` は末尾に `\n` を付加します。
+プロセスの stdin に書き込みます。  
+`writeStdin` は改行を付加しません。`writeLineStdin` は末尾に `\n` を付加します。  
 プロセスが終了済みの場合は `false` を返します。
 
 #### waitForOutput
@@ -135,18 +135,18 @@ extern string waitForOutput(AsyncProcessHandle& handle,
                              int timeout_ms = 5000)
 ```
 
-stdout に指定パターン (部分一致) が出現するまで待機します。
-パターン出現位置までの stdout を返します。
+stdout に指定パターン (部分一致) が出現するまで待機します。  
+パターン出現位置までの stdout を返します。  
 タイムアウトした場合、またはプロセスが予期せず終了した場合は `std::runtime_error` を送出します。
 
-stdout の読み取りはバックグラウンドスレッドが常時行っているため、
+stdout の読み取りはバックグラウンド スレッドが常時行っているため、  
 `writeLineStdin()` と同時に呼び出してもデッドロックは発生しません。
 
 Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForOutput()` 完了後にはその時点までの全ログが利用可能です。
 
 > **テスト対象側の要件**: stdout / stderr はパイプ経由で受け渡されるため、
 > テストが待機するパターンを出力した直後にテスト対象側で `fflush(stdout)` を呼ぶ必要があります。
-> 呼ばれていない場合、出力が stdio の内部バッファに滞留し、タイムアウトまでパターンが届きません。
+> 呼ばれていない場合、出力が stdio の内部バッファーに滞留し、タイムアウトまでパターンが届きません。
 
 #### closeStdin
 
@@ -184,7 +184,7 @@ extern void killProcess(AsyncProcessHandle& handle)
 extern int waitForExit(AsyncProcessHandle& handle, int timeout_ms = 10000)
 ```
 
-プロセス終了を待機し、終了コードを返します。
+プロセス終了を待機し、終了コードを返します。  
 タイムアウト時は `-1` を返します。
 
 Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForExit()` 完了後には全ログが利用可能です。
@@ -205,11 +205,11 @@ extern size_t          getDebugLogCount(AsyncProcessHandle& handle)
 extern vector<string>  getDebugLog     (AsyncProcessHandle& handle, size_t from_index = 0)
 ```
 
-デバッグログを行単位で返します (非破壊)。
+デバッグ ログを行単位で返します (非破壊)。
 
 - **Linux**: `preload_lib` を指定した場合に有効。syslog モック出力が対象。
 - **Windows**: `capture_debug_output = true` を指定した場合に有効。OutputDebugString 出力が対象。
-- `from_index` に `getDebugLogCount()` で記録したインデックスを渡すと、
+- `from_index` に `getDebugLogCount()` で記録したインデックスを渡すと、  
   その時点以降のログのみを取り出せます。
 
 ## 使い方
@@ -266,9 +266,9 @@ waitForExit(recv_h, 3000);
 EXPECT_NE(string::npos, getStdout(recv_h).find("Hello Porter"));
 ```
 
-### テスト失敗時のプロセスリーク防止
+### テスト失敗時のプロセス リーク防止
 
-`ASSERT_*` マクロでテストが中断された場合でもプロセスを確実に終了させるため、
+`ASSERT_*` マクロでテストが中断された場合でもプロセスを確実に終了させるため、  
 `TearDown()` に終了処理を実装します。
 
 ```cpp
@@ -278,7 +278,7 @@ void TearDown() override {
 }
 ```
 
-### デバッグログのキャプチャ
+### デバッグ ログのキャプチャ
 
 ```cpp
 // TARGET_ARCH は識別子として定義される。文字列化には TOSTRING を使う
@@ -313,7 +313,7 @@ EXPECT_TRUE(any_of(logs.begin(), logs.end(),
 |---|---|
 | `runProcess()` | `startProcess()` |
 
-`ProcessOptions` から `args`・`timeout_ms`・`stdin_lines` フィールドが削除されました。
+`ProcessOptions` から `args`・`timeout_ms`・`stdin_lines` フィールドが削除されました。  
 それぞれ `startProcess()` の独立した引数として渡します。
 
 ```cpp

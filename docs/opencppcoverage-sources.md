@@ -42,7 +42,7 @@ OpenCppCoverage の `--sources` オプションには **終端記号や完全一
 
 ## 注意点
 
-- OpenCppCoverage のパターンマッチは単純な部分一致であり、正規表現や終端アンカー (`$` など) は使えません。
+- OpenCppCoverage のパターン マッチは単純な部分一致であり、正規表現や終端アンカー (`$` など) は使えません。
 - パスの区切り文字は `\` (Windows) で記述します。
 - 複数の `--sources` や `--excluded_sources` を並べて使えます。
 
