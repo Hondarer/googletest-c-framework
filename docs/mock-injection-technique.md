@@ -37,13 +37,13 @@
 
 ```text
 include_override/
-├── stdio.h       # stdio.h のインターセプター
-├── stdlib.h      # stdlib.h のインターセプター
-├── string.h      # string.h のインターセプター
-├── unistd.h      # unistd.h のインターセプター
-└── sys/
-    ├── stat.h    # sys/stat.h のインターセプター
-    └── wait.h    # sys/wait.h のインターセプター
++-- stdio.h       # stdio.h のインターセプター
++-- stdlib.h      # stdlib.h のインターセプター
++-- string.h      # string.h のインターセプター
++-- unistd.h      # unistd.h のインターセプター
++-- sys/
+    +-- stat.h    # sys/stat.h のインターセプター
+    +-- wait.h    # sys/wait.h のインターセプター
 ```
 
 ### #include_next による本物のインクルード
