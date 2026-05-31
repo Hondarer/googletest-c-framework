@@ -12,7 +12,7 @@ When building shared libraries with `LIB_TYPE=shared` in `makelibsrc.mk`, `.a` f
 
 ### 課題 / Problem
 
-共有ライブラリ `libcalc.so` が静的ライブラリ `libcalcbase.a` の関数を参照する場合、以下の 2 つのアプローチがあります：
+共有ライブラリ `libcalc.so` が静的ライブラリ `libcalcbase.a` の関数を参照する場合、以下の 2 つのアプローチがあります:
 
 When a shared library `libcalc.so` references functions from a static library `libcalcbase.a`, there are two approaches:
 
@@ -70,7 +70,7 @@ This feature automatically implements option 1 (the recommended approach). By em
 
 ### ライブラリ検索パス / Library Search Path
 
-`-l` オプションで指定されたライブラリは、以下の順序で `.a` ファイルを検索します：
+`-l` オプションで指定されたライブラリは、以下の順序で `.a` ファイルを検索します:
 
 Libraries specified with `-l` are searched for `.a` files in the following order:
 
