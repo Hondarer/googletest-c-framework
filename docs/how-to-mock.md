@@ -5,13 +5,13 @@ mock 関数を追加するときの共通ルールを示します。
 ## 用語
 
 - mock
-  - ここではテスト ダブル全般を指す総称として扱います。
+    - ここではテスト ダブル全般を指す総称として扱います。
 - override ヘッダー
-  - 本物のヘッダーを読み込んだ後に、関数呼び出しを mock へ差し替えるためのヘッダーです。
+    - 本物のヘッダーを読み込んだ後に、関数呼び出しを mock へ差し替えるためのヘッダーです。
 - Mock クラス
-  - Google Mock の `MOCK_METHOD` を並べたクラスです。テスト中の振る舞いはここで定義します。
+    - Google Mock の `MOCK_METHOD` を並べたクラスです。テスト中の振る舞いはここで定義します。
 - mock 関数本体
-  - 置換マクロの着地点になる関数です。グローバル ポインター経由で Mock クラスへ委譲します。
+    - 置換マクロの着地点になる関数です。グローバル ポインター経由で Mock クラスへ委譲します。
 
 ## 流れ
 
@@ -70,10 +70,10 @@ TEST_F(MyTest, example)
 ## 参照例
 
 - Mock クラス
-  - `../include/mock_stdio.h`
-  - `../include/mock_unistd.h`
+    - `../include/mock_stdio.h`
+    - `../include/mock_unistd.h`
 - override ヘッダー
-  - `../include_override/stdio.h`
-  - `../include_override/unistd.h`
+    - `../include_override/stdio.h`
+    - `../include_override/unistd.h`
 - 関数実装
-  - `../libsrc/mock_libc/`
+    - `../libsrc/mock_libc/`

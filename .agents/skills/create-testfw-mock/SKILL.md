@@ -37,13 +37,13 @@ testfw mock は mock 未注入時に本物の関数へ委譲 (`delegate_real_`) 
 ## 変更対象
 
 - `include/mock_<lib>.h`
-  - mock 関数宣言、置換マクロ、delegate 宣言、Mock クラスを定義します。
+    - mock 関数宣言、置換マクロ、delegate 宣言、Mock クラスを定義します。
 - `include_override/...`
-  - 本物のヘッダーを読み込んだ後に置換マクロを有効化します。
+    - 本物のヘッダーを読み込んだ後に置換マクロを有効化します。
 - `libsrc/mock_<lib>/mock_<lib>.cc`
-  - `ON_CALL` の既定値と `switch_to_real_*` / `switch_to_mock_*` を実装します。
+    - `ON_CALL` の既定値と `switch_to_real_*` / `switch_to_mock_*` を実装します。
 - `libsrc/mock_<lib>/mock_<func>.cc`
-  - `delegate_real_`、必要に応じて `delegate_fake_`、`mock_<func>` を実装します。
+    - `delegate_real_`、必要に応じて `delegate_fake_`、`mock_<func>` を実装します。
 
 参照先:
 
