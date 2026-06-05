@@ -12,7 +12,7 @@
 
 using namespace testing;
 
-// -Wl,--wrap=main を利用して main() を wrap した際のエントリーポイント
+// -Wl,--wrap=main を利用して main() を wrap した際のエントリ ポイント
 int __wrap_main(int argc, char **argv)
 {
   ScopedConsoleUtf8 scoped_console_utf8;

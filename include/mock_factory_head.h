@@ -98,7 +98,7 @@
         _,                                               \
         BOOL_TO_VOIDNONVOID(isvoid))(__VA_ARGS__)
 
-// エントリーポイント
+// エントリ ポイント
 #define MOCK_C_METHOD(ret, name, ...) \
     DISPATCH_VOID_NONVOID(IS_VOID(ret), VA_NARGS(__VA_ARGS__), ret, name, __VA_ARGS__)
 
