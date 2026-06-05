@@ -59,7 +59,7 @@ struct ProcessResult {
     int    exit_code;     // 終了コード (-1 = 起動失敗またはタイムアウト)
     string stdout_out;    // 標準出力
     string stderr_out;    // 標準エラー出力
-    string debug_log;     // デバッグログ出力 (preload_lib / capture_debug_output 指定時のみ)
+    string debug_log;     // デバッグ ログ出力 (preload_lib / capture_debug_output 指定時のみ)
 };
 ```
 

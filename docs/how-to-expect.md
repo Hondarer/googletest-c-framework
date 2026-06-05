@@ -83,7 +83,7 @@ EXPECT_CALL(mock, DoSomething(_))
 EXPECT_CALL(mock, DoSomething(StrEq("CountUp")))
     .Times(2);
 
-// 2回以上ならOK
+// 2 回以上なら OK
 EXPECT_CALL(mock, DoSomething(StrEq("CountUp")))
     .Times(AtLeast(2));
 ```
@@ -95,12 +95,12 @@ EXPECT_CALL(mock, DoSomething(StrEq("CountUp")))
 `WillOnce` は「その指定した呼び出し回数分だけ、ある動作を行う」ために使う。複数回 `WillOnce` をつないで書くことで、回数に応じて返却値 (あるいは動作) を変化させられる。その後、さらに呼び出しが続くときは `WillRepeatedly` が使われる。
 
 ```cpp
-// 例: 1回目は 10 を返す、2回目は 20 を返す、3回目以降は常に -1 を返す
+// 例: 1 回目は 10 を返す、2 回目は 20 を返す、3 回目以降は常に -1 を返す
 EXPECT_CALL(mock, DoSomething(_))
     .Times(AnyNumber())                  // 呼び出し回数自体は制限しない
-    .WillOnce(Return(10))               // 1回目
-    .WillOnce(Return(20))               // 2回目
-    .WillRepeatedly(Return(-1));        // 3回目以降
+    .WillOnce(Return(10))               // 1 回目
+    .WillOnce(Return(20))               // 2 回目
+    .WillRepeatedly(Return(-1));        // 3 回目以降
 ```
 
 以下のような呼び出しを想定する。
@@ -140,7 +140,7 @@ TEST(MyTest, OnCallDefaultBehavior) {
     EXPECT_CALL(mock, DoSomething(StrEq("special")))
         .WillOnce(Return(999));
 
-    // テストコード内の呼び出し
+    // テスト コード内の呼び出し
     // special 以外ならデフォルトの -1、"special" なら 999 を返す
     EXPECT_EQ(mock.DoSomething("foo"), -1);
     EXPECT_EQ(mock.DoSomething("special"), 999);
@@ -223,7 +223,7 @@ EXPECT_CALL(mock, M3())
 EXPECT_CALL(mock, M4())
     .InSequence(s2);
 
-// これら2つのシーケンス (s1, s2) はそれぞれ独立して順序をチェックする
+// これら 2 つのシーケンス (s1, s2) はそれぞれ独立して順序をチェックする
 // M1 → M2 の順と、M3 → M4 の順が守られていれば OK
 ```
 

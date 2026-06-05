@@ -98,14 +98,14 @@ def convert_cobertura_to_gcov(xml_path, output_dir='.'):
     output_path = Path(output_dir)
     output_path.mkdir(exist_ok=True)
 
-    # 各ソースファイルを処理
+    # 各ソース ファイルを処理
     for package in root.findall('.//package'):
         for cls in package.findall('.//class'):
             filename = cls.get('filename')
             if not filename:
                 continue
 
-            # ソースファイルを読み込む
+            # ソース ファイルを読み込む
             try:
                 with open(filename, 'r', encoding='utf-8') as f:
                     source_lines = f.readlines()

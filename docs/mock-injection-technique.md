@@ -123,12 +123,12 @@ include_override/
 ```c
 #ifdef _IN_OVERRIDE_HEADER_STDIO_H
 
-// Cコード用：マクロ定義のみ
+// C コード用: マクロ定義のみ
 #define fopen(filename, modes) mock_fopen(__FILE__, __LINE__, __func__, filename, modes)
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H
 
-// テストコード（C++）用：Google Mock クラス定義
+// テスト コード (C++) 用: Google Mock クラス定義
 #include <gmock/gmock.h>
 
 extern FILE *delegate_real_fopen(const char *, const int, const char *, const char *, const char *);
@@ -169,16 +169,16 @@ FILE *mock_fopen(const char *file, const int line, const char *func,
 
     if (_mock_stdio != nullptr)
     {
-        // モックが有効な場合：Google Mock の期待値に基づいて動作
+        // モックが有効な場合: Google Mock の期待値に基づいて動作
         fp = _mock_stdio->fopen(file, line, func, filename, modes);
     }
     else
     {
-        // モックが無効な場合：本物の実装を呼び出す
+        // モックが無効な場合: 本物の実装を呼び出す
         fp = delegate_real_fopen(file, line, func, filename, modes);
     }
 
-    // トレース出力（デバッグ用）
+    // トレース出力 (デバッグ用)
     if (getTraceLevel() > TRACE_NONE)
     {
         printf("  > fopen %s, %c", filename, *modes);
@@ -215,7 +215,7 @@ FILE *delegate_real_fopen(const char *file, const int line, const char *func,
 FILE *delegate_fake_fopen(const char *file, const int line, const char *func,
                           const char *filename, const char *modes)
 {
-    // フェイク実装：ダミーのFILEポインタを返す
+    // フェイク実装: ダミーの FILE ポインターを返す
     FILE *fp = (FILE *)malloc(sizeof(FILE));
     return fp;
 }
@@ -228,7 +228,7 @@ FILE *delegate_fake_fopen(const char *file, const int line, const char *func,
 **制御フロー:**
 
 ```cpp
-// テストフィクスチャのSetUp()で生成
+// テスト フィクスチャの SetUp() で生成
 Mock_stdio *_mock_stdio = nullptr;
 
 void SetUp() override
@@ -254,11 +254,11 @@ void TearDown() override
 モック注入を有効にするためには、以下のコンパイル オプションが必要です:
 
 ```makefile
-# include_override を最優先のインクルードパスに追加
+# include_override を最優先のインクルード パスに追加
 CFLAGS += -I$(TESTFW_DIR)/include_override
 CFLAGS += -I$(TESTFW_DIR)/include
 
-# モックライブラリをリンク
+# モック ライブラリをリンク
 LDFLAGS += -L$(TESTFW_DIR)/lib
 LDLIBS += -lmock_libc
 ```
@@ -310,11 +310,11 @@ extern FILE *mock_fopen(const char *, const int, const char *,
 #endif
 
 #ifdef _IN_OVERRIDE_HEADER_STDIO_H
-// Cコード用：マクロ定義
+// C コード用: マクロ定義
 #define fopen(filename, modes) mock_fopen(__FILE__, __LINE__, __func__, filename, modes)
 
 #else
-// C++テストコード用：Google Mock クラス定義
+// C++テスト コード用: Google Mock クラス定義
 #include <gmock/gmock.h>
 
 extern FILE *delegate_real_fopen(const char *, const int, const char *,
@@ -417,10 +417,10 @@ TEST_F(MyTest, TestFopenFailure)
         .WillOnce(Return(nullptr));
 
     // テスト対象関数を呼び出す
-    // （内部で fopen("test.txt", "r") が呼ばれる）
+    // (内部で fopen("test.txt", "r") が呼ばれる)
     int result = my_function_that_opens_file();
 
-    // エラーハンドリングが正しく動作することを確認
+    // エラー処理が正しく動作することを確認
     EXPECT_EQ(result, -1);
 }
 
@@ -470,7 +470,7 @@ TEST_F(MyTest, TestFopenSuccess)
 # 正しい例
 CFLAGS = -I./include_override -I./include -I/usr/include
 
-# 誤った例（システムパスが優先されてしまう）
+# 誤った例 (システム パスが優先されてしまう)
 CFLAGS = -I/usr/include -I./include_override
 ```
 
@@ -483,7 +483,7 @@ CFLAGS = -I/usr/include -I./include_override
 
 ```c
 // 問題が発生する例
-void (*fp)(const char *) = printf;  // マクロ展開されてコンパイルエラー
+void (*fp)(const char *) = printf;  // マクロ展開されてコンパイル エラー
 
 // 回避策
 #undef printf

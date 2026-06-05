@@ -181,7 +181,7 @@ if (result.Skipped()) {
 # フィルター適用後の出力
 ./test.exe --gtest_color=no | python add_gtest_color.py > filtered.txt
 
-# エスケープシーケンスを比較
+# エスケープ シーケンスを比較
 diff colored.txt filtered.txt
 ```
 
