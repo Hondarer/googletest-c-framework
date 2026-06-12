@@ -8,7 +8,7 @@
 
 using namespace std;
 
-/* 構造体メンバーのアライメント調整パディングに対する警告を抑制する。
+/* 構造体メンバーのアラインメント調整パディングに対する警告を抑制する。
  * int と string の混在でパディングが生じるが、意図した設計のため無視する。 */
 #ifndef _WIN32
 #pragma GCC diagnostic push
