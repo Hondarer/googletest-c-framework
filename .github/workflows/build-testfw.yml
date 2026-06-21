@@ -35,13 +35,13 @@ jobs:
 
     steps:
       - name: Checkout testfw repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: framework/testfw
           submodules: recursive
 
       - name: Checkout makefw repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Hondarer/make-framework
           path: framework/makefw
@@ -78,13 +78,13 @@ jobs:
 
     steps:
       - name: Checkout testfw repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: framework/testfw
           submodules: recursive
 
       - name: Checkout makefw repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: Hondarer/make-framework
           path: framework/makefw
@@ -133,7 +133,7 @@ jobs:
   #
   #   steps:
   #     - name: Checkout testfw repository
-  #       uses: actions/checkout@v6
+  #       uses: actions/checkout@v7
   #       with:
   #         token: ${{ secrets.GITHUB_TOKEN }}
   #
