@@ -77,6 +77,10 @@ struct AsyncProcess {
     /** OutputDebugString キャプチャが有効かどうか。 */
     bool capture_debug_output = true;
 
+    /** DBWIN_* 系のシステム シングルトンを巡るテスト プロセス間排他用セマフォ。
+     *  capture_debug_output 時に CreateProcess 前に取得し、reader_thread 終了で解放する。 */
+    HANDLE dbwin_serialize_sem = nullptr;
+
     /** ETW プロバイダ GUID 文字列 (空 = ETW キャプチャ無効)。 */
     std::string etw_provider_guid;
     /** ETW Service フィールドフィルタ (空 = フィルタなし)。 */

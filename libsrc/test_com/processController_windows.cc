@@ -291,6 +291,8 @@ struct EtwSession {
 
 /* -------- AsyncProcess デストラクタ -------- */
 
+static void releaseDbwinSerializeSem(HANDLE& token);
+
 AsyncProcess::~AsyncProcess()
 {
     if (proc_handle != nullptr) {
@@ -304,6 +306,56 @@ AsyncProcess::~AsyncProcess()
     if (stdin_h     != nullptr) { CloseHandle(stdin_h);     stdin_h     = nullptr; }
     if (stdout_h    != nullptr) { CloseHandle(stdout_h);    stdout_h    = nullptr; }
     if (stderr_h    != nullptr) { CloseHandle(stderr_h);    stderr_h    = nullptr; }
+    /* reader_thread が異常終了などで解放できなかった場合のフォールバック。
+     * dbwin_serialize_sem はトークンであり、解放処理は releaseDbwinSerializeSem に集約する。 */
+    if (dbwin_serialize_sem != nullptr) {
+        releaseDbwinSerializeSem(dbwin_serialize_sem);
+    }
+}
+
+/* -------- DBWIN 直列化セマフォ -------- */
+
+/** OutputDebugString キャプチャに使う DBWIN_BUFFER / DBWIN_*_READY は
+ *  カーネル オブジェクト名でシステム内シングルトン化される。複数のテスト
+ *  プロセスが同時にキャプチャ スレッドを動かすと、Auto-Reset イベント
+ *  DBWIN_DATA_READY の通知を奪い合い、別プロセスの子の出力が混入したり、
+ *  本来受け取るべきメッセージを失う。
+ *
+ *  対策として「テスト プロセス間では 1 プロセスのみ DBWIN を占有」を保証する
+ *  名前付きセマフォを用意する。同一プロセス内で startProcessAsync を多重に
+ *  呼ぶ porterSendRecvTest のようなケースでは、子プロセスの相互依存により
+ *  再取得が必要となるため、プロセス内では参照カウントで再入を許可し、
+ *  プロセス間排他だけを名前付きセマフォで担保する。 */
+static std::mutex  g_dbwin_local_mutex;
+static int         g_dbwin_local_count   = 0;
+static HANDLE      g_dbwin_named_sem     = nullptr;
+
+/** 取得成功を表す不透明トークン。値そのものに意味はなく nullptr でないことだけが重要。 */
+static HANDLE      g_dbwin_acquired_token = reinterpret_cast<HANDLE>(static_cast<INT_PTR>(1));
+
+static HANDLE acquireDbwinSerializeSem()
+{
+    std::lock_guard<std::mutex> lk(g_dbwin_local_mutex);
+    if (g_dbwin_local_count == 0) {
+        g_dbwin_named_sem = CreateSemaphoreA(nullptr, 1, 1, "testfw_dbwin_capture_sem");
+        if (g_dbwin_named_sem == nullptr) { return nullptr; }
+        WaitForSingleObject(g_dbwin_named_sem, INFINITE);
+    }
+    g_dbwin_local_count++;
+    return g_dbwin_acquired_token;
+}
+
+static void releaseDbwinSerializeSem(HANDLE& token)
+{
+    if (token == nullptr) { return; }
+    std::lock_guard<std::mutex> lk(g_dbwin_local_mutex);
+    g_dbwin_local_count--;
+    if (g_dbwin_local_count == 0 && g_dbwin_named_sem != nullptr) {
+        ReleaseSemaphore(g_dbwin_named_sem, 1, nullptr);
+        CloseHandle(g_dbwin_named_sem);
+        g_dbwin_named_sem = nullptr;
+    }
+    token = nullptr;
 }
 
 /* -------- startProcessAsync -------- */
@@ -367,6 +419,15 @@ AsyncProcessHandle startProcessAsync(const string& path,
 
     DWORD creation_flags = CREATE_NEW_PROCESS_GROUP; /* SIGINT 用 */
 
+    /* DBWIN は名前付きシングルトンであり、複数プロセスからの同時キャプチャは
+     * 取り合いになるため、capture_debug_output 時のみテスト プロセス間で直列化する。
+     * CreateProcess の前に取得し、子プロセスが OutputDebugString を出し始めるより
+     * 早く DBWIN を確保できるようにする。 */
+    HANDLE dbwin_sem = nullptr;
+    if (opts.capture_debug_output) {
+        dbwin_sem = acquireDbwinSerializeSem();
+    }
+
     PROCESS_INFORMATION pi = {};
     BOOL created = CreateProcessA(
         nullptr, cmd_buf.data(), nullptr, nullptr,
@@ -383,6 +444,7 @@ AsyncProcessHandle startProcessAsync(const string& path,
         CloseHandle(stdin_w);
         CloseHandle(stdout_r);
         CloseHandle(stderr_r);
+        releaseDbwinSerializeSem(dbwin_sem);
         if (_tl >= TRACE_DETAIL) {
             printf(" -> nullptr\n");
         } else if (_tl > TRACE_NONE) {
@@ -399,6 +461,7 @@ AsyncProcessHandle startProcessAsync(const string& path,
     proc->stdout_h             = stdout_r;
     proc->stderr_h             = stderr_r;
     proc->capture_debug_output = opts.capture_debug_output;
+    proc->dbwin_serialize_sem  = dbwin_sem;
     proc->etw_provider_guid    = opts.etw_provider_guid;
     proc->etw_service_filter   = opts.etw_service_filter;
 
@@ -547,6 +610,9 @@ AsyncProcessHandle startProcessAsync(const string& path,
 
         /* ETW セッション停止 (ProcessTrace 終了 → スレッド join) */
         etw_session.stop();
+
+        /* DBWIN を使い終えたので他のテスト プロセスを起こす。 */
+        releaseDbwinSerializeSem(p->dbwin_serialize_sem);
 
         lock_guard<mutex> lk(p->buf_mutex);
         p->process_done = true;
