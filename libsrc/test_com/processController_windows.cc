@@ -292,6 +292,7 @@ struct EtwSession {
 /* -------- AsyncProcess デストラクタ -------- */
 
 static void releaseDbwinSerializeSem(HANDLE& token);
+static void teardownDbwinCapture(AsyncProcess *p);
 
 AsyncProcess::~AsyncProcess()
 {
@@ -307,7 +308,8 @@ AsyncProcess::~AsyncProcess()
     if (stdout_h    != nullptr) { CloseHandle(stdout_h);    stdout_h    = nullptr; }
     if (stderr_h    != nullptr) { CloseHandle(stderr_h);    stderr_h    = nullptr; }
     /* reader_thread が異常終了などで解放できなかった場合のフォールバック。
-     * dbwin_serialize_sem はトークンであり、解放処理は releaseDbwinSerializeSem に集約する。 */
+     * dbwin_* は teardownDbwinCapture / dbwin_serialize_sem は releaseDbwinSerializeSem に解放を集約する。 */
+    teardownDbwinCapture(this);
     if (dbwin_serialize_sem != nullptr) {
         releaseDbwinSerializeSem(dbwin_serialize_sem);
     }
@@ -356,6 +358,70 @@ static void releaseDbwinSerializeSem(HANDLE& token)
         g_dbwin_named_sem = nullptr;
     }
     token = nullptr;
+}
+
+/* -------- DBWIN 受信バッファのセットアップ -------- */
+
+/** AsyncProcess に DBWIN 受信側カーネル オブジェクトをまとめて生成する。
+ *  CreateProcess より前に呼び出すことで、子の DllMain が OutputDebugStringW を
+ *  呼んだ瞬間に DBWIN_BUFFER_READY を必ずシグナル状態にしておく。
+ *  reader_thread の t_dbg ループ起動より後に組み立てると、短命プロセスでは
+ *  ATTACH/DETACH の OutputDebugStringW がタイムアウトまで滞留しメッセージを
+ *  取りこぼすケースがある。
+ *  see: https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-outputdebugstringa
+ *
+ *  @return  成功 true / 失敗 false。失敗時は p のメンバーをすべて nullptr に戻す。 */
+static bool setupDbwinCapture(AsyncProcess *p)
+{
+    HANDLE hBufReady  = CreateEventA(nullptr, FALSE, FALSE, "DBWIN_BUFFER_READY");
+    HANDLE hDataReady = CreateEventA(nullptr, FALSE, FALSE, "DBWIN_DATA_READY");
+    HANDLE hMapping   = CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr,
+                                            PAGE_READWRITE, 0, 4096, "DBWIN_BUFFER");
+    if ((hBufReady == nullptr) || (hDataReady == nullptr) || (hMapping == nullptr)) {
+        if (hBufReady  != nullptr) { CloseHandle(hBufReady);  }
+        if (hDataReady != nullptr) { CloseHandle(hDataReady); }
+        if (hMapping   != nullptr) { CloseHandle(hMapping);   }
+        return false;
+    }
+    void *view = MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0);
+    if (view == nullptr) {
+        CloseHandle(hBufReady);
+        CloseHandle(hDataReady);
+        CloseHandle(hMapping);
+        return false;
+    }
+
+    p->dbwin_buffer_ready = hBufReady;
+    p->dbwin_data_ready   = hDataReady;
+    p->dbwin_mapping      = hMapping;
+    p->dbwin_view         = view;
+
+    /* CreateProcess より前にバッファ受信準備完了を通知しておく。 */
+    SetEvent(hBufReady);
+    return true;
+}
+
+/** setupDbwinCapture で確保したカーネル オブジェクトを解放する。
+ *  reader_thread の t_dbg ループ終了時の通常解放経路、および
+ *  AsyncProcess デストラクター側のフォールバック経路で共有する。 */
+static void teardownDbwinCapture(AsyncProcess *p)
+{
+    if (p->dbwin_view != nullptr) {
+        UnmapViewOfFile(p->dbwin_view);
+        p->dbwin_view = nullptr;
+    }
+    if (p->dbwin_mapping != nullptr) {
+        CloseHandle(p->dbwin_mapping);
+        p->dbwin_mapping = nullptr;
+    }
+    if (p->dbwin_data_ready != nullptr) {
+        CloseHandle(p->dbwin_data_ready);
+        p->dbwin_data_ready = nullptr;
+    }
+    if (p->dbwin_buffer_ready != nullptr) {
+        CloseHandle(p->dbwin_buffer_ready);
+        p->dbwin_buffer_ready = nullptr;
+    }
 }
 
 /* -------- startProcessAsync -------- */
@@ -428,6 +494,17 @@ AsyncProcessHandle startProcessAsync(const string& path,
         dbwin_sem = acquireDbwinSerializeSem();
     }
 
+    /* DBWIN 受信側を CreateProcess より前に組み立てる。短命プロセスでは
+     * DllMain の DLL_PROCESS_ATTACH / DETACH で発火する OutputDebugStringW が
+     * t_dbg の初期化を待たずに走り、メッセージを取りこぼすケースがあるため。
+     * セットアップ用に一時 AsyncProcess を作り、成功したハンドルを後段の proc に移す。
+     * 失敗した場合はキャプチャを諦めて従来動作 (debug_log 空) にフォールバックする。
+     * see: https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-outputdebugstringa */
+    AsyncProcess dbwin_staging;
+    if (opts.capture_debug_output) {
+        (void)setupDbwinCapture(&dbwin_staging);
+    }
+
     PROCESS_INFORMATION pi = {};
     BOOL created = CreateProcessA(
         nullptr, cmd_buf.data(), nullptr, nullptr,
@@ -444,6 +521,7 @@ AsyncProcessHandle startProcessAsync(const string& path,
         CloseHandle(stdin_w);
         CloseHandle(stdout_r);
         CloseHandle(stderr_r);
+        teardownDbwinCapture(&dbwin_staging);
         releaseDbwinSerializeSem(dbwin_sem);
         if (_tl >= TRACE_DETAIL) {
             printf(" -> nullptr\n");
@@ -462,6 +540,14 @@ AsyncProcessHandle startProcessAsync(const string& path,
     proc->stderr_h             = stderr_r;
     proc->capture_debug_output = opts.capture_debug_output;
     proc->dbwin_serialize_sem  = dbwin_sem;
+    proc->dbwin_buffer_ready   = dbwin_staging.dbwin_buffer_ready;
+    proc->dbwin_data_ready     = dbwin_staging.dbwin_data_ready;
+    proc->dbwin_mapping        = dbwin_staging.dbwin_mapping;
+    proc->dbwin_view           = dbwin_staging.dbwin_view;
+    dbwin_staging.dbwin_buffer_ready = nullptr;
+    dbwin_staging.dbwin_data_ready   = nullptr;
+    dbwin_staging.dbwin_mapping      = nullptr;
+    dbwin_staging.dbwin_view         = nullptr;
     proc->etw_provider_guid    = opts.etw_provider_guid;
     proc->etw_service_filter   = opts.etw_service_filter;
 
@@ -529,33 +615,18 @@ AsyncProcessHandle startProcessAsync(const string& path,
          * WaitForDebugEvent は CreateProcess を呼び出したスレッドからのみ呼び出し可能であり、
          * 別スレッドから呼び出すとプロセスがデバッグ初期状態で永久に凍結する。
          * そのため DEBUG_ONLY_THIS_PROCESS を使用せず、共有メモリ経由でキャプチャする。
-         * capture_debug_output が true の場合のみ起動する。 */
+         * DBWIN 受信側カーネル オブジェクトは startProcessAsync 側で CreateProcess より
+         * 前に組み立て済みのため、ここでは待機ループのみを回す。
+         * capture_debug_output が true かつ setupDbwinCapture が成功した場合のみ起動する。 */
         thread t_dbg;
-        if (p->capture_debug_output) {
+        if (p->capture_debug_output && p->dbwin_view != nullptr) {
             t_dbg = thread([p, reader_pid]() {
-                HANDLE hBufReady = CreateEventA(nullptr, FALSE, FALSE, "DBWIN_BUFFER_READY");
-                HANDLE hDataReady = CreateEventA(nullptr, FALSE, FALSE, "DBWIN_DATA_READY");
-                HANDLE hMapping   = CreateFileMappingA(INVALID_HANDLE_VALUE, nullptr,
-                                        PAGE_READWRITE, 0, 4096, "DBWIN_BUFFER");
-                if (!hBufReady || !hDataReady || !hMapping) {
-                    if (hBufReady)  { CloseHandle(hBufReady);  }
-                    if (hDataReady) { CloseHandle(hDataReady); }
-                    if (hMapping)   { CloseHandle(hMapping);   }
-                    return;
-                }
                 struct DbwinView { DWORD pid; char msg[4096 - sizeof(DWORD)]; };
-                DbwinView* view = static_cast<DbwinView*>(
-                    MapViewOfFile(hMapping, FILE_MAP_READ, 0, 0, 0));
-                if (!view) {
-                    CloseHandle(hBufReady);
-                    CloseHandle(hDataReady);
-                    CloseHandle(hMapping);
-                    return;
-                }
+                DbwinView* view      = static_cast<DbwinView*>(p->dbwin_view);
+                HANDLE     hBufReady = p->dbwin_buffer_ready;
+                HANDLE     hDataReady = p->dbwin_data_ready;
 
                 HANDLE proc_h = p->proc_handle; /* waitForExit が閉じるまで有効 */
-
-                SetEvent(hBufReady); /* バッファ受信準備完了を通知 */
 
                 for (;;) {
                     DWORD dr = WaitForSingleObject(hDataReady, 200);
@@ -582,10 +653,9 @@ AsyncProcessHandle startProcessAsync(const string& path,
                     }
                 }
 
-                UnmapViewOfFile(view);
-                CloseHandle(hMapping);
-                CloseHandle(hDataReady);
-                CloseHandle(hBufReady);
+                /* setupDbwinCapture で確保したカーネル オブジェクトを通常経路で解放する。
+                 * デストラクター側は nullptr フォールバックでのみ解放する。 */
+                teardownDbwinCapture(p);
             });
         }
 

@@ -81,6 +81,17 @@ struct AsyncProcess {
      *  capture_debug_output 時に CreateProcess 前に取得し、reader_thread 終了で解放する。 */
     HANDLE dbwin_serialize_sem = nullptr;
 
+    /** DBWIN 受信側のカーネル オブジェクト。CreateProcess より先に組み立てて、
+     *  子プロセスの DllMain が OutputDebugStringW を呼んだ瞬間に
+     *  DBWIN_BUFFER_READY が必ずシグナル状態になっているようにする。
+     *  reader_thread の DBWIN ループ終了時にクローズし、デストラクターは
+     *  nullptr フォールバックでのみ解放する。
+     *  see: https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-outputdebugstringa */
+    HANDLE dbwin_buffer_ready = nullptr;
+    HANDLE dbwin_data_ready   = nullptr;
+    HANDLE dbwin_mapping      = nullptr;
+    void  *dbwin_view         = nullptr;
+
     /** ETW プロバイダ GUID 文字列 (空 = ETW キャプチャ無効)。 */
     std::string etw_provider_guid;
     /** ETW Service フィールドフィルタ (空 = フィルタなし)。 */
