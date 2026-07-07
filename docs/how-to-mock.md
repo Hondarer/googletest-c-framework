@@ -75,5 +75,6 @@ TEST_F(MyTest, example)
 - override ヘッダー
     - `../include_override/stdio.h`
     - `../include_override/unistd.h`
+    - `../include_override/io.h` (Windows の `_close` / `_read` など。`mock_unistd.h` と共用)
 - 関数実装
     - `../libsrc/mock_libc/`
