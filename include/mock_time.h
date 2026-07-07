@@ -14,8 +14,10 @@ extern "C"
 #ifndef _WIN32
     extern int mock_clock_gettime(const char *, const int, const char *, clockid_t, struct timespec *);
     extern struct tm *mock_gmtime_r(const char *, const int, const char *, const time_t *, struct tm *);
+    extern char *mock_ctime_r(const char *, const int, const char *, const time_t *, char *);
 #else
     extern errno_t mock_gmtime_s(const char *, const int, const char *, struct tm *, const time_t *);
+    extern errno_t mock_ctime_s(const char *, const int, const char *, char *, size_t, const time_t *);
 #endif
 
 #ifdef __cplusplus
@@ -27,8 +29,10 @@ extern "C"
 #ifndef _WIN32
 #define clock_gettime(clk_id, tp) mock_clock_gettime(__FILE__, __LINE__, __func__, clk_id, tp)
 #define gmtime_r(timep, result) mock_gmtime_r(__FILE__, __LINE__, __func__, timep, result)
+#define ctime_r(timep, buf) mock_ctime_r(__FILE__, __LINE__, __func__, timep, buf)
 #else
 #define gmtime_s(utc_tm, timep) mock_gmtime_s(__FILE__, __LINE__, __func__, utc_tm, timep)
+#define ctime_s(buf, size, timep) mock_ctime_s(__FILE__, __LINE__, __func__, buf, size, timep)
 #endif
 
 #else // _IN_OVERRIDE_HEADER_TIME_H
@@ -47,12 +51,15 @@ extern int delegate_real_clock_gettime(const char *, const int, const char *, cl
 extern int delegate_fake_clock_gettime(const char *, const int, const char *, clockid_t, struct timespec *);
 extern struct tm *delegate_real_gmtime_r(const char *, const int, const char *, const time_t *, struct tm *);
 extern struct tm *delegate_fake_gmtime_r(const char *, const int, const char *, const time_t *, struct tm *);
+extern char *delegate_real_ctime_r(const char *, const int, const char *, const time_t *, char *);
+extern char *delegate_fake_ctime_r(const char *, const int, const char *, const time_t *, char *);
 
 class Mock_time
 {
 public:
     MOCK_METHOD(int, clock_gettime, (const char *, const int, const char *, clockid_t, struct timespec *));
     MOCK_METHOD(struct tm *, gmtime_r, (const char *, const int, const char *, const time_t *, struct tm *));
+    MOCK_METHOD(char *, ctime_r, (const char *, const int, const char *, const time_t *, char *));
 
     void switch_to_real_time();
     void switch_to_mock_time();
@@ -63,11 +70,14 @@ public:
 #else
 extern errno_t delegate_real_gmtime_s(const char *, const int, const char *, struct tm *, const time_t *);
 extern errno_t delegate_fake_gmtime_s(const char *, const int, const char *, struct tm *, const time_t *);
+extern errno_t delegate_real_ctime_s(const char *, const int, const char *, char *, size_t, const time_t *);
+extern errno_t delegate_fake_ctime_s(const char *, const int, const char *, char *, size_t, const time_t *);
 
 class Mock_time
 {
 public:
     MOCK_METHOD(errno_t, gmtime_s, (const char *, const int, const char *, struct tm *, const time_t *));
+    MOCK_METHOD(errno_t, ctime_s, (const char *, const int, const char *, char *, size_t, const time_t *));
 
     void switch_to_real_time();
     void switch_to_mock_time();
