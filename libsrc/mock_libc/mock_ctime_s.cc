@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
-#include <test_com.h>
-#include <mock_time.h>
+    #include <test_com.h>
+    #include <mock_time.h>
 
-#include <string.h>
-#include <errno.h>
+    #include <string.h>
+    #include <errno.h>
 
 using namespace testing;
 
-errno_t delegate_fake_ctime_s(const char *file, const int line, const char *func, char *buf, size_t size, const time_t *timep)
+errno_t delegate_fake_ctime_s(const char *file, const int line, const char *func, char *buf, size_t size,
+                              const time_t *timep)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -21,12 +22,11 @@ errno_t delegate_fake_ctime_s(const char *file, const int line, const char *func
         return EINVAL;
     }
 
-    strcpy(buf, "Thu Jan  1 00:00:00 1970\n");
-
-    return 0;
+    return strcpy_s(buf, size, "Thu Jan  1 00:00:00 1970\n");
 }
 
-errno_t delegate_real_ctime_s(const char *file, const int line, const char *func, char *buf, size_t size, const time_t *timep)
+errno_t delegate_real_ctime_s(const char *file, const int line, const char *func, char *buf, size_t size,
+                              const time_t *timep)
 {
     // avoid -Wunused-parameter
     (void)file;
