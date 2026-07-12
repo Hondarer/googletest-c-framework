@@ -8,6 +8,8 @@ mock 関数を追加するときの共通ルールを示します。
     - ここではテスト ダブル全般を指す総称として扱います。
 - override ヘッダー
     - 本物のヘッダーを読み込んだ後に、関数呼び出しを mock へ差し替えるためのヘッダーです。
+    - 置換マクロが注入されるのは、ベース名が `TEST_SRCS` に一致するソース (makefw の `makesrc_c_cpp.mk` が `CFLAGS_TEST` / `CXXFLAGS_TEST` + `-D_IN_TEST_SRC` でコンパイルするテスト対象) だけです。テストの `.cc`、mock ライブラリ、`ADD_SRCS` には適用されません。
+    - このため `read` / `write` / `close` のような一般名の CRT 関数も、C++ テスト コードとの名前衝突を心配せずにマクロで mock 化できます。
 - Mock クラス
     - Google Mock の `MOCK_METHOD` を並べたクラスです。テスト中の振る舞いはここで定義します。
 - mock 関数本体

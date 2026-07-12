@@ -33,6 +33,7 @@ testfw mock は mock 未注入時に本物の関数へ委譲 (`delegate_real_`) 
 - 置換マクロは `__FILE__`, `__LINE__`, `__func__` を追加して呼び出し元情報を渡します。
 - `WEAK_ATR` は使いません。
 - OS 差分は `_WIN32` / `#ifndef _WIN32` で明示します。
+- include_override の置換マクロが注入されるのは、ベース名が `TEST_SRCS` に一致するソースだけです (`CFLAGS_TEST` / `CXXFLAGS_TEST` + `-D_IN_TEST_SRC` でコンパイルされる)。テストの `.cc`、mock ライブラリ、`ADD_SRCS` には適用されません。このため `read` / `write` / `close` のような一般名の CRT 関数も、テスト コードとの名前衝突を心配せずにマクロでモック化できます。
 
 ## 変更対象
 
@@ -236,6 +237,7 @@ int mock_<func>(const char *file, const int line, const char *func, <args>)
 - mock 関数は元の `(..., const char *fmt, ...)` を保持します。
 - Mock クラスと delegate では、展開済みの `const char *str` を受け取ります。
 - `allocvprintf` が `NULL` の場合は失敗値を返します。
+- テストの matcher (`HasSubstr` 等) が照合するのは format 文字列ではなく展開済みの出力文字列です。matcher は展開結果に対して書きます。
 
 ```cpp
 int delegate_real_fprintf(const char *file, const int line, const char *func, FILE *stream, const char *str)
