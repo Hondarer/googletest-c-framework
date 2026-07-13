@@ -63,7 +63,8 @@ mock を新規追加する作業は `create-mock` を使い、この文書では
 - `#include <testfw.h>` を先頭に置きます
 - 被テスト関数のヘッダーを直接 include します
 - 依存先を差し替える必要がある場合だけ `Mock_<lib>` を生成し、`EXPECT_CALL` を書きます
-- Act では対象関数を直接呼び、Assert で戻り値と出力引数を確認します
+- Act では被テスト関数を呼び出し、戻り値を `rtc` などの変数で受けます。Assert ではその変数と出力引数を確認し、被テスト関数の呼び出しを `EXPECT_*` / `ASSERT_*` (`EXPECT_CALL` を除く) の引数に直接書きません
+- Arrange フェーズの前提ガード、SetUp / TearDown / fixture ヘルパー、フロー補助ヘルパーのガードは、Act の被テスト関数呼び出しではないため、この分離の対象外です。`ASSERT_NO_THROW` / `EXPECT_NO_FATAL_FAILURE` / `EXPECT_EXIT`、戻り値のない呼び出し、期待値側の補助計算も対象外です
 
 `makepart.mk` の基本形:
 
@@ -241,6 +242,7 @@ EXPECT_EQ(0, rtc); // [確認_正常系] - main() の戻り値が 0 であるこ
 - 関数単体テストに `USE_WRAP_MAIN := 1` を入れていないこと
 - `main()` テストで `USE_WRAP_MAIN := 1` を入れていること
 - `EXPECT_CALL` が Act より前に書かれていること
+- 被テスト関数の呼び出しが `EXPECT_*` / `ASSERT_*` (`EXPECT_CALL` を除く) の引数に埋め込まれていないこと
 - 新しい mock が必要なら `create-mock` を使うこと
 - `make test` 後に `results.log` のサマリーを確認し、次の状態になっていないこと
     - 「## テスト項目」ブロックが存在しない (タグが 1 つもない)

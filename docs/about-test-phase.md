@@ -75,6 +75,8 @@ EXPECT_CALL(mockDependency, SomeMethod())
 
 - テスト対象のメソッドを呼び出す。
 
+被テスト関数の戻り値は変数で受け、Assert フェーズではその変数を検証する。被テスト関数の呼び出しを `EXPECT_*` / `ASSERT_*` の引数に直接書かない。
+
 ### 例
 
 ```cpp
