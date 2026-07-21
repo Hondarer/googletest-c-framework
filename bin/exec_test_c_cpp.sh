@@ -131,7 +131,7 @@ function run_test() {
         # Linux
         LANG=$FILES_LANG bash -c \
            "echo \"----\"; \
-            find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
+            find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -v is_windows=\"$IS_WINDOWS\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
             echo \"----\"; \
             echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
             ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
@@ -158,7 +158,7 @@ function run_test() {
             # TEST_SRCS が指定されている場合のみカバレッジ計測
             LANG=$FILES_LANG bash -c \
                "echo \"----\"; \
-                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
+                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -v is_windows=\"$IS_WINDOWS\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
                 echo \"----\"; \
                 echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
@@ -172,7 +172,7 @@ function run_test() {
             # TEST_SRCS が未指定の場合はカバレッジ計測なし
             LANG=$FILES_LANG bash -c \
                "echo \"----\"; \
-                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
+                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -v is_windows=\"$IS_WINDOWS\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
                 echo \"----\"; \
                 echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
                 ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \

@@ -9,6 +9,13 @@ BEGIN {
     in_multiline_comment = 0;    # 複数行コメント中フラグ
     test_found = 0;              # テストケースを見つけたフラグ
 
+    # PLATFORM_WINDOWS / PLATFORM_LINUX の #if 評価用スタック (depth==0 は常にアクティブ)
+    # is_windows が未指定の場合は評価せず、PLATFORM_* の #if も未知条件として素通しする
+    depth = 0;
+    filter_platform = (is_windows != "");
+    platform_windows = (filter_platform && is_windows == "1");
+    platform_linux = (filter_platform && is_windows == "0");
+
     # test_id を "." で分割
     split(test_id, parts, "\\.");
     if (length(parts) != 2) {
@@ -134,25 +141,131 @@ in_multiline_comment {
     }
 }
 
+# テストケース本体の中の #if/#elif/#else/#endif を評価する。
+# PLATFORM_WINDOWS / PLATFORM_LINUX 単独の defined() 判定のみを対象とし、
+# 複合条件や #ifdef/#ifndef 等の未知条件はこれまでどおり素通しする (フィルタしない)。
+extracting && /^[[:space:]]*#/ {
+    # gawk の \b は単語境界ではなくバックスペース文字を指すため、
+    # ディレクティブ種別の判定には [[:space:]] または行末 ($) を用いる
+    is_start = ($0 ~ /^[[:space:]]*#[[:space:]]*(ifdef|ifndef|if)([[:space:]]|$)/);
+    is_elif  = ($0 ~ /^[[:space:]]*#[[:space:]]*elif([[:space:]]|$)/);
+    is_else  = ($0 ~ /^[[:space:]]*#[[:space:]]*else([[:space:]]|$)/);
+    is_endif = ($0 ~ /^[[:space:]]*#[[:space:]]*endif([[:space:]]|$)/);
+
+    if (is_start) {
+        parent_active = (depth == 0) ? 1 : stk_active[depth];
+        depth++;
+        stk_parent[depth] = parent_active;
+
+        if (filter_platform && $0 ~ /^[[:space:]]*#[[:space:]]*if[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_WINDOWS[[:space:]]*\)[[:space:]]*$/) {
+            stk_known[depth] = 1;
+            stk_active[depth] = parent_active && platform_windows;
+            stk_taken[depth] = stk_active[depth];
+        } else if (filter_platform && $0 ~ /^[[:space:]]*#[[:space:]]*if[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_LINUX[[:space:]]*\)[[:space:]]*$/) {
+            stk_known[depth] = 1;
+            stk_active[depth] = parent_active && platform_linux;
+            stk_taken[depth] = stk_active[depth];
+        } else {
+            # 未知条件: フィルタせず、現在の有効状態をそのまま引き継ぐ
+            stk_known[depth] = 0;
+            stk_active[depth] = parent_active;
+        }
+
+        if (!stk_known[depth] && stk_active[depth]) {
+            print $0;
+        }
+        next;
+    }
+
+    if (depth == 0) {
+        # 対応する #if がない #elif/#else/#endif (通常は発生しない) は素通しする
+        print $0;
+        next;
+    }
+
+    if (is_elif) {
+        if (stk_known[depth]) {
+            if ($0 ~ /^[[:space:]]*#[[:space:]]*elif[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_WINDOWS[[:space:]]*\)[[:space:]]*$/) {
+                cond = platform_windows;
+            } else if ($0 ~ /^[[:space:]]*#[[:space:]]*elif[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_LINUX[[:space:]]*\)[[:space:]]*$/) {
+                cond = platform_linux;
+            } else {
+                # 認識できない #elif: この分岐グループ全体を未知条件へ切り替える
+                stk_known[depth] = 0;
+                stk_active[depth] = stk_parent[depth];
+                if (stk_active[depth]) {
+                    print $0;
+                }
+                next;
+            }
+            stk_active[depth] = stk_parent[depth] && !stk_taken[depth] && cond;
+            if (stk_active[depth]) {
+                stk_taken[depth] = 1;
+            }
+        } else {
+            stk_active[depth] = stk_parent[depth];
+            if (stk_active[depth]) {
+                print $0;
+            }
+        }
+        next;
+    }
+
+    if (is_else) {
+        if (stk_known[depth]) {
+            stk_active[depth] = stk_parent[depth] && !stk_taken[depth];
+            stk_taken[depth] = 1;
+        } else {
+            stk_active[depth] = stk_parent[depth];
+            if (stk_active[depth]) {
+                print $0;
+            }
+        }
+        next;
+    }
+
+    if (is_endif) {
+        if (!stk_known[depth] && stk_active[depth]) {
+            print $0;
+        }
+        depth--;
+        next;
+    }
+
+    # if/elif/else/endif 以外のプリプロセッサ行 (#define 等)
+    if (depth == 0 || stk_active[depth]) {
+        print $0;
+    }
+    next;
+}
+
 # テストケースの中身を出力
 extracting {
-    print $0;
+    active = (depth == 0) ? 1 : stk_active[depth];
+
+    if (active) {
+        print $0;
+    }
 
     if (extracting == 1)
     {
-        # { の数を増加
-        brace_count += gsub(/\{/, "{");
+        if (active) {
+            # { の数を増加
+            brace_count += gsub(/\{/, "{");
 
-        # } の数を減少
-        brace_count -= gsub(/\}/, "}");
+            # } の数を減少
+            brace_count -= gsub(/\}/, "}");
+        }
     }
     else if (extracting == 2)
     {
-        # ( の数を増加
-        brace_count += gsub(/\(/, "(");
+        if (active) {
+            # ( の数を増加
+            brace_count += gsub(/\(/, "(");
 
-        # ) の数を減少
-        brace_count -= gsub(/\)/, ")");
+            # ) の数を減少
+            brace_count -= gsub(/\)/, ")");
+        }
     }
 
     # ブロック終了を検知
