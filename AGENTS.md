@@ -34,3 +34,4 @@ make test
 - `gtest/` は別 repo 扱いです。GoogleTest 配布物の変更はその直下の `AGENTS.md` と `README.md` に従うこと。
 - `TEST_SRCS` / `ADD_SRCS` に指定したソース ファイルは、`make test` 時にビルド ディレクトリへシンボリック リンクまたはコピーとして取り込まれる。ビルド ディレクトリ内のファイルを直接変更しても次回 `make test` で上書きされるため、`prod/` の実体ファイルを変更すること。  
   see: `framework/makefw/docs/makeparts.md` の「TEST_SRCS / ADD_SRCS の留意事項」
+- テスト コードのフェーズ分割コメント (`// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` と `[状態]` 等のブラケット タグ) は `docs/about-test-phase.md` の規則に従うこと。1 テスト内で Arrange/Act/Assert のサイクルを複数回含むマルチフェーズ テストの番号付与規則は同ドキュメントの「シングルフェーズ テストとマルチフェーズ テスト」を参照すること。
