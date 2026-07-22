@@ -7,10 +7,15 @@
 #include <test_com.h>
 
 #include <cctype>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <regex>
 #include <sstream>
+
+#ifndef _WIN32
+    #include <unistd.h>
+#endif /* _WIN32 */
 
 namespace testing
 {
@@ -70,6 +75,36 @@ set<string> parseNmExportNames(const string &stdout_text)
     return names;
 }
 
+#ifndef _WIN32
+// startProcess (Linux) は execv で子プロセスを起動するため PATH 探索を行わず、
+// 絶対パスの指定を要求する (see: framework/testfw/docs/process-control-api.md)。
+// "nm" のような裸のコマンド名を PATH から解決し、絶対パスへ変換する。
+// 見つからない場合は command をそのまま返し、startProcess 側の失敗として扱う。
+string resolveOnPath(const string &command)
+{
+    const char *path_env = getenv("PATH");
+    if (path_env == nullptr)
+    {
+        return command;
+    }
+    istringstream iss(path_env);
+    string dir;
+    while (getline(iss, dir, ':'))
+    {
+        if (dir.empty())
+        {
+            continue;
+        }
+        string candidate = dir + "/" + command;
+        if (access(candidate.c_str(), X_OK) == 0)
+        {
+            return candidate;
+        }
+    }
+    return command;
+}
+#endif /* _WIN32 */
+
 } // namespace
 
 set<string> getActualExportNames(const string &dll_or_so_path)
@@ -79,8 +114,10 @@ set<string> getActualExportNames(const string &dll_or_so_path)
     printf("  > getActualExportNames 対象=\"%s\"\n", dll_or_so_path.c_str());
 
 #ifndef _WIN32
-    printf("  > getActualExportNames 実行コマンド: nm -D --defined-only \"%s\"\n", dll_or_so_path.c_str());
-    ProcessResult res = startProcess("nm", {"-D", "--defined-only", dll_or_so_path}, opts);
+    string nm_path = resolveOnPath("nm");
+    printf("  > getActualExportNames 実行コマンド: %s -D --defined-only \"%s\"\n", nm_path.c_str(),
+           dll_or_so_path.c_str());
+    ProcessResult res = startProcess(nm_path, {"-D", "--defined-only", dll_or_so_path}, opts);
     if (res.exit_code != 0)
     {
         ADD_FAILURE() << "nm -D --defined-only の実行に失敗しました (exit_code=" << res.exit_code
