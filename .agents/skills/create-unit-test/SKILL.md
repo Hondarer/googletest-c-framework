@@ -9,7 +9,7 @@ description: |
 
 # app 向け C テスト作成
 
-このスキルは `app/<name>/test/` 配下の Google Test の作成、変更、レビューを対象にします。
+このスキルは `app/<name>/test/` 配下の Google Test の作成、変更、レビューを対象にします。  
 mock を新規追加する作業は `create-mock` を使い、この文書ではテスト コードと `makepart.mk` の作り方に絞ります。
 
 ## テストの種類と単体テストの位置付け
@@ -216,11 +216,11 @@ app 向けテストで OS 分岐が必要な場合は、`_WIN32` を直接使わ
 - 明示的な後処理がない場合は、空の `// Cleanup` を記載しません
 - 終了系 API 自体の挙動を試験する呼び出しや、結果を確定するために必要な終了操作は Act とします。fixture の `TearDown`、ヘルパー内の後処理、RAII による自動解放には、テスト本体の `// Cleanup` を記載しません
 - 正常系と異常系を区別して記載します
-- フェーズ見出しは `// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` の形で統一します。`// Act & Assert` や `// Cleanup - 後処理` のような結合見出しや説明付き見出しは使用しません。マルチフェーズ テストにおける `_N` 付与は次項で定めます
+- フェーズ見出しは `// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` の形で統一します。`// Act & Assert` や `// Cleanup - 後処理` のような結合見出しや説明付き見出しは使用しません。マルチ フェーズ テストにおける `_N` 付与は次項で定めます
 
-### マルチフェーズ テスト
+### マルチ フェーズ テスト
 
-1 つのテスト関数内で Arrange/Pre-Assert/Act/Assert のサイクルを複数回含むテストの規則です。詳細は `framework/testfw/docs/about-test-phase.md` の「シングルフェーズ テストとマルチフェーズ テスト」を参照します。
+1 つのテスト関数内で Arrange/Pre-Assert/Act/Assert のサイクルを複数回含むテストの規則です。詳細は `framework/testfw/docs/about-test-phase.md` の「シングル フェーズ テストとマルチ フェーズ テスト」を参照します。
 
 - 1 回目のサイクルの構造コメントには番号を付けません
 - 2 回目以降のサイクルでは、実際に繰り返す構造コメントにだけ `_N` を付与します (`// Arrange_2` `// Pre-Assert_2` `// Act_2` `// Assert_2`)
