@@ -37,6 +37,7 @@ string joinNames(const vector<string> &names)
 namespace
 {
 
+#ifdef _WIN32
 // dumpbin /exports (Windows) の出力からエクスポート シンボル名を抽出する。
 // 例: "          1    0 0001D370 ChangeServiceConfig2U = ChangeServiceConfig2U"
 set<string> parseDumpbinExportNames(const string &stdout_text)
@@ -55,7 +56,9 @@ set<string> parseDumpbinExportNames(const string &stdout_text)
     }
     return names;
 }
+#endif /* _WIN32 */
 
+#ifndef _WIN32
 // nm -D --defined-only (Linux) の出力からエクスポート シンボル名を抽出する。
 // 例: "0000000000012340 T mylib_open"
 set<string> parseNmExportNames(const string &stdout_text)
@@ -74,6 +77,7 @@ set<string> parseNmExportNames(const string &stdout_text)
     }
     return names;
 }
+#endif /* _WIN32 */
 
 #ifndef _WIN32
 // startProcess (Linux) は execv で子プロセスを起動するため PATH 探索を行わず、
