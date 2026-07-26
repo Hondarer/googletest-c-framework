@@ -104,11 +104,14 @@ bool result = myObject.TestedMethod(); // [手順] - TestedMethod を呼び出�
 | `[確認_正常系]` | 正常な動作パスの確認 |
 | `[確認_異常系]` | エラー処理パスの確認 |
 
+Assert フェーズの各 `ASSERT_*` マクロには、検証内容と一対一に対応する `[確認_正常系]` または `[確認_異常系]` のコメントを付与します。
+後続の検証を継続できるか確認するための `ASSERT_*` マクロも、テスト結果の確認であるため省略しません。
+
 ### 例
 
 ```cpp
 // 戻り値が期待通りであることを確認
-EXPECT_TRUE(result);  // [確認_正常系] - TestedMethod の戻り値が true であること。
+ASSERT_TRUE(result); // [確認_正常系] - TestedMethod の戻り値が true であること。
 
 // オブジェクトの状態を確認
 EXPECT_EQ(myObject.GetState(), ExpectedState); // [確認_正常系] - 状態が ExpectedState であること。
