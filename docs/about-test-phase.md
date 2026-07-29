@@ -211,7 +211,7 @@ remove(outputPath);
 **例**:
 
 ```text
-app/porter/test/src/libporter/potrDisconnectPeerTest/results/potrDisconnectPeerTest.normal_health_dead/results.log
+app/sample/test/src/libsampleTest/sampleCloseTest/results/sampleCloseTest.handle_null/results.log
 ```
 
 ### ファイル構成
@@ -297,37 +297,37 @@ C/C++ のテスト エビデンス生成では、テスト本体内にある Lin
 
 ### 出力例
 
-以下は `potrDisconnectPeerTest.handle_null` (異常系) の results.log の例です。
+以下は `sampleCloseTest.handle_null` (異常系) の results.log の例です。
 
 ```text
-Running test: potrDisconnectPeerTest.handle_null on bin/potrDisconnectPeerTest
+Running test: sampleCloseTest.handle_null on bin/sampleCloseTest
 ----
 ## テスト項目
 
-ハンドルが NULL の場合に POTR_ERROR を返すことの確認
+ハンドルが NULL の場合に SAMPLE_ERR を返すことの確認
 
 ### 状態
 
 ### 手順
 
-- handle=NULL で potrDisconnectPeer を呼び出す。
+- handle=NULL で sample_close を呼び出す。
 
 ### 確認内容 (異常系:2)
 
 - ERROR ログに "handle is NULL" が含まれること。
-- potrDisconnectPeer の戻り値が POTR_ERROR であること。
+- sample_close の戻り値が SAMPLE_ERR であること。
 ----
-// ハンドルが NULL の場合に POTR_ERROR を返すことの確認
-TEST_F(potrDisconnectPeerTest, handle_null)
+// ハンドルが NULL の場合に SAMPLE_ERR を返すことの確認
+TEST_F(sampleCloseTest, handle_null)
 {
     ...
     .Times(1); // [Pre-Assert確認_異常系] - ERROR ログに "handle is NULL" が含まれること。
     ...
-    EXPECT_EQ(POTR_ERROR, rtc); // [確認_異常系] - potrDisconnectPeer の戻り値が POTR_ERROR であること。
+    EXPECT_EQ(SAMPLE_ERR, rtc); // [確認_異常系] - sample_close の戻り値が SAMPLE_ERR であること。
 }
 ----
-[ RUN      ] potrDisconnectPeerTest.handle_null
-[       OK ] potrDisconnectPeerTest.handle_null (0 ms)
+[ RUN      ] sampleCloseTest.handle_null
+[       OK ] sampleCloseTest.handle_null (0 ms)
 ```
 
 ### タグと出力の対応
