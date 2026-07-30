@@ -43,6 +43,12 @@ void Mock_stdio::switch_to_mock_fileio()
 
     ON_CALL(*this, fgets(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_fake_fgets));
+
+    ON_CALL(*this, fread(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_fread));
+
+    ON_CALL(*this, fwrite(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_fwrite));
 }
 
 void Mock_stdio::switch_to_real_fileio()
@@ -71,6 +77,12 @@ void Mock_stdio::switch_to_real_fileio()
 
     ON_CALL(*this, fgets(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_fgets));
+
+    ON_CALL(*this, fread(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_fread));
+
+    ON_CALL(*this, fwrite(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_fwrite));
 }
 
 Mock_stdio::~Mock_stdio()

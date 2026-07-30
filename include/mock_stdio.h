@@ -25,6 +25,8 @@ extern "C"
     extern int mock_vfprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, va_list) PRINTF_ATTR(5, 0);
     extern int mock_scanf(SCANF_FMT const char *, const int, const char *, const char *, ...) SCANF_ATTR(4, 5);
     extern char *mock_fgets(const char *, const int, const char *, char *, int, FILE *);
+    extern size_t mock_fread(const char *, const int, const char *, void *, size_t, size_t, FILE *);
+    extern size_t mock_fwrite(const char *, const int, const char *, const void *, size_t, size_t, FILE *);
 
 #ifdef __cplusplus
 }
@@ -44,6 +46,8 @@ extern "C"
 #define vfprintf(stream, format, ap) mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
 #define scanf(format, ...) mock_scanf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
 #define fgets(s, n, stream) mock_fgets(__FILE__, __LINE__, __func__, s, n, stream)
+#define fread(ptr, size, count, stream) mock_fread(__FILE__, __LINE__, __func__, ptr, size, count, stream)
+#define fwrite(ptr, size, count, stream) mock_fwrite(__FILE__, __LINE__, __func__, ptr, size, count, stream)
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H
 
@@ -75,6 +79,10 @@ extern int delegate_real_vfprintf(const char *, const int, const char *, FILE *,
 extern int delegate_fake_vfprintf(const char *, const int, const char *, FILE *, const char *);
 extern char *delegate_real_fgets(const char *, const int, const char *, char *, int, FILE *);
 extern char *delegate_fake_fgets(const char *, const int, const char *, char *, int, FILE *);
+extern size_t delegate_real_fread(const char *, const int, const char *, void *, size_t, size_t, FILE *);
+extern size_t delegate_fake_fread(const char *, const int, const char *, void *, size_t, size_t, FILE *);
+extern size_t delegate_real_fwrite(const char *, const int, const char *, const void *, size_t, size_t, FILE *);
+extern size_t delegate_fake_fwrite(const char *, const int, const char *, const void *, size_t, size_t, FILE *);
 
 extern int delegate_real_printf(const char *, const int, const char *, const char *);
 extern int delegate_real_scanf(const char *, const int, const char *, const char *, va_list) SCANF_ATTR(1, 0);
@@ -93,6 +101,8 @@ public:
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(char *, fgets, (const char *, const int, const char *, char *, int, FILE *));
+    MOCK_METHOD(size_t, fread, (const char *, const int, const char *, void *, size_t, size_t, FILE *));
+    MOCK_METHOD(size_t, fwrite, (const char *, const int, const char *, const void *, size_t, size_t, FILE *));
 
     void switch_to_real_fileio();
     void switch_to_mock_fileio();
