@@ -41,6 +41,8 @@ void Mock_stdio::switch_to_mock_fileio()
     ON_CALL(*this, vfprintf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_fake_vfprintf));
 
+    ON_CALL(*this, vsnprintf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_vsnprintf));
+
     ON_CALL(*this, fgets(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_fake_fgets));
 
@@ -74,6 +76,8 @@ void Mock_stdio::switch_to_real_fileio()
 
     ON_CALL(*this, vfprintf(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_vfprintf));
+
+    ON_CALL(*this, vsnprintf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_vsnprintf));
 
     ON_CALL(*this, fgets(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_fgets));
