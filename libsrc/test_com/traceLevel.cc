@@ -7,19 +7,19 @@ using namespace std;
 using namespace testing;
 
 #ifndef _WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpadded"
 #endif // _WIN32
 class TraceLevelDictionary
 {
-private:
+  private:
     unordered_map<string, int> data;
     int defaultLavel = TRACE_NONE;
 
     // コンストラクタを private にする (外部からのインスタンス化禁止)
     TraceLevelDictionary() {}
 
-public:
+  public:
     // シングルトンのインスタンスを取得
     static TraceLevelDictionary &getInstance()
     {
@@ -61,7 +61,7 @@ public:
     }
 };
 #ifndef _WIN32
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #endif // _WIN32
 
 void testing::resetTraceLevel(int defaultTraceLevel)

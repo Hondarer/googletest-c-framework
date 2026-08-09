@@ -10,13 +10,15 @@
 #include <string>
 #include <vector>
 
-namespace testing {
+namespace testing
+{
 
 /* -------- writeStdin -------- */
 
-bool writeStdin(AsyncProcessHandle& handle, const string& data)
+bool writeStdin(AsyncProcessHandle &handle, const string &data)
 {
-    if (_getTraceLevel("processController") > TRACE_NONE) {
+    if (_getTraceLevel("processController") > TRACE_NONE)
+    {
         int pid = handle ? (int)handle->pid : -1;
         printf("  > writeStdin pid=%d \"%s\"\n", pid, data.c_str());
     }
@@ -25,9 +27,10 @@ bool writeStdin(AsyncProcessHandle& handle, const string& data)
 
 /* -------- writeLineStdin -------- */
 
-bool writeLineStdin(AsyncProcessHandle& handle, const string& line)
+bool writeLineStdin(AsyncProcessHandle &handle, const string &line)
 {
-    if (_getTraceLevel("processController") > TRACE_NONE) {
+    if (_getTraceLevel("processController") > TRACE_NONE)
+    {
         int pid = handle ? (int)handle->pid : -1;
         printf("  > writeLineStdin pid=%d \"%s\"\n", pid, line.c_str());
     }
@@ -36,43 +39,46 @@ bool writeLineStdin(AsyncProcessHandle& handle, const string& line)
 
 /* -------- waitForOutput -------- */
 
-string waitForOutput(AsyncProcessHandle& handle,
-                     const string& pattern,
-                     int timeout_ms)
+string waitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms)
 {
-    if (!handle) {
+    if (!handle)
+    {
         throw runtime_error("waitForOutput: null handle");
     }
 
     int _tl = _getTraceLevel("processController");
     int pid = (int)handle->pid;
-    if (_tl > TRACE_NONE) {
+    if (_tl > TRACE_NONE)
+    {
         printf("  > waitForOutput pid=%d \"%s\" timeout=%dms\n", pid, pattern.c_str(), timeout_ms);
     }
 
     unique_lock<mutex> lk(handle->buf_mutex);
 
-    auto check = [&]() -> bool {
-        return handle->stdout_buf.find(pattern) != string::npos || handle->process_done;
-    };
+    auto check = [&]() -> bool { return handle->stdout_buf.find(pattern) != string::npos || handle->process_done; };
 
-    if (timeout_ms < 0) {
+    if (timeout_ms < 0)
+    {
         handle->buf_cv.wait(lk, check);
-    } else {
+    }
+    else
+    {
         auto deadline = chrono::steady_clock::now() + chrono::milliseconds(timeout_ms);
         handle->buf_cv.wait_until(lk, deadline, check);
     }
 
     size_t pos = handle->stdout_buf.find(pattern);
-    if (pos == string::npos) {
-        if (_tl > TRACE_NONE) {
+    if (pos == string::npos)
+    {
+        if (_tl > TRACE_NONE)
+        {
             printf("  > waitForOutput pid=%d \"%s\" timeout\n", pid, pattern.c_str());
         }
-        throw runtime_error(
-            "waitForOutput: timeout or EOF before pattern: \"" + pattern + "\"");
+        throw runtime_error("waitForOutput: timeout or EOF before pattern: \"" + pattern + "\"");
     }
 
-    if (_tl > TRACE_NONE) {
+    if (_tl > TRACE_NONE)
+    {
         printf("  > waitForOutput pid=%d \"%s\" matched\n", pid, pattern.c_str());
     }
     return handle->stdout_buf.substr(0, pos + pattern.size());
@@ -80,39 +86,54 @@ string waitForOutput(AsyncProcessHandle& handle,
 
 /* -------- getStdout -------- */
 
-string getStdout(AsyncProcessHandle& handle)
+string getStdout(AsyncProcessHandle &handle)
 {
-    if (!handle) { return {}; }
+    if (!handle)
+    {
+        return {};
+    }
     lock_guard<mutex> lk(handle->buf_mutex);
     return handle->stdout_buf;
 }
 
 /* -------- getStderr -------- */
 
-string getStderr(AsyncProcessHandle& handle)
+string getStderr(AsyncProcessHandle &handle)
 {
-    if (!handle) { return {}; }
+    if (!handle)
+    {
+        return {};
+    }
     lock_guard<mutex> lk(handle->buf_mutex);
     return handle->stderr_buf;
 }
 
 /* -------- getDebugLogCount -------- */
 
-size_t getDebugLogCount(AsyncProcessHandle& handle)
+size_t getDebugLogCount(AsyncProcessHandle &handle)
 {
-    if (!handle) { return 0; }
+    if (!handle)
+    {
+        return 0;
+    }
     lock_guard<mutex> lk(handle->buf_mutex);
     return handle->debug_log_lines.size();
 }
 
 /* -------- getDebugLog -------- */
 
-vector<string> getDebugLog(AsyncProcessHandle& handle, size_t from_index)
+vector<string> getDebugLog(AsyncProcessHandle &handle, size_t from_index)
 {
-    if (!handle) { return {}; }
+    if (!handle)
+    {
+        return {};
+    }
     lock_guard<mutex> lk(handle->buf_mutex);
-    const auto& lines = handle->debug_log_lines;
-    if (from_index >= lines.size()) { return {}; }
+    const auto &lines = handle->debug_log_lines;
+    if (from_index >= lines.size())
+    {
+        return {};
+    }
     return vector<string>(lines.begin() + (ptrdiff_t)from_index, lines.end());
 }
 

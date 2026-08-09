@@ -231,8 +231,8 @@ int mock_sftp_get_error(const char *file, const int line, const char *func, sftp
  * sftp_open
  * ======================================== */
 
-sftp_file delegate_fake_sftp_open(const char *file, const int line, const char *func,
-                                   sftp_session sftp, const char *filename, int accesstype, mode_t mode)
+sftp_file delegate_fake_sftp_open(const char *file, const int line, const char *func, sftp_session sftp,
+                                  const char *filename, int accesstype, mode_t mode)
 {
     (void)file;
     (void)line;
@@ -245,8 +245,8 @@ sftp_file delegate_fake_sftp_open(const char *file, const int line, const char *
     return (sftp_file)malloc(sizeof(struct sftp_file_struct *));
 }
 
-sftp_file delegate_real_sftp_open(const char *file, const int line, const char *func,
-                                   sftp_session sftp, const char *filename, int accesstype, mode_t mode)
+sftp_file delegate_real_sftp_open(const char *file, const int line, const char *func, sftp_session sftp,
+                                  const char *filename, int accesstype, mode_t mode)
 {
     (void)file;
     (void)line;
@@ -259,8 +259,8 @@ sftp_file delegate_real_sftp_open(const char *file, const int line, const char *
 #endif
 }
 
-sftp_file mock_sftp_open(const char *file, const int line, const char *func,
-                          sftp_session sftp, const char *filename, int accesstype, mode_t mode)
+sftp_file mock_sftp_open(const char *file, const int line, const char *func, sftp_session sftp, const char *filename,
+                         int accesstype, mode_t mode)
 {
     sftp_file result;
 
@@ -353,8 +353,8 @@ int mock_sftp_close(const char *file, const int line, const char *func, sftp_fil
  * sftp_read
  * ======================================== */
 
-ssize_t delegate_fake_sftp_read(const char *file, const int line, const char *func,
-                                 sftp_file sftpfile, void *buf, size_t count)
+ssize_t delegate_fake_sftp_read(const char *file, const int line, const char *func, sftp_file sftpfile, void *buf,
+                                size_t count)
 {
     (void)file;
     (void)line;
@@ -366,8 +366,8 @@ ssize_t delegate_fake_sftp_read(const char *file, const int line, const char *fu
     return 0; /* EOF */
 }
 
-ssize_t delegate_real_sftp_read(const char *file, const int line, const char *func,
-                                 sftp_file sftpfile, void *buf, size_t count)
+ssize_t delegate_real_sftp_read(const char *file, const int line, const char *func, sftp_file sftpfile, void *buf,
+                                size_t count)
 {
     (void)file;
     (void)line;
@@ -380,8 +380,7 @@ ssize_t delegate_real_sftp_read(const char *file, const int line, const char *fu
 #endif
 }
 
-ssize_t mock_sftp_read(const char *file, const int line, const char *func,
-                        sftp_file sftpfile, void *buf, size_t count)
+ssize_t mock_sftp_read(const char *file, const int line, const char *func, sftp_file sftpfile, void *buf, size_t count)
 {
     ssize_t result;
 
@@ -414,8 +413,8 @@ ssize_t mock_sftp_read(const char *file, const int line, const char *func,
  * sftp_write
  * ======================================== */
 
-ssize_t delegate_fake_sftp_write(const char *file, const int line, const char *func,
-                                  sftp_file sftpfile, const void *buf, size_t count)
+ssize_t delegate_fake_sftp_write(const char *file, const int line, const char *func, sftp_file sftpfile,
+                                 const void *buf, size_t count)
 {
     (void)file;
     (void)line;
@@ -426,8 +425,8 @@ ssize_t delegate_fake_sftp_write(const char *file, const int line, const char *f
     return (ssize_t)count;
 }
 
-ssize_t delegate_real_sftp_write(const char *file, const int line, const char *func,
-                                  sftp_file sftpfile, const void *buf, size_t count)
+ssize_t delegate_real_sftp_write(const char *file, const int line, const char *func, sftp_file sftpfile,
+                                 const void *buf, size_t count)
 {
     (void)file;
     (void)line;
@@ -440,8 +439,8 @@ ssize_t delegate_real_sftp_write(const char *file, const int line, const char *f
 #endif
 }
 
-ssize_t mock_sftp_write(const char *file, const int line, const char *func,
-                         sftp_file sftpfile, const void *buf, size_t count)
+ssize_t mock_sftp_write(const char *file, const int line, const char *func, sftp_file sftpfile, const void *buf,
+                        size_t count)
 {
     ssize_t result;
 
@@ -474,8 +473,7 @@ ssize_t mock_sftp_write(const char *file, const int line, const char *func,
  * sftp_seek
  * ======================================== */
 
-int delegate_fake_sftp_seek(const char *file, const int line, const char *func,
-                             sftp_file sftpfile, uint32_t new_offset)
+int delegate_fake_sftp_seek(const char *file, const int line, const char *func, sftp_file sftpfile, uint32_t new_offset)
 {
     (void)file;
     (void)line;
@@ -486,8 +484,7 @@ int delegate_fake_sftp_seek(const char *file, const int line, const char *func,
     return SSH_OK;
 }
 
-int delegate_real_sftp_seek(const char *file, const int line, const char *func,
-                             sftp_file sftpfile, uint32_t new_offset)
+int delegate_real_sftp_seek(const char *file, const int line, const char *func, sftp_file sftpfile, uint32_t new_offset)
 {
     (void)file;
     (void)line;
@@ -500,8 +497,7 @@ int delegate_real_sftp_seek(const char *file, const int line, const char *func,
 #endif
 }
 
-int mock_sftp_seek(const char *file, const int line, const char *func,
-                    sftp_file sftpfile, uint32_t new_offset)
+int mock_sftp_seek(const char *file, const int line, const char *func, sftp_file sftpfile, uint32_t new_offset)
 {
     int result;
 
@@ -534,8 +530,8 @@ int mock_sftp_seek(const char *file, const int line, const char *func,
  * sftp_seek64
  * ======================================== */
 
-int delegate_fake_sftp_seek64(const char *file, const int line, const char *func,
-                               sftp_file sftpfile, uint64_t new_offset)
+int delegate_fake_sftp_seek64(const char *file, const int line, const char *func, sftp_file sftpfile,
+                              uint64_t new_offset)
 {
     (void)file;
     (void)line;
@@ -546,8 +542,8 @@ int delegate_fake_sftp_seek64(const char *file, const int line, const char *func
     return SSH_OK;
 }
 
-int delegate_real_sftp_seek64(const char *file, const int line, const char *func,
-                               sftp_file sftpfile, uint64_t new_offset)
+int delegate_real_sftp_seek64(const char *file, const int line, const char *func, sftp_file sftpfile,
+                              uint64_t new_offset)
 {
     (void)file;
     (void)line;
@@ -560,8 +556,7 @@ int delegate_real_sftp_seek64(const char *file, const int line, const char *func
 #endif
 }
 
-int mock_sftp_seek64(const char *file, const int line, const char *func,
-                      sftp_file sftpfile, uint64_t new_offset)
+int mock_sftp_seek64(const char *file, const int line, const char *func, sftp_file sftpfile, uint64_t new_offset)
 {
     int result;
 
@@ -813,8 +808,8 @@ sftp_attributes mock_sftp_fstat(const char *file, const int line, const char *fu
  * sftp_opendir
  * ======================================== */
 
-sftp_dir delegate_fake_sftp_opendir(const char *file, const int line, const char *func,
-                                     sftp_session sftp, const char *path)
+sftp_dir delegate_fake_sftp_opendir(const char *file, const int line, const char *func, sftp_session sftp,
+                                    const char *path)
 {
     (void)file;
     (void)line;
@@ -825,8 +820,8 @@ sftp_dir delegate_fake_sftp_opendir(const char *file, const int line, const char
     return (sftp_dir)malloc(sizeof(struct sftp_dir_struct *));
 }
 
-sftp_dir delegate_real_sftp_opendir(const char *file, const int line, const char *func,
-                                     sftp_session sftp, const char *path)
+sftp_dir delegate_real_sftp_opendir(const char *file, const int line, const char *func, sftp_session sftp,
+                                    const char *path)
 {
     (void)file;
     (void)line;
@@ -839,8 +834,7 @@ sftp_dir delegate_real_sftp_opendir(const char *file, const int line, const char
 #endif
 }
 
-sftp_dir mock_sftp_opendir(const char *file, const int line, const char *func,
-                            sftp_session sftp, const char *path)
+sftp_dir mock_sftp_opendir(const char *file, const int line, const char *func, sftp_session sftp, const char *path)
 {
     sftp_dir result;
 
@@ -873,8 +867,8 @@ sftp_dir mock_sftp_opendir(const char *file, const int line, const char *func,
  * sftp_readdir
  * ======================================== */
 
-sftp_attributes delegate_fake_sftp_readdir(const char *file, const int line, const char *func,
-                                            sftp_session sftp, sftp_dir dir)
+sftp_attributes delegate_fake_sftp_readdir(const char *file, const int line, const char *func, sftp_session sftp,
+                                           sftp_dir dir)
 {
     (void)file;
     (void)line;
@@ -885,8 +879,8 @@ sftp_attributes delegate_fake_sftp_readdir(const char *file, const int line, con
     return nullptr; /* End of directory */
 }
 
-sftp_attributes delegate_real_sftp_readdir(const char *file, const int line, const char *func,
-                                            sftp_session sftp, sftp_dir dir)
+sftp_attributes delegate_real_sftp_readdir(const char *file, const int line, const char *func, sftp_session sftp,
+                                           sftp_dir dir)
 {
     (void)file;
     (void)line;
@@ -899,8 +893,7 @@ sftp_attributes delegate_real_sftp_readdir(const char *file, const int line, con
 #endif
 }
 
-sftp_attributes mock_sftp_readdir(const char *file, const int line, const char *func,
-                                   sftp_session sftp, sftp_dir dir)
+sftp_attributes mock_sftp_readdir(const char *file, const int line, const char *func, sftp_session sftp, sftp_dir dir)
 {
     sftp_attributes result;
 
@@ -993,8 +986,8 @@ int mock_sftp_closedir(const char *file, const int line, const char *func, sftp_
  * sftp_mkdir
  * ======================================== */
 
-int delegate_fake_sftp_mkdir(const char *file, const int line, const char *func,
-                              sftp_session sftp, const char *directory, mode_t mode)
+int delegate_fake_sftp_mkdir(const char *file, const int line, const char *func, sftp_session sftp,
+                             const char *directory, mode_t mode)
 {
     (void)file;
     (void)line;
@@ -1006,8 +999,8 @@ int delegate_fake_sftp_mkdir(const char *file, const int line, const char *func,
     return SSH_OK;
 }
 
-int delegate_real_sftp_mkdir(const char *file, const int line, const char *func,
-                              sftp_session sftp, const char *directory, mode_t mode)
+int delegate_real_sftp_mkdir(const char *file, const int line, const char *func, sftp_session sftp,
+                             const char *directory, mode_t mode)
 {
     (void)file;
     (void)line;
@@ -1020,8 +1013,8 @@ int delegate_real_sftp_mkdir(const char *file, const int line, const char *func,
 #endif
 }
 
-int mock_sftp_mkdir(const char *file, const int line, const char *func,
-                     sftp_session sftp, const char *directory, mode_t mode)
+int mock_sftp_mkdir(const char *file, const int line, const char *func, sftp_session sftp, const char *directory,
+                    mode_t mode)
 {
     int result;
 
@@ -1054,8 +1047,8 @@ int mock_sftp_mkdir(const char *file, const int line, const char *func,
  * sftp_rmdir
  * ======================================== */
 
-int delegate_fake_sftp_rmdir(const char *file, const int line, const char *func,
-                              sftp_session sftp, const char *directory)
+int delegate_fake_sftp_rmdir(const char *file, const int line, const char *func, sftp_session sftp,
+                             const char *directory)
 {
     (void)file;
     (void)line;
@@ -1066,8 +1059,8 @@ int delegate_fake_sftp_rmdir(const char *file, const int line, const char *func,
     return SSH_OK;
 }
 
-int delegate_real_sftp_rmdir(const char *file, const int line, const char *func,
-                              sftp_session sftp, const char *directory)
+int delegate_real_sftp_rmdir(const char *file, const int line, const char *func, sftp_session sftp,
+                             const char *directory)
 {
     (void)file;
     (void)line;
@@ -1080,8 +1073,7 @@ int delegate_real_sftp_rmdir(const char *file, const int line, const char *func,
 #endif
 }
 
-int mock_sftp_rmdir(const char *file, const int line, const char *func,
-                     sftp_session sftp, const char *directory)
+int mock_sftp_rmdir(const char *file, const int line, const char *func, sftp_session sftp, const char *directory)
 {
     int result;
 
@@ -1114,8 +1106,8 @@ int mock_sftp_rmdir(const char *file, const int line, const char *func,
  * sftp_unlink
  * ======================================== */
 
-int delegate_fake_sftp_unlink(const char *file, const int line, const char *func,
-                               sftp_session sftp, const char *filename)
+int delegate_fake_sftp_unlink(const char *file, const int line, const char *func, sftp_session sftp,
+                              const char *filename)
 {
     (void)file;
     (void)line;
@@ -1126,8 +1118,8 @@ int delegate_fake_sftp_unlink(const char *file, const int line, const char *func
     return SSH_OK;
 }
 
-int delegate_real_sftp_unlink(const char *file, const int line, const char *func,
-                               sftp_session sftp, const char *filename)
+int delegate_real_sftp_unlink(const char *file, const int line, const char *func, sftp_session sftp,
+                              const char *filename)
 {
     (void)file;
     (void)line;
@@ -1140,8 +1132,7 @@ int delegate_real_sftp_unlink(const char *file, const int line, const char *func
 #endif
 }
 
-int mock_sftp_unlink(const char *file, const int line, const char *func,
-                      sftp_session sftp, const char *filename)
+int mock_sftp_unlink(const char *file, const int line, const char *func, sftp_session sftp, const char *filename)
 {
     int result;
 
@@ -1174,8 +1165,8 @@ int mock_sftp_unlink(const char *file, const int line, const char *func,
  * sftp_rename
  * ======================================== */
 
-int delegate_fake_sftp_rename(const char *file, const int line, const char *func,
-                               sftp_session sftp, const char *original, const char *newname)
+int delegate_fake_sftp_rename(const char *file, const int line, const char *func, sftp_session sftp,
+                              const char *original, const char *newname)
 {
     (void)file;
     (void)line;
@@ -1187,8 +1178,8 @@ int delegate_fake_sftp_rename(const char *file, const int line, const char *func
     return SSH_OK;
 }
 
-int delegate_real_sftp_rename(const char *file, const int line, const char *func,
-                               sftp_session sftp, const char *original, const char *newname)
+int delegate_real_sftp_rename(const char *file, const int line, const char *func, sftp_session sftp,
+                              const char *original, const char *newname)
 {
     (void)file;
     (void)line;
@@ -1201,8 +1192,8 @@ int delegate_real_sftp_rename(const char *file, const int line, const char *func
 #endif
 }
 
-int mock_sftp_rename(const char *file, const int line, const char *func,
-                      sftp_session sftp, const char *original, const char *newname)
+int mock_sftp_rename(const char *file, const int line, const char *func, sftp_session sftp, const char *original,
+                     const char *newname)
 {
     int result;
 
@@ -1235,8 +1226,8 @@ int mock_sftp_rename(const char *file, const int line, const char *func,
  * sftp_stat
  * ======================================== */
 
-sftp_attributes delegate_fake_sftp_stat(const char *file, const int line, const char *func,
-                                         sftp_session sftp, const char *path)
+sftp_attributes delegate_fake_sftp_stat(const char *file, const int line, const char *func, sftp_session sftp,
+                                        const char *path)
 {
     (void)file;
     (void)line;
@@ -1248,8 +1239,8 @@ sftp_attributes delegate_fake_sftp_stat(const char *file, const int line, const 
     return attr;
 }
 
-sftp_attributes delegate_real_sftp_stat(const char *file, const int line, const char *func,
-                                         sftp_session sftp, const char *path)
+sftp_attributes delegate_real_sftp_stat(const char *file, const int line, const char *func, sftp_session sftp,
+                                        const char *path)
 {
     (void)file;
     (void)line;
@@ -1262,8 +1253,7 @@ sftp_attributes delegate_real_sftp_stat(const char *file, const int line, const 
 #endif
 }
 
-sftp_attributes mock_sftp_stat(const char *file, const int line, const char *func,
-                                sftp_session sftp, const char *path)
+sftp_attributes mock_sftp_stat(const char *file, const int line, const char *func, sftp_session sftp, const char *path)
 {
     sftp_attributes result;
 
@@ -1296,8 +1286,8 @@ sftp_attributes mock_sftp_stat(const char *file, const int line, const char *fun
  * sftp_lstat
  * ======================================== */
 
-sftp_attributes delegate_fake_sftp_lstat(const char *file, const int line, const char *func,
-                                          sftp_session sftp, const char *path)
+sftp_attributes delegate_fake_sftp_lstat(const char *file, const int line, const char *func, sftp_session sftp,
+                                         const char *path)
 {
     (void)file;
     (void)line;
@@ -1309,8 +1299,8 @@ sftp_attributes delegate_fake_sftp_lstat(const char *file, const int line, const
     return attr;
 }
 
-sftp_attributes delegate_real_sftp_lstat(const char *file, const int line, const char *func,
-                                          sftp_session sftp, const char *path)
+sftp_attributes delegate_real_sftp_lstat(const char *file, const int line, const char *func, sftp_session sftp,
+                                         const char *path)
 {
     (void)file;
     (void)line;
@@ -1323,8 +1313,7 @@ sftp_attributes delegate_real_sftp_lstat(const char *file, const int line, const
 #endif
 }
 
-sftp_attributes mock_sftp_lstat(const char *file, const int line, const char *func,
-                                 sftp_session sftp, const char *path)
+sftp_attributes mock_sftp_lstat(const char *file, const int line, const char *func, sftp_session sftp, const char *path)
 {
     sftp_attributes result;
 
@@ -1365,13 +1354,20 @@ void delegate_fake_sftp_attributes_free(const char *file, const int line, const 
 
     if (attr != nullptr)
     {
-        if (attr->name != nullptr) free(attr->name);
-        if (attr->longname != nullptr) free(attr->longname);
-        if (attr->owner != nullptr) free(attr->owner);
-        if (attr->group != nullptr) free(attr->group);
-        if (attr->acl != nullptr) free(attr->acl);
-        if (attr->extended_type != nullptr) free(attr->extended_type);
-        if (attr->extended_data != nullptr) free(attr->extended_data);
+        if (attr->name != nullptr)
+            free(attr->name);
+        if (attr->longname != nullptr)
+            free(attr->longname);
+        if (attr->owner != nullptr)
+            free(attr->owner);
+        if (attr->group != nullptr)
+            free(attr->group);
+        if (attr->acl != nullptr)
+            free(attr->acl);
+        if (attr->extended_type != nullptr)
+            free(attr->extended_type);
+        if (attr->extended_data != nullptr)
+            free(attr->extended_data);
         free(attr);
     }
 }

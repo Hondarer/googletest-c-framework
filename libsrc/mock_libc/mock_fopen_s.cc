@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
-#include <test_com.h>
-#include <mock_stdio.h>
+    #include <test_com.h>
+    #include <mock_stdio.h>
 
-#include <string.h>
-#include <errno.h>
+    #include <string.h>
+    #include <errno.h>
 
 using namespace testing;
 
-errno_t delegate_fake_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename, const char *modes)
+errno_t delegate_fake_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename,
+                              const char *modes)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -28,7 +29,8 @@ errno_t delegate_fake_fopen_s(const char *file, const int line, const char *func
     return 0;
 }
 
-errno_t delegate_real_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename, const char *modes)
+errno_t delegate_real_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename,
+                              const char *modes)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -44,7 +46,8 @@ errno_t delegate_real_fopen_s(const char *file, const int line, const char *func
     return fopen_s(pFile, filename, modes);
 }
 
-errno_t mock_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename, const char *modes)
+errno_t mock_fopen_s(const char *file, const int line, const char *func, FILE **pFile, const char *filename,
+                     const char *modes)
 {
     errno_t err;
 

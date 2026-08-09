@@ -3,12 +3,12 @@
 
 /* 本物を include */
 #ifndef _WIN32
-#include_next <time.h>
+    #include_next <time.h>
 #else // _WIN32
-#pragma push_macro("_INC_TIME")
-#undef _INC_TIME
-#include <../ucrt/time.h>
-#pragma pop_macro("_INC_TIME")
+    #pragma push_macro("_INC_TIME")
+    #undef _INC_TIME
+    #include <../ucrt/time.h>
+    #pragma pop_macro("_INC_TIME")
 #endif // _WIN32
 
 /* モックにすげ替え */

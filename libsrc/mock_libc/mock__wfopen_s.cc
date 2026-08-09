@@ -1,14 +1,14 @@
 #ifdef _WIN32
 
-#include <test_com.h>
-#include <mock_stdio.h>
+    #include <test_com.h>
+    #include <mock_stdio.h>
 
-#include <errno.h>
+    #include <errno.h>
 
 using namespace testing;
 
-errno_t delegate_fake__wfopen_s(const char *file, const int line, const char *func,
-                                 FILE **pFile, const wchar_t *filename, const wchar_t *modes)
+errno_t delegate_fake__wfopen_s(const char *file, const int line, const char *func, FILE **pFile,
+                                const wchar_t *filename, const wchar_t *modes)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -26,8 +26,8 @@ errno_t delegate_fake__wfopen_s(const char *file, const int line, const char *fu
     return 0;
 }
 
-errno_t delegate_real__wfopen_s(const char *file, const int line, const char *func,
-                                 FILE **pFile, const wchar_t *filename, const wchar_t *modes)
+errno_t delegate_real__wfopen_s(const char *file, const int line, const char *func, FILE **pFile,
+                                const wchar_t *filename, const wchar_t *modes)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -42,8 +42,8 @@ errno_t delegate_real__wfopen_s(const char *file, const int line, const char *fu
     return _wfopen_s(pFile, filename, modes);
 }
 
-errno_t mock__wfopen_s(const char *file, const int line, const char *func,
-                        FILE **pFile, const wchar_t *filename, const wchar_t *modes)
+errno_t mock__wfopen_s(const char *file, const int line, const char *func, FILE **pFile, const wchar_t *filename,
+                       const wchar_t *modes)
 {
     errno_t rtc;
 

@@ -10,8 +10,8 @@ using namespace testing;
  * ssh_get_server_publickey
  * ======================================== */
 
-int delegate_fake_ssh_get_server_publickey(const char *file, const int line, const char *func,
-                                            ssh_session session, ssh_key *key)
+int delegate_fake_ssh_get_server_publickey(const char *file, const int line, const char *func, ssh_session session,
+                                           ssh_key *key)
 {
     (void)file;
     (void)line;
@@ -26,8 +26,8 @@ int delegate_fake_ssh_get_server_publickey(const char *file, const int line, con
     return SSH_OK;
 }
 
-int delegate_real_ssh_get_server_publickey(const char *file, const int line, const char *func,
-                                            ssh_session session, ssh_key *key)
+int delegate_real_ssh_get_server_publickey(const char *file, const int line, const char *func, ssh_session session,
+                                           ssh_key *key)
 {
     (void)file;
     (void)line;
@@ -40,8 +40,7 @@ int delegate_real_ssh_get_server_publickey(const char *file, const int line, con
 #endif
 }
 
-int mock_ssh_get_server_publickey(const char *file, const int line, const char *func,
-                                   ssh_session session, ssh_key *key)
+int mock_ssh_get_server_publickey(const char *file, const int line, const char *func, ssh_session session, ssh_key *key)
 {
     int result;
 
@@ -74,9 +73,8 @@ int mock_ssh_get_server_publickey(const char *file, const int line, const char *
  * ssh_get_publickey_hash
  * ======================================== */
 
-int delegate_fake_ssh_get_publickey_hash(const char *file, const int line, const char *func,
-                                          const ssh_key key, enum ssh_publickey_hash_type type,
-                                          unsigned char **hash, size_t *hlen)
+int delegate_fake_ssh_get_publickey_hash(const char *file, const int line, const char *func, const ssh_key key,
+                                         enum ssh_publickey_hash_type type, unsigned char **hash, size_t *hlen)
 {
     (void)file;
     (void)line;
@@ -97,9 +95,8 @@ int delegate_fake_ssh_get_publickey_hash(const char *file, const int line, const
     return SSH_OK;
 }
 
-int delegate_real_ssh_get_publickey_hash(const char *file, const int line, const char *func,
-                                          const ssh_key key, enum ssh_publickey_hash_type type,
-                                          unsigned char **hash, size_t *hlen)
+int delegate_real_ssh_get_publickey_hash(const char *file, const int line, const char *func, const ssh_key key,
+                                         enum ssh_publickey_hash_type type, unsigned char **hash, size_t *hlen)
 {
     (void)file;
     (void)line;
@@ -112,9 +109,8 @@ int delegate_real_ssh_get_publickey_hash(const char *file, const int line, const
 #endif
 }
 
-int mock_ssh_get_publickey_hash(const char *file, const int line, const char *func,
-                                 const ssh_key key, enum ssh_publickey_hash_type type,
-                                 unsigned char **hash, size_t *hlen)
+int mock_ssh_get_publickey_hash(const char *file, const int line, const char *func, const ssh_key key,
+                                enum ssh_publickey_hash_type type, unsigned char **hash, size_t *hlen)
 {
     int result;
 
@@ -202,7 +198,7 @@ void mock_ssh_key_free(const char *file, const int line, const char *func, ssh_k
  * ======================================== */
 
 enum ssh_known_hosts_e delegate_fake_ssh_session_is_known_server(const char *file, const int line, const char *func,
-                                                                   ssh_session session)
+                                                                 ssh_session session)
 {
     (void)file;
     (void)line;
@@ -214,7 +210,7 @@ enum ssh_known_hosts_e delegate_fake_ssh_session_is_known_server(const char *fil
 }
 
 enum ssh_known_hosts_e delegate_real_ssh_session_is_known_server(const char *file, const int line, const char *func,
-                                                                   ssh_session session)
+                                                                 ssh_session session)
 {
     (void)file;
     (void)line;
@@ -228,7 +224,7 @@ enum ssh_known_hosts_e delegate_real_ssh_session_is_known_server(const char *fil
 }
 
 enum ssh_known_hosts_e mock_ssh_session_is_known_server(const char *file, const int line, const char *func,
-                                                          ssh_session session)
+                                                        ssh_session session)
 {
     enum ssh_known_hosts_e result;
 
@@ -261,8 +257,7 @@ enum ssh_known_hosts_e mock_ssh_session_is_known_server(const char *file, const 
  * ssh_clean_pubkey_hash
  * ======================================== */
 
-void delegate_fake_ssh_clean_pubkey_hash(const char *file, const int line, const char *func,
-                                           unsigned char **hash)
+void delegate_fake_ssh_clean_pubkey_hash(const char *file, const int line, const char *func, unsigned char **hash)
 {
     (void)file;
     (void)line;
@@ -275,8 +270,7 @@ void delegate_fake_ssh_clean_pubkey_hash(const char *file, const int line, const
     }
 }
 
-void delegate_real_ssh_clean_pubkey_hash(const char *file, const int line, const char *func,
-                                           unsigned char **hash)
+void delegate_real_ssh_clean_pubkey_hash(const char *file, const int line, const char *func, unsigned char **hash)
 {
     (void)file;
     (void)line;
@@ -289,8 +283,7 @@ void delegate_real_ssh_clean_pubkey_hash(const char *file, const int line, const
 #endif
 }
 
-void mock_ssh_clean_pubkey_hash(const char *file, const int line, const char *func,
-                                  unsigned char **hash)
+void mock_ssh_clean_pubkey_hash(const char *file, const int line, const char *func, unsigned char **hash)
 {
     if (_mock_libssh != nullptr)
     {
@@ -320,7 +313,7 @@ void mock_ssh_clean_pubkey_hash(const char *file, const int line, const char *fu
  * ======================================== */
 
 int delegate_fake_ssh_session_update_known_hosts(const char *file, const int line, const char *func,
-                                                   ssh_session session)
+                                                 ssh_session session)
 {
     (void)file;
     (void)line;
@@ -332,7 +325,7 @@ int delegate_fake_ssh_session_update_known_hosts(const char *file, const int lin
 }
 
 int delegate_real_ssh_session_update_known_hosts(const char *file, const int line, const char *func,
-                                                   ssh_session session)
+                                                 ssh_session session)
 {
     (void)file;
     (void)line;
@@ -345,8 +338,7 @@ int delegate_real_ssh_session_update_known_hosts(const char *file, const int lin
 #endif
 }
 
-int mock_ssh_session_update_known_hosts(const char *file, const int line, const char *func,
-                                          ssh_session session)
+int mock_ssh_session_update_known_hosts(const char *file, const int line, const char *func, ssh_session session)
 {
     int result;
 
@@ -379,8 +371,8 @@ int mock_ssh_session_update_known_hosts(const char *file, const int line, const 
  * ssh_print_hash
  * ======================================== */
 
-void delegate_fake_ssh_print_hash(const char *file, const int line, const char *func,
-                                    enum ssh_publickey_hash_type type, unsigned char *hash, size_t len)
+void delegate_fake_ssh_print_hash(const char *file, const int line, const char *func, enum ssh_publickey_hash_type type,
+                                  unsigned char *hash, size_t len)
 {
     (void)file;
     (void)line;
@@ -392,8 +384,8 @@ void delegate_fake_ssh_print_hash(const char *file, const int line, const char *
     /* 何もしない */
 }
 
-void delegate_real_ssh_print_hash(const char *file, const int line, const char *func,
-                                    enum ssh_publickey_hash_type type, unsigned char *hash, size_t len)
+void delegate_real_ssh_print_hash(const char *file, const int line, const char *func, enum ssh_publickey_hash_type type,
+                                  unsigned char *hash, size_t len)
 {
     (void)file;
     (void)line;
@@ -406,8 +398,8 @@ void delegate_real_ssh_print_hash(const char *file, const int line, const char *
 #endif
 }
 
-void mock_ssh_print_hash(const char *file, const int line, const char *func,
-                           enum ssh_publickey_hash_type type, unsigned char *hash, size_t len)
+void mock_ssh_print_hash(const char *file, const int line, const char *func, enum ssh_publickey_hash_type type,
+                         unsigned char *hash, size_t len)
 {
     if (_mock_libssh != nullptr)
     {

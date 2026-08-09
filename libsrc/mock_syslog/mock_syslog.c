@@ -36,16 +36,16 @@ void syslog(int priority, const char *fmt, ...)
             }
 
             /* 残り領域にメッセージ本体を展開する */
-            char *msg     = buf + prefix_len;
+            char *msg = buf + prefix_len;
             size_t msg_sz = sizeof(buf) - (size_t)prefix_len - 1; /* \n 用に 1 バイト確保 */
-            int n         = vsnprintf(msg, msg_sz, fmt, ap);
+            int n = vsnprintf(msg, msg_sz, fmt, ap);
             if (n > 0)
             {
                 if ((size_t)n >= msg_sz)
                 {
                     n = (int)(msg_sz - 1);
                 }
-                msg[n]     = '\n';
+                msg[n] = '\n';
                 msg[n + 1] = '\0';
                 write(fd, buf, (size_t)(prefix_len + n + 1));
             }

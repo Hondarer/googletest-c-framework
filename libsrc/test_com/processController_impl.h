@@ -11,68 +11,72 @@
 #include <vector>
 
 #ifndef _WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpadded"
 #endif /* _WIN32 */
 
 #ifndef _WIN32
 
-#include <sys/types.h>
+    #include <sys/types.h>
 
-namespace testing {
+namespace testing
+{
 
-struct AsyncProcess {
-    pid_t pid         = -1;
-    int   stdin_fd    = -1;
-    int   stdout_fd   = -1;
-    int   stderr_fd   = -1;
+struct AsyncProcess
+{
+    pid_t pid = -1;
+    int stdin_fd = -1;
+    int stdout_fd = -1;
+    int stderr_fd = -1;
 
     /** syslog キャプチャ用パイプ read 端 (-1 = preload_lib 未使用)。 */
-    int         debug_log_fd  = -1;
+    int debug_log_fd = -1;
     /** パイプから受信した途中の行バッファ。 */
     std::string debug_log_buf;
 
     /** waitForExit() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;
 
-    std::thread             reader_thread;
-    std::mutex              buf_mutex;
+    std::thread reader_thread;
+    std::mutex buf_mutex;
     std::condition_variable buf_cv;
-    std::string             stdout_buf;
-    std::string             stderr_buf;
+    std::string stdout_buf;
+    std::string stderr_buf;
     std::vector<std::string> debug_log_lines;
-    bool                    process_done = false;
+    bool process_done = false;
 
-    AsyncProcess()  = default;
+    AsyncProcess() = default;
     ~AsyncProcess();
 
     /* コピー禁止 */
-    AsyncProcess(const AsyncProcess&)            = delete;
-    AsyncProcess& operator=(const AsyncProcess&) = delete;
+    AsyncProcess(const AsyncProcess &) = delete;
+    AsyncProcess &operator=(const AsyncProcess &) = delete;
 };
 
 } // namespace testing
 
-#ifndef _WIN32
-#pragma GCC diagnostic pop
-#endif /* _WIN32 */
+    #ifndef _WIN32
+        #pragma GCC diagnostic pop
+    #endif /* _WIN32 */
 
 #else /* _WIN32 */
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#ifdef byte
-#undef byte
-#endif
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #ifdef byte
+        #undef byte
+    #endif
 
-namespace testing {
+namespace testing
+{
 
-struct AsyncProcess {
+struct AsyncProcess
+{
     HANDLE proc_handle = nullptr;
-    HANDLE stdin_h     = nullptr;
-    HANDLE stdout_h    = nullptr;
-    HANDLE stderr_h    = nullptr;
-    DWORD  pid         = 0;
+    HANDLE stdin_h = nullptr;
+    HANDLE stdout_h = nullptr;
+    HANDLE stderr_h = nullptr;
+    DWORD pid = 0;
 
     /** OutputDebugString キャプチャが有効かどうか。 */
     bool capture_debug_output = true;
@@ -88,9 +92,9 @@ struct AsyncProcess {
      *  nullptr フォールバックでのみ解放する。
      *  see: https://learn.microsoft.com/en-us/windows/win32/api/debugapi/nf-debugapi-outputdebugstringa */
     HANDLE dbwin_buffer_ready = nullptr;
-    HANDLE dbwin_data_ready   = nullptr;
-    HANDLE dbwin_mapping      = nullptr;
-    void  *dbwin_view         = nullptr;
+    HANDLE dbwin_data_ready = nullptr;
+    HANDLE dbwin_mapping = nullptr;
+    void *dbwin_view = nullptr;
 
     /** ETW プロバイダ GUID 文字列 (空 = ETW キャプチャ無効)。 */
     std::string etw_provider_guid;
@@ -100,27 +104,28 @@ struct AsyncProcess {
     /** waitForExit() が返した終了コード (-1 = 未取得)。 */
     int last_exit_code = -1;
 
-    std::thread             reader_thread;
-    std::mutex              buf_mutex;
+    std::thread reader_thread;
+    std::mutex buf_mutex;
     std::condition_variable buf_cv;
-    std::string             stdout_buf;
-    std::string             stderr_buf;
+    std::string stdout_buf;
+    std::string stderr_buf;
     std::vector<std::string> debug_log_lines;
-    bool                    process_done = false;
+    bool process_done = false;
 
-    AsyncProcess()  = default;
+    AsyncProcess() = default;
     ~AsyncProcess();
 
     /* コピー禁止 */
-    AsyncProcess(const AsyncProcess&)            = delete;
-    AsyncProcess& operator=(const AsyncProcess&) = delete;
+    AsyncProcess(const AsyncProcess &) = delete;
+    AsyncProcess &operator=(const AsyncProcess &) = delete;
 };
 
 } // namespace testing
 
 #endif /* _WIN32 */
 
-namespace testing {
+namespace testing
+{
 /** OS レベルの stdin 書き込み。トレースなし。writeStdin/writeLineStdin が呼び出す。 */
-bool writeStdinImpl(AsyncProcessHandle& handle, const string& data);
+bool writeStdinImpl(AsyncProcessHandle &handle, const string &data);
 } // namespace testing

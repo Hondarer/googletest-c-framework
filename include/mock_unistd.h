@@ -85,7 +85,7 @@ extern ssize_t delegate_real_write(const char *, const int, const char *, int, c
 
 class Mock_unistd
 {
-public:
+  public:
     MOCK_METHOD(int, access, (const char *, const int, const char *, const char *, int));
     MOCK_METHOD(pid_t, fork, (const char *, const int, const char *));
     MOCK_METHOD(int, mkstemp, (const char *, const int, const char *, char *));

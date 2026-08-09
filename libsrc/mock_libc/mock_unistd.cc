@@ -8,12 +8,9 @@ Mock_unistd *_mock_unistd = nullptr;
 
 Mock_unistd::Mock_unistd()
 {
-    ON_CALL(*this, access(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_access));
-    ON_CALL(*this, fork(_, _, _))
-        .WillByDefault(Invoke(delegate_real_fork));
-    ON_CALL(*this, mkstemp(_, _, _, _))
-        .WillByDefault(Invoke(delegate_real_mkstemp));
+    ON_CALL(*this, access(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_access));
+    ON_CALL(*this, fork(_, _, _)).WillByDefault(Invoke(delegate_real_fork));
+    ON_CALL(*this, mkstemp(_, _, _, _)).WillByDefault(Invoke(delegate_real_mkstemp));
     ON_CALL(*this, lseek(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_lseek));
     ON_CALL(*this, close(_, _, _, _)).WillByDefault(Invoke(delegate_real_close));
     ON_CALL(*this, dup(_, _, _, _)).WillByDefault(Invoke(delegate_real_dup));

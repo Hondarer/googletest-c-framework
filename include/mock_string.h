@@ -16,24 +16,24 @@ extern "C"
 
 #ifdef _IN_OVERRIDE_HEADER_STRING_H
 
-#define memset(s, c, n) mock_memset(__FILE__, __LINE__, __func__, s, c, n)
+    #define memset(s, c, n) mock_memset(__FILE__, __LINE__, __func__, s, c, n)
 
 #else // _IN_OVERRIDE_HEADER_STRING_H
 
-#ifndef _WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif // _WIN32
-#include <gmock/gmock.h>
-#ifndef _WIN32
-#pragma GCC diagnostic pop
-#endif // _WIN32
+    #ifndef _WIN32
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpadded"
+    #endif // _WIN32
+    #include <gmock/gmock.h>
+    #ifndef _WIN32
+        #pragma GCC diagnostic pop
+    #endif // _WIN32
 
 extern void *delegate_real_memset(const char *, const int, const char *, void *, int, size_t);
 
 class Mock_string
 {
-public:
+  public:
     MOCK_METHOD(void *, memset, (const char *, const int, const char *, void *, int, size_t));
 
     Mock_string();

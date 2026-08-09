@@ -1,13 +1,14 @@
 #ifndef _WIN32
 
-#include <test_com.h>
-#include <mock_time.h>
+    #include <test_com.h>
+    #include <mock_time.h>
 
-#include <string.h>
+    #include <string.h>
 
 using namespace testing;
 
-struct tm *delegate_fake_gmtime_r(const char *file, const int line, const char *func, const time_t *timep, struct tm *result)
+struct tm *delegate_fake_gmtime_r(const char *file, const int line, const char *func, const time_t *timep,
+                                  struct tm *result)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -25,7 +26,8 @@ struct tm *delegate_fake_gmtime_r(const char *file, const int line, const char *
     return result;
 }
 
-struct tm *delegate_real_gmtime_r(const char *file, const int line, const char *func, const time_t *timep, struct tm *result)
+struct tm *delegate_real_gmtime_r(const char *file, const int line, const char *func, const time_t *timep,
+                                  struct tm *result)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -59,10 +61,8 @@ struct tm *mock_gmtime_r(const char *file, const int line, const char *func, con
             }
             else
             {
-                printf(" from %s:%d -> %04d-%02d-%02d %02d:%02d:%02d\n",
-                       file, line,
-                       rtc->tm_year + 1900, rtc->tm_mon + 1, rtc->tm_mday,
-                       rtc->tm_hour, rtc->tm_min, rtc->tm_sec);
+                printf(" from %s:%d -> %04d-%02d-%02d %02d:%02d:%02d\n", file, line, rtc->tm_year + 1900,
+                       rtc->tm_mon + 1, rtc->tm_mday, rtc->tm_hour, rtc->tm_min, rtc->tm_sec);
             }
         }
         else

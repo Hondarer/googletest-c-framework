@@ -241,8 +241,8 @@ int mock_ssh_channel_close(const char *file, const int line, const char *func, s
  * ssh_channel_request_exec
  * ======================================== */
 
-int delegate_fake_ssh_channel_request_exec(const char *file, const int line, const char *func,
-                                            ssh_channel channel, const char *cmd)
+int delegate_fake_ssh_channel_request_exec(const char *file, const int line, const char *func, ssh_channel channel,
+                                           const char *cmd)
 {
     (void)file;
     (void)line;
@@ -253,8 +253,8 @@ int delegate_fake_ssh_channel_request_exec(const char *file, const int line, con
     return SSH_OK;
 }
 
-int delegate_real_ssh_channel_request_exec(const char *file, const int line, const char *func,
-                                            ssh_channel channel, const char *cmd)
+int delegate_real_ssh_channel_request_exec(const char *file, const int line, const char *func, ssh_channel channel,
+                                           const char *cmd)
 {
     (void)file;
     (void)line;
@@ -267,8 +267,8 @@ int delegate_real_ssh_channel_request_exec(const char *file, const int line, con
 #endif
 }
 
-int mock_ssh_channel_request_exec(const char *file, const int line, const char *func,
-                                   ssh_channel channel, const char *cmd)
+int mock_ssh_channel_request_exec(const char *file, const int line, const char *func, ssh_channel channel,
+                                  const char *cmd)
 {
     int result;
 
@@ -301,8 +301,8 @@ int mock_ssh_channel_request_exec(const char *file, const int line, const char *
  * ssh_channel_read
  * ======================================== */
 
-int delegate_fake_ssh_channel_read(const char *file, const int line, const char *func,
-                                    ssh_channel channel, void *dest, uint32_t count, int is_stderr)
+int delegate_fake_ssh_channel_read(const char *file, const int line, const char *func, ssh_channel channel, void *dest,
+                                   uint32_t count, int is_stderr)
 {
     (void)file;
     (void)line;
@@ -316,8 +316,8 @@ int delegate_fake_ssh_channel_read(const char *file, const int line, const char 
     return 0;
 }
 
-int delegate_real_ssh_channel_read(const char *file, const int line, const char *func,
-                                    ssh_channel channel, void *dest, uint32_t count, int is_stderr)
+int delegate_real_ssh_channel_read(const char *file, const int line, const char *func, ssh_channel channel, void *dest,
+                                   uint32_t count, int is_stderr)
 {
     (void)file;
     (void)line;
@@ -330,8 +330,8 @@ int delegate_real_ssh_channel_read(const char *file, const int line, const char 
 #endif
 }
 
-int mock_ssh_channel_read(const char *file, const int line, const char *func,
-                           ssh_channel channel, void *dest, uint32_t count, int is_stderr)
+int mock_ssh_channel_read(const char *file, const int line, const char *func, ssh_channel channel, void *dest,
+                          uint32_t count, int is_stderr)
 {
     int result;
 
@@ -364,8 +364,8 @@ int mock_ssh_channel_read(const char *file, const int line, const char *func,
  * ssh_channel_write
  * ======================================== */
 
-int delegate_fake_ssh_channel_write(const char *file, const int line, const char *func,
-                                     ssh_channel channel, const void *data, uint32_t len)
+int delegate_fake_ssh_channel_write(const char *file, const int line, const char *func, ssh_channel channel,
+                                    const void *data, uint32_t len)
 {
     (void)file;
     (void)line;
@@ -377,8 +377,8 @@ int delegate_fake_ssh_channel_write(const char *file, const int line, const char
     return (int)len;
 }
 
-int delegate_real_ssh_channel_write(const char *file, const int line, const char *func,
-                                     ssh_channel channel, const void *data, uint32_t len)
+int delegate_real_ssh_channel_write(const char *file, const int line, const char *func, ssh_channel channel,
+                                    const void *data, uint32_t len)
 {
     (void)file;
     (void)line;
@@ -391,8 +391,8 @@ int delegate_real_ssh_channel_write(const char *file, const int line, const char
 #endif
 }
 
-int mock_ssh_channel_write(const char *file, const int line, const char *func,
-                            ssh_channel channel, const void *data, uint32_t len)
+int mock_ssh_channel_write(const char *file, const int line, const char *func, ssh_channel channel, const void *data,
+                           uint32_t len)
 {
     int result;
 

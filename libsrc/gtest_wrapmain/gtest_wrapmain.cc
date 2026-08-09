@@ -1,10 +1,10 @@
 #ifndef _WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpadded"
 #endif // _WIN32
 #include <gtest/gtest.h>
 #ifndef _WIN32
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #endif // _WIN32
 
 #include <gtest_wrapmain.h>
@@ -15,8 +15,8 @@ using namespace testing;
 // -Wl,--wrap=main を利用して main() を wrap した際のエントリ ポイント
 int __wrap_main(int argc, char **argv)
 {
-  ScopedConsoleUtf8 scoped_console_utf8;
-  printf("Running main() from %s\n", __FILE__);
-  InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    ScopedConsoleUtf8 scoped_console_utf8;
+    printf("Running main() from %s\n", __FILE__);
+    InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

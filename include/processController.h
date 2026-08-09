@@ -11,18 +11,20 @@ using namespace std;
 /* 構造体メンバーのアラインメント調整パディングに対する警告を抑制する。
  * int と string の混在でパディングが生じるが、意図した設計のため無視する。 */
 #ifndef _WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wpadded"
 #endif /* _WIN32 */
 
-namespace testing {
+namespace testing
+{
 
 /** 非同期プロセスのハンドル。内部実装は非公開。 */
 struct AsyncProcess;
 using AsyncProcessHandle = shared_ptr<AsyncProcess>;
 
 /** プロセス実行オプション (startProcess / startProcessAsync 共通) */
-struct ProcessOptions {
+struct ProcessOptions
+{
     /** 追加または上書きする環境変数。 */
     map<string, string> env_set;
 
@@ -57,7 +59,8 @@ struct ProcessOptions {
 };
 
 /** プロセス実行結果 (startProcess() の返値) */
-struct ProcessResult {
+struct ProcessResult
+{
     int exit_code;     ///< 終了コード (-1 = 起動失敗またはタイムアウト)
     string stdout_out; ///< 標準出力
     string stderr_out; ///< 標準エラー出力
@@ -77,24 +80,22 @@ struct ProcessResult {
  * @param opts    実行オプション (env_set / preload_lib 等)
  * @return        プロセスハンドル。起動失敗時は nullptr。
  */
-extern AsyncProcessHandle startProcessAsync(
-    const string& path,
-    const vector<string>& args = {},
-    const ProcessOptions& opts = ProcessOptions{});
+extern AsyncProcessHandle startProcessAsync(const string &path, const vector<string> &args = {},
+                                            const ProcessOptions &opts = ProcessOptions{});
 
 /**
  * プロセスの stdin に文字列をそのまま書き込む (改行を付加しない)。
  *
  * @return  書き込み成功時は true。プロセスが終了済みの場合は false。
  */
-extern bool writeStdin(AsyncProcessHandle& handle, const string& data);
+extern bool writeStdin(AsyncProcessHandle &handle, const string &data);
 
 /**
  * プロセスの stdin に 1 行書き込む (末尾に \n を付加する)。
  *
  * @return  書き込み成功時は true。プロセスが終了済みの場合は false。
  */
-extern bool writeLineStdin(AsyncProcessHandle& handle, const string& line);
+extern bool writeLineStdin(AsyncProcessHandle &handle, const string &line);
 
 /**
  * stdout に指定パターンが出現するまで待機し、
@@ -106,29 +107,27 @@ extern bool writeLineStdin(AsyncProcessHandle& handle, const string& line);
  * @param timeout_ms タイムアウト (ms)。-1 で無制限。
  * @return           受信した stdout (パターン出現位置まで含む)
  */
-extern string waitForOutput(AsyncProcessHandle& handle,
-                             const string& pattern,
-                             int timeout_ms = 5000);
+extern string waitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms = 5000);
 
 /**
  * プロセスの stdin パイプを閉じる。
  * fgets ブロックに EOF を通知する用途で使用する。
  */
-extern void closeStdin(AsyncProcessHandle& handle);
+extern void closeStdin(AsyncProcessHandle &handle);
 
 /**
  * プロセスに SIGINT (Ctrl+C 相当) を送る。
  * Linux  : kill(pid, SIGINT)
  * Windows: GenerateConsoleCtrlEvent(CTRL_BREAK_EVENT, pid)
  */
-extern void interruptProcess(AsyncProcessHandle& handle);
+extern void interruptProcess(AsyncProcessHandle &handle);
 
 /**
  * プロセスを強制終了する。
  * Linux  : kill(pid, SIGKILL)
  * Windows: TerminateProcess
  */
-extern void killProcess(AsyncProcessHandle& handle);
+extern void killProcess(AsyncProcessHandle &handle);
 
 /**
  * プロセス終了を待機し、終了コードを返す。
@@ -136,17 +135,17 @@ extern void killProcess(AsyncProcessHandle& handle);
  * @param timeout_ms タイムアウト (ms)。-1 で無制限。デフォルト 10000。
  * @return           終了コード。タイムアウト時は -1。
  */
-extern int waitForExit(AsyncProcessHandle& handle, int timeout_ms = 10000);
+extern int waitForExit(AsyncProcessHandle &handle, int timeout_ms = 10000);
 
 /**
  * これまでに受信した stdout 全体を返す (非破壊)。
  */
-extern string getStdout(AsyncProcessHandle& handle);
+extern string getStdout(AsyncProcessHandle &handle);
 
 /**
  * これまでに受信した stderr 全体を返す (非破壊)。
  */
-extern string getStderr(AsyncProcessHandle& handle);
+extern string getStderr(AsyncProcessHandle &handle);
 
 /**
  * 現在の蓄積デバッグログの行数を返す。
@@ -157,7 +156,7 @@ extern string getStderr(AsyncProcessHandle& handle);
  * ProcessOptions.preload_lib (Linux) / capture_debug_output / etw_provider_guid (Windows) を
  * 指定しない場合は常に 0 を返す。
  */
-extern size_t getDebugLogCount(AsyncProcessHandle& handle);
+extern size_t getDebugLogCount(AsyncProcessHandle &handle);
 
 /**
  * 蓄積デバッグログを行単位のコレクションで返す (非破壊)。
@@ -171,7 +170,7 @@ extern size_t getDebugLogCount(AsyncProcessHandle& handle);
  *
  * @param from_index  返却を開始する行インデックス (デフォルト 0 = 全件)。
  */
-extern vector<string> getDebugLog(AsyncProcessHandle& handle, size_t from_index = 0);
+extern vector<string> getDebugLog(AsyncProcessHandle &handle, size_t from_index = 0);
 
 /**
  * プロセスを起動し、終了まで待機して結果を返す。
@@ -184,32 +183,37 @@ extern vector<string> getDebugLog(AsyncProcessHandle& handle, size_t from_index 
  * @param timeout_ms  タイムアウト (ms)。デフォルト 30000。
  * @return            実行結果
  */
-inline ProcessResult startProcess(const string& binary,
-                                   const vector<string>& args = {},
-                                   const ProcessOptions& opts = ProcessOptions{},
-                                   const vector<string>& stdin_lines = {},
-                                   int timeout_ms = 30000)
+inline ProcessResult startProcess(const string &binary, const vector<string> &args = {},
+                                  const ProcessOptions &opts = ProcessOptions{}, const vector<string> &stdin_lines = {},
+                                  int timeout_ms = 30000)
 {
     auto h = startProcessAsync(binary, args, opts);
-    if (!h) {
+    if (!h)
+    {
         ProcessResult res;
         res.exit_code = -1;
         return res;
     }
-    for (const auto& line : stdin_lines) { writeLineStdin(h, line); }
+    for (const auto &line : stdin_lines)
+    {
+        writeLineStdin(h, line);
+    }
     closeStdin(h);
     ProcessResult res;
-    res.exit_code  = waitForExit(h, timeout_ms);
+    res.exit_code = waitForExit(h, timeout_ms);
     res.stdout_out = getStdout(h);
     res.stderr_out = getStderr(h);
-    for (const auto& line : getDebugLog(h)) { res.debug_log += line; }
+    for (const auto &line : getDebugLog(h))
+    {
+        res.debug_log += line;
+    }
     return res;
 }
 
 } // namespace testing
 
 #ifndef _WIN32
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #endif /* _WIN32 */
 
 #endif // _PROCESS_CONTROLLER_H

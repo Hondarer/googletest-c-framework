@@ -8,85 +8,63 @@ Mock_stdio::Mock_stdio()
 {
     switch_to_real_fileio();
 
-    ON_CALL(*this, printf(_, _, _, _))
-        .WillByDefault(Invoke(delegate_real_printf));
+    ON_CALL(*this, printf(_, _, _, _)).WillByDefault(Invoke(delegate_real_printf));
 
-    ON_CALL(*this, scanf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_scanf));
+    ON_CALL(*this, scanf(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_scanf));
 
     _mock_stdio = this;
 }
 
 void Mock_stdio::switch_to_mock_fileio()
 {
-    ON_CALL(*this, fclose(_, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fclose));
+    ON_CALL(*this, fclose(_, _, _, _)).WillByDefault(Invoke(delegate_fake_fclose));
 
-    ON_CALL(*this, fflush(_, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fflush));
+    ON_CALL(*this, fflush(_, _, _, _)).WillByDefault(Invoke(delegate_fake_fflush));
 
-    ON_CALL(*this, fopen(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fopen));
+    ON_CALL(*this, fopen(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fopen));
 
 #ifdef _WIN32
-    ON_CALL(*this, fopen_s(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fopen_s));
-    ON_CALL(*this, _wfopen_s(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake__wfopen_s));
+    ON_CALL(*this, fopen_s(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fopen_s));
+    ON_CALL(*this, _wfopen_s(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake__wfopen_s));
 #endif
 
-    ON_CALL(*this, fprintf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fprintf));
+    ON_CALL(*this, fprintf(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fprintf));
 
-    ON_CALL(*this, vfprintf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_vfprintf));
+    ON_CALL(*this, vfprintf(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_vfprintf));
 
     ON_CALL(*this, vsnprintf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_vsnprintf));
 
-    ON_CALL(*this, fgets(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fgets));
+    ON_CALL(*this, fgets(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fgets));
 
-    ON_CALL(*this, fread(_, _, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fread));
+    ON_CALL(*this, fread(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fread));
 
-    ON_CALL(*this, fwrite(_, _, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_fake_fwrite));
+    ON_CALL(*this, fwrite(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fwrite));
 }
 
 void Mock_stdio::switch_to_real_fileio()
 {
-    ON_CALL(*this, fclose(_, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fclose));
+    ON_CALL(*this, fclose(_, _, _, _)).WillByDefault(Invoke(delegate_real_fclose));
 
-    ON_CALL(*this, fflush(_, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fflush));
+    ON_CALL(*this, fflush(_, _, _, _)).WillByDefault(Invoke(delegate_real_fflush));
 
-    ON_CALL(*this, fopen(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fopen));
+    ON_CALL(*this, fopen(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_fopen));
 
 #ifdef _WIN32
-    ON_CALL(*this, fopen_s(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fopen_s));
-    ON_CALL(*this, _wfopen_s(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real__wfopen_s));
+    ON_CALL(*this, fopen_s(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fopen_s));
+    ON_CALL(*this, _wfopen_s(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real__wfopen_s));
 #endif
 
-    ON_CALL(*this, fprintf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fprintf));
+    ON_CALL(*this, fprintf(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_fprintf));
 
-    ON_CALL(*this, vfprintf(_, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_vfprintf));
+    ON_CALL(*this, vfprintf(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_vfprintf));
 
     ON_CALL(*this, vsnprintf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_vsnprintf));
 
-    ON_CALL(*this, fgets(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fgets));
+    ON_CALL(*this, fgets(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fgets));
 
-    ON_CALL(*this, fread(_, _, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fread));
+    ON_CALL(*this, fread(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fread));
 
-    ON_CALL(*this, fwrite(_, _, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_fwrite));
+    ON_CALL(*this, fwrite(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fwrite));
 }
 
 Mock_stdio::~Mock_stdio()

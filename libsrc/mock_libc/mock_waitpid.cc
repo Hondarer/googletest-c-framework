@@ -1,7 +1,7 @@
 #ifndef _WIN32
 
-#include <test_com.h>
-#include <sys/mock_wait.h>
+    #include <test_com.h>
+    #include <sys/mock_wait.h>
 
 using namespace testing;
 

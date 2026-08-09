@@ -3,12 +3,12 @@
 
 /* 本物を include */
 #ifndef _WIN32
-#include_next <sys/stat.h>
+    #include_next <sys/stat.h>
 #else // _WIN32
-#pragma push_macro("_INC_SYS_STAT")
-#undef _INC_SYS_STAT
-#include <../ucrt/sys/stat.h>
-#pragma pop_macro("_INC_SYS_STAT")
+    #pragma push_macro("_INC_SYS_STAT")
+    #undef _INC_SYS_STAT
+    #include <../ucrt/sys/stat.h>
+    #pragma pop_macro("_INC_SYS_STAT")
 #endif // _WIN32
 
 /* モックにすげ替え */

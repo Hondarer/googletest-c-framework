@@ -237,8 +237,8 @@ void mock_ssh_disconnect(const char *file, const int line, const char *func, ssh
  * ssh_options_set
  * ======================================== */
 
-int delegate_fake_ssh_options_set(const char *file, const int line, const char *func,
-                                   ssh_session session, enum ssh_options_e type, const void *value)
+int delegate_fake_ssh_options_set(const char *file, const int line, const char *func, ssh_session session,
+                                  enum ssh_options_e type, const void *value)
 {
     (void)file;
     (void)line;
@@ -251,8 +251,8 @@ int delegate_fake_ssh_options_set(const char *file, const int line, const char *
     return SSH_OK;
 }
 
-int delegate_real_ssh_options_set(const char *file, const int line, const char *func,
-                                   ssh_session session, enum ssh_options_e type, const void *value)
+int delegate_real_ssh_options_set(const char *file, const int line, const char *func, ssh_session session,
+                                  enum ssh_options_e type, const void *value)
 {
     (void)file;
     (void)line;
@@ -265,8 +265,8 @@ int delegate_real_ssh_options_set(const char *file, const int line, const char *
 #endif
 }
 
-int mock_ssh_options_set(const char *file, const int line, const char *func,
-                          ssh_session session, enum ssh_options_e type, const void *value)
+int mock_ssh_options_set(const char *file, const int line, const char *func, ssh_session session,
+                         enum ssh_options_e type, const void *value)
 {
     int result;
 

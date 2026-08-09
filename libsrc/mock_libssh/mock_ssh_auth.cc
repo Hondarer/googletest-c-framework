@@ -7,8 +7,8 @@ using namespace testing;
  * ssh_userauth_password
  * ======================================== */
 
-int delegate_fake_ssh_userauth_password(const char *file, const int line, const char *func,
-                                         ssh_session session, const char *username, const char *password)
+int delegate_fake_ssh_userauth_password(const char *file, const int line, const char *func, ssh_session session,
+                                        const char *username, const char *password)
 {
     (void)file;
     (void)line;
@@ -21,8 +21,8 @@ int delegate_fake_ssh_userauth_password(const char *file, const int line, const 
     return SSH_AUTH_SUCCESS;
 }
 
-int delegate_real_ssh_userauth_password(const char *file, const int line, const char *func,
-                                         ssh_session session, const char *username, const char *password)
+int delegate_real_ssh_userauth_password(const char *file, const int line, const char *func, ssh_session session,
+                                        const char *username, const char *password)
 {
     (void)file;
     (void)line;
@@ -35,8 +35,8 @@ int delegate_real_ssh_userauth_password(const char *file, const int line, const 
 #endif
 }
 
-int mock_ssh_userauth_password(const char *file, const int line, const char *func,
-                                ssh_session session, const char *username, const char *password)
+int mock_ssh_userauth_password(const char *file, const int line, const char *func, ssh_session session,
+                               const char *username, const char *password)
 {
     int result;
 
@@ -69,8 +69,8 @@ int mock_ssh_userauth_password(const char *file, const int line, const char *fun
  * ssh_userauth_publickey_auto
  * ======================================== */
 
-int delegate_fake_ssh_userauth_publickey_auto(const char *file, const int line, const char *func,
-                                               ssh_session session, const char *username, const char *passphrase)
+int delegate_fake_ssh_userauth_publickey_auto(const char *file, const int line, const char *func, ssh_session session,
+                                              const char *username, const char *passphrase)
 {
     (void)file;
     (void)line;
@@ -83,8 +83,8 @@ int delegate_fake_ssh_userauth_publickey_auto(const char *file, const int line, 
     return SSH_AUTH_SUCCESS;
 }
 
-int delegate_real_ssh_userauth_publickey_auto(const char *file, const int line, const char *func,
-                                               ssh_session session, const char *username, const char *passphrase)
+int delegate_real_ssh_userauth_publickey_auto(const char *file, const int line, const char *func, ssh_session session,
+                                              const char *username, const char *passphrase)
 {
     (void)file;
     (void)line;
@@ -97,8 +97,8 @@ int delegate_real_ssh_userauth_publickey_auto(const char *file, const int line, 
 #endif
 }
 
-int mock_ssh_userauth_publickey_auto(const char *file, const int line, const char *func,
-                                      ssh_session session, const char *username, const char *passphrase)
+int mock_ssh_userauth_publickey_auto(const char *file, const int line, const char *func, ssh_session session,
+                                     const char *username, const char *passphrase)
 {
     int result;
 

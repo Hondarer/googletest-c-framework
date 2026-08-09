@@ -1,11 +1,12 @@
 #ifndef _WIN32
 
-#include <test_com.h>
-#include <mock_time.h>
+    #include <test_com.h>
+    #include <mock_time.h>
 
 using namespace testing;
 
-int delegate_fake_clock_gettime(const char *file, const int line, const char *func, clockid_t clk_id, struct timespec *tp)
+int delegate_fake_clock_gettime(const char *file, const int line, const char *func, clockid_t clk_id,
+                                struct timespec *tp)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -24,7 +25,8 @@ int delegate_fake_clock_gettime(const char *file, const int line, const char *fu
     return 0;
 }
 
-int delegate_real_clock_gettime(const char *file, const int line, const char *func, clockid_t clk_id, struct timespec *tp)
+int delegate_real_clock_gettime(const char *file, const int line, const char *func, clockid_t clk_id,
+                                struct timespec *tp)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -58,8 +60,7 @@ int mock_clock_gettime(const char *file, const int line, const char *func, clock
             }
             else
             {
-                printf(" from %s:%d -> %lld, %ld\n",
-                       file, line, (long long)tp->tv_sec, (long)tp->tv_nsec);
+                printf(" from %s:%d -> %lld, %ld\n", file, line, (long long)tp->tv_sec, (long)tp->tv_nsec);
             }
         }
         else

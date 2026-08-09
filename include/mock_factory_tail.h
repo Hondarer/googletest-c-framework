@@ -2,5 +2,5 @@
 #undef Return
 
 #ifndef _WIN32
-#pragma GCC diagnostic pop
+    #pragma GCC diagnostic pop
 #endif // _WIN32

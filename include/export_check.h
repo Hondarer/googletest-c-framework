@@ -60,7 +60,7 @@ extern set<string> getActualExportNames(const string &dll_or_so_path);
  *                    省略した場合、シグネチャなしで名前と OK/MISSING のみ出力する。
  */
 extern void expectExportNamesMatch(const set<string> &expected, const set<string> &actual,
-                                    const map<string, string> &signatures = {});
+                                   const map<string, string> &signatures = {});
 
 /**
  * include_dir 配下のヘッダー (*.h) から、export_macro_name を伴わない

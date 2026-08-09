@@ -11,18 +11,18 @@
     #error "unsupported platform"
 #endif
 
-namespace testing {
+namespace testing
+{
 
-struct SharedSymbolResult {
+struct SharedSymbolResult
+{
     void *symbol = nullptr;
     std::string diagnostic;
 };
 
-extern SharedSymbolResult tryResolveSharedSymbol(const std::string& lib_name,
-                                                 const std::string& symbol_name);
+extern SharedSymbolResult tryResolveSharedSymbol(const std::string &lib_name, const std::string &symbol_name);
 
-extern void *resolveSharedSymbolOrExit(const std::string& lib_name,
-                                       const std::string& symbol_name);
+extern void *resolveSharedSymbolOrExit(const std::string &lib_name, const std::string &symbol_name);
 
 } // namespace testing
 

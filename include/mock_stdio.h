@@ -5,7 +5,7 @@
 #include <stdarg.h>
 #include <format_attr.h>
 #ifdef _WIN32
-#include <wchar.h>
+    #include <wchar.h>
 #endif
 
 #ifdef __cplusplus
@@ -21,8 +21,10 @@ extern "C"
     extern errno_t mock__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *);
 #endif
     extern int mock_printf(PRINTF_FMT const char *, const int, const char *, const char *, ...) PRINTF_ATTR(4, 5);
-    extern int mock_fprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, ...) PRINTF_ATTR(5, 6);
-    extern int mock_vfprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, va_list) PRINTF_ATTR(5, 0);
+    extern int mock_fprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, ...)
+        PRINTF_ATTR(5, 6);
+    extern int mock_vfprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, va_list)
+        PRINTF_ATTR(5, 0);
     extern int mock_vsnprintf(const char *, const int, const char *, char *, size_t, PRINTF_FMT const char *, va_list)
         PRINTF_ATTR(6, 0);
     extern int mock_scanf(SCANF_FMT const char *, const int, const char *, const char *, ...) SCANF_ATTR(4, 5);
@@ -36,16 +38,16 @@ extern "C"
 
 #ifdef _IN_OVERRIDE_HEADER_STDIO_H
 
-#define fclose(stream) mock_fclose(__FILE__, __LINE__, __func__, stream)
-#define fflush(stream) mock_fflush(__FILE__, __LINE__, __func__, stream)
-#define fopen(filename, modes) mock_fopen(__FILE__, __LINE__, __func__, filename, modes)
-#ifdef _WIN32
-#define fopen_s(pFile, filename, modes) mock_fopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
-#define _wfopen_s(pFile, filename, modes) mock__wfopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
-#endif
-#define printf(format, ...) mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
-#define fprintf(stream, format, ...) mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
-#define vfprintf(stream, format, ap) mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
+    #define fclose(stream)         mock_fclose(__FILE__, __LINE__, __func__, stream)
+    #define fflush(stream)         mock_fflush(__FILE__, __LINE__, __func__, stream)
+    #define fopen(filename, modes) mock_fopen(__FILE__, __LINE__, __func__, filename, modes)
+    #ifdef _WIN32
+        #define fopen_s(pFile, filename, modes)   mock_fopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
+        #define _wfopen_s(pFile, filename, modes) mock__wfopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
+    #endif
+    #define printf(format, ...)              mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
+    #define fprintf(stream, format, ...)     mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
+    #define vfprintf(stream, format, ap)     mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
     #define vsnprintf(s, n, format, ap)      mock_vsnprintf(__FILE__, __LINE__, __func__, s, n, format, ap)
     #define scanf(format, ...)               mock_scanf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
     #define fgets(s, n, stream)              mock_fgets(__FILE__, __LINE__, __func__, s, n, stream)
@@ -54,14 +56,14 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H
 
-#ifndef _WIN32
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
-#endif // _WIN32
-#include <gmock/gmock.h>
-#ifndef _WIN32
-#pragma GCC diagnostic pop
-#endif // _WIN32
+    #ifndef _WIN32
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wpadded"
+    #endif // _WIN32
+    #include <gmock/gmock.h>
+    #ifndef _WIN32
+        #pragma GCC diagnostic pop
+    #endif // _WIN32
 
 extern int delegate_real_fclose(const char *, const int, const char *, FILE *);
 extern int delegate_fake_fclose(const char *, const int, const char *, FILE *);
@@ -70,12 +72,14 @@ extern int delegate_fake_fflush(const char *, const int, const char *, FILE *);
 extern FILE *delegate_real_fopen(const char *, const int, const char *, const char *, const char *);
 extern FILE *delegate_fake_fopen(const char *, const int, const char *, const char *, const char *);
 extern void reset_fake_fopen();
-#ifdef _WIN32
+    #ifdef _WIN32
 extern errno_t delegate_real_fopen_s(const char *, const int, const char *, FILE **, const char *, const char *);
 extern errno_t delegate_fake_fopen_s(const char *, const int, const char *, FILE **, const char *, const char *);
-extern errno_t delegate_real__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *);
-extern errno_t delegate_fake__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *);
-#endif
+extern errno_t delegate_real__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *,
+                                       const wchar_t *);
+extern errno_t delegate_fake__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *,
+                                       const wchar_t *);
+    #endif
 extern int delegate_real_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_fake_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_real_vfprintf(const char *, const int, const char *, FILE *, const char *);
@@ -94,15 +98,15 @@ extern int delegate_real_scanf(const char *, const int, const char *, const char
 
 class Mock_stdio
 {
-public:
+  public:
     MOCK_METHOD(int, access, (const char *, const int, const char *, const char *, int));
     MOCK_METHOD(int, fclose, (const char *, const int, const char *, FILE *));
     MOCK_METHOD(int, fflush, (const char *, const int, const char *, FILE *));
     MOCK_METHOD(FILE *, fopen, (const char *, const int, const char *, const char *, const char *));
-#ifdef _WIN32
+    #ifdef _WIN32
     MOCK_METHOD(errno_t, fopen_s, (const char *, const int, const char *, FILE **, const char *, const char *));
     MOCK_METHOD(errno_t, _wfopen_s, (const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *));
-#endif
+    #endif
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vsnprintf, (const char *, const int, const char *, char *, size_t, const char *));

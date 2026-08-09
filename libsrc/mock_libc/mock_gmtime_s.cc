@@ -1,14 +1,15 @@
 #ifdef _WIN32
 
-#include <test_com.h>
-#include <mock_time.h>
+    #include <test_com.h>
+    #include <mock_time.h>
 
-#include <string.h>
-#include <errno.h>
+    #include <string.h>
+    #include <errno.h>
 
 using namespace testing;
 
-errno_t delegate_fake_gmtime_s(const char *file, const int line, const char *func, struct tm *utc_tm, const time_t *timep)
+errno_t delegate_fake_gmtime_s(const char *file, const int line, const char *func, struct tm *utc_tm,
+                               const time_t *timep)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -26,7 +27,8 @@ errno_t delegate_fake_gmtime_s(const char *file, const int line, const char *fun
     return 0;
 }
 
-errno_t delegate_real_gmtime_s(const char *file, const int line, const char *func, struct tm *utc_tm, const time_t *timep)
+errno_t delegate_real_gmtime_s(const char *file, const int line, const char *func, struct tm *utc_tm,
+                               const time_t *timep)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -60,10 +62,8 @@ errno_t mock_gmtime_s(const char *file, const int line, const char *func, struct
             }
             else
             {
-                printf(" from %s:%d -> %04d-%02d-%02d %02d:%02d:%02d\n",
-                       file, line,
-                       utc_tm->tm_year + 1900, utc_tm->tm_mon + 1, utc_tm->tm_mday,
-                       utc_tm->tm_hour, utc_tm->tm_min, utc_tm->tm_sec);
+                printf(" from %s:%d -> %04d-%02d-%02d %02d:%02d:%02d\n", file, line, utc_tm->tm_year + 1900,
+                       utc_tm->tm_mon + 1, utc_tm->tm_mday, utc_tm->tm_hour, utc_tm->tm_min, utc_tm->tm_sec);
             }
         }
         else

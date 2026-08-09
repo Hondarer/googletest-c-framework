@@ -1,9 +1,9 @@
 #ifdef _WIN32
 
-#include <mock_windows.h>
-#include <test_com.h>
+    #include <mock_windows.h>
+    #include <test_com.h>
 
-#include <string.h>
+    #include <string.h>
 
 using namespace testing;
 
@@ -52,9 +52,7 @@ void mock_GetSystemTimeAsFileTime(const char *file, const int line, const char *
             }
             else
             {
-                printf(" from %s:%d -> %lu, %lu\n",
-                       file, line,
-                       (unsigned long)file_time->dwHighDateTime,
+                printf(" from %s:%d -> %lu, %lu\n", file, line, (unsigned long)file_time->dwHighDateTime,
                        (unsigned long)file_time->dwLowDateTime);
             }
         }

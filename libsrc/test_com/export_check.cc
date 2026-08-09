@@ -125,7 +125,7 @@ set<string> getActualExportNames(const string &dll_or_so_path)
     if (res.exit_code != 0)
     {
         ADD_FAILURE() << "nm -D --defined-only の実行に失敗しました (exit_code=" << res.exit_code
-                       << "): " << res.stderr_out;
+                      << "): " << res.stderr_out;
         return {};
     }
     set<string> names = parseNmExportNames(res.stdout_out);
@@ -135,7 +135,7 @@ set<string> getActualExportNames(const string &dll_or_so_path)
     if (res.exit_code != 0)
     {
         ADD_FAILURE() << "dumpbin /exports の実行に失敗しました (exit_code=" << res.exit_code
-                       << "): " << res.stderr_out;
+                      << "): " << res.stderr_out;
         return {};
     }
     set<string> names = parseDumpbinExportNames(res.stdout_out);
@@ -144,7 +144,7 @@ set<string> getActualExportNames(const string &dll_or_so_path)
     if (names.empty())
     {
         ADD_FAILURE() << "エクスポート シンボルを 1 件も取得できませんでした。対象: " << dll_or_so_path
-                       << " 出力: " << res.stdout_out;
+                      << " 出力: " << res.stdout_out;
     }
 
     printf("  > getActualExportNames 実際のエクスポート シンボル数=%zu\n", names.size());
@@ -170,7 +170,7 @@ bool isLinkerSyntheticSymbol(const string &name)
 } // namespace
 
 void expectExportNamesMatch(const set<string> &expected, const set<string> &actual,
-                             const map<string, string> &signatures)
+                            const map<string, string> &signatures)
 {
     set<string> actual_for_match;
     for (const auto &name : actual)
@@ -193,8 +193,7 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
         auto sig_it = signatures.find(name);
         if (sig_it != signatures.end())
         {
-            printf("  >   expected: %s [%s] sig=%s\n", name.c_str(), found ? "OK" : "MISSING",
-                   sig_it->second.c_str());
+            printf("  >   expected: %s [%s] sig=%s\n", name.c_str(), found ? "OK" : "MISSING", sig_it->second.c_str());
         }
         else
         {

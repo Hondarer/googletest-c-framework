@@ -28,7 +28,7 @@ int delegate_real_fclose(const char *file, const int line, const char *func, FIL
 int mock_fclose(const char *file, const int line, const char *func, FILE *fp)
 {
     int rtc;
-    void * _fp = fp; // fclose 内にて初期化されるため、退避
+    void *_fp = fp; // fclose 内にて初期化されるため、退避
 
     if (_mock_stdio != nullptr)
     {
