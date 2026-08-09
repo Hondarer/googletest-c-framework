@@ -50,12 +50,10 @@ extern set<string> getActualExportNames(const string &dll_or_so_path);
 
 /**
  * 期待シンボル名一覧 (EXPORT_ENTRY マクロ テーブルから生成) と、実際のエクスポート一覧を突き合わせる。
- * 不足しているシンボルはプラットフォーム共通で EXPECT_TRUE により報告する。
- * Windows は __declspec(dllexport) で明示的にエクスポート対象を選ぶビルドのため、
- * 想定外のシンボル (テーブル未登録なのに実際にはエクスポートされている) も併せて報告する。
- * Linux (.so) は可視性制御 (-fvisibility=hidden 等) が未整備な構成が多く、
- * include_internal 配下の内部共有関数もリンカ シンボルとして公開されがちなため、
- * 想定外チェックは行わない (不足チェックのみ) 。
+ * 不足と想定外の両方を、Windows / Linux 共通で EXPECT_TRUE により報告する
+ * (過不足なしの完全一致)。
+ * Linux の nm -D が返すリンカー合成シンボル (__bss_start / _edata / _end) は
+ * 検査対象から除外し、dumpbin /exports との条件差を吸収する。
  *
  * @param signatures  名前 → シグネチャ文字列 (TESTFW_EXPORT_SIGNATURE_ENTRY で生成) 。
  *                    渡された場合、該当する expected シンボルの stdout にシグネチャを併記する。

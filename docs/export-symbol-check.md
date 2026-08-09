@@ -6,11 +6,13 @@ testfw は特定の app の内容に依存しないフレームワークであ�
 
 ## 目的
 
-`__declspec(dllexport)` (Windows) の付け忘れは、DLL を実際に外部から利用する段階まで発覚しないことが多いです。公開ヘッダーの宣言と、ビルド成果物の実際のエクスポート一覧を機械的に突き合わせることで、次を検出します。
+`__declspec(dllexport)` (Windows) や `visibility("default")` (Linux、共有ビルドの公開印) の付け忘れは、DLL/SO を実際に外部から利用する段階まで発覚しないことが多いです。公開ヘッダーの宣言と、ビルド成果物の実際のエクスポート一覧を機械的に突き合わせることで、次を検出します。
 
 - テーブルに登録したのに export マクロを付け忘れた場合 (実際にはエクスポートされていない)
-- export マクロは付けたがテーブルへの登録を忘れた場合 (Windows のみ、想定外のエクスポートとして検出)
+- export マクロは付けたがテーブルへの登録を忘れた場合、または内部シンボルが動的表に漏れた場合 (想定外のエクスポートとして検出。Windows / Linux 共通)
 - 変数宣言に export マクロを付け忘れた場合 (公開ヘッダーの静的走査で検出、テーブル登録の有無に関係なく検出できる)
+
+Linux の `nm -D --defined-only` が返すリンカー合成シンボル (`__bss_start` / `_edata` / `_end`) は、検査対象から除外します。
 
 ## 提供する関数・マクロ
 
@@ -20,7 +22,7 @@ testfw は特定の app の内容に依存しないフレームワークであ�
 | `TESTFW_EXPORT_NAME_ENTRY(name, sig)` | EXPORT_ENTRY マクロ テーブルから期待シンボル名配列の要素を生成する定型マクロ |
 | `TESTFW_EXPORT_SIGNATURE_ENTRY(name, sig)` | EXPORT_ENTRY マクロ テーブルから「名前 → シグネチャ文字列」の map 要素を生成する定型マクロ |
 | `testing::getActualExportNames(dll_or_so_path)` | 実際の DLL/SO からエクスポート シンボル名一覧を取得する (`dumpbin`/`nm` をプラットフォームに応じて内部で実行する) |
-| `testing::expectExportNamesMatch(expected, actual, signatures = {})` | 期待値と実際値を突き合わせ、不足 (全プラットフォーム) と想定外 (Windows のみ) を `EXPECT_TRUE` で報告する。`signatures` を渡すと stdout の各シンボルにシグネチャを併記する |
+| `testing::expectExportNamesMatch(expected, actual, signatures = {})` | 期待値と実際値を突き合わせ、不足と想定外の両方を Windows / Linux 共通で `EXPECT_TRUE` で報告する (完全一致)。Linux のリンカー合成シンボルは除外する。`signatures` を渡すと stdout の各シンボルにシグネチャを併記する |
 | `testing::findUndecoratedExternVariables(include_dir, export_macro_name)` | 指定ディレクトリ配下のヘッダーから、export マクロを伴わない `extern` 変数宣言を検出する |
 | `testing::identManifestSymbolName(target)` | IDENT 機能 ([ident.md](../../makefw/docs/ident.md)) が自動生成するシンボル名を組み立てる |
 | `testing::joinNames(names)` | 文字列一覧をカンマ区切りで連結する (失敗メッセージ整形用) |

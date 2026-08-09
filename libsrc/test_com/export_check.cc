@@ -156,15 +156,40 @@ set<string> getActualExportNames(const string &dll_or_so_path)
     return names;
 }
 
+namespace
+{
+
+// Linux の nm -D --defined-only が返すリンカー合成シンボル。
+// dumpbin /exports には現れないため、両 OS の比較条件を揃える目的で actual から除外する。
+// 公開 API のアンダースコア始まり (_com_util_* 等) は除外しない。
+bool isLinkerSyntheticSymbol(const string &name)
+{
+    return name == "__bss_start" || name == "_edata" || name == "_end";
+}
+
+} // namespace
+
 void expectExportNamesMatch(const set<string> &expected, const set<string> &actual,
                              const map<string, string> &signatures)
 {
-    printf("  > expectExportNamesMatch 期待シンボル数=%zu 実際のシンボル数=%zu\n", expected.size(), actual.size());
+    set<string> actual_for_match;
+    for (const auto &name : actual)
+    {
+        if (isLinkerSyntheticSymbol(name))
+        {
+            printf("  >   actual (ignored linker synthetic): %s\n", name.c_str());
+            continue;
+        }
+        actual_for_match.insert(name);
+    }
+
+    printf("  > expectExportNamesMatch 期待シンボル数=%zu 実際のシンボル数=%zu (検査対象=%zu)\n", expected.size(),
+           actual.size(), actual_for_match.size());
 
     vector<string> missing;
     for (const auto &name : expected)
     {
-        bool found = actual.find(name) != actual.end();
+        bool found = actual_for_match.find(name) != actual_for_match.end();
         auto sig_it = signatures.find(name);
         if (sig_it != signatures.end())
         {
@@ -182,11 +207,10 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
     }
     EXPECT_TRUE(missing.empty()) << "不足しているエクスポート: " << joinNames(missing);
 
-#ifdef _WIN32
-    // Windows は __declspec(dllexport) で明示的にエクスポート対象を選ぶビルドのため、
-    // 過不足なしの完全一致を要求する。
+    // Windows (明示 dllexport) と Linux (-fvisibility=hidden + 公開印 default) の双方で、
+    // 期待テーブルとの過不足なし完全一致を要求する。
     vector<string> extra;
-    for (const auto &name : actual)
+    for (const auto &name : actual_for_match)
     {
         if (expected.find(name) == expected.end())
         {
@@ -195,10 +219,6 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
         }
     }
     EXPECT_TRUE(extra.empty()) << "想定外のエクスポート: " << joinNames(extra);
-#endif
-    // Linux (.so) は可視性制御 (-fvisibility=hidden 等) が未整備で、
-    // include_internal 配下の内部共有関数もリンカ シンボルとして公開されるため、
-    // 過剰なエクスポートは失敗要因にせず、期待シンボルが含まれることのみ確認する。
 }
 
 vector<string> findUndecoratedExternVariables(const string &include_dir, const string &export_macro_name)
