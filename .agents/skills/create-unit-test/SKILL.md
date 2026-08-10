@@ -119,6 +119,26 @@ LIBS += mock_calcbase mock_libc com_util
 - 1 回しか使わない期待値は、不要に Arrange フェーズにて変数へ切り出さず `EXPECT_EQ(...)` へ即値で書きます。プラットフォームごとに値が違う場合は Assert 側を分岐します
 - 共通の説明は `framework/testfw/docs/how-to-expect.md` を参照します
 
+### 失敗注入で多用する関数への期待値
+
+`malloc` / `realloc` / `fopen` のように、被テスト ソースが同じ関数を複数の用途で呼ぶ場合は次に注意します。
+
+- ある関数に 1 つでも `EXPECT_CALL` を置くと、`NiceMock` でも「期待に合致しない呼び出し」がエラーになります。目的以外の呼び出しを通すには、本物へ委譲する期待値を別途置きます
+- gMock は後から宣言した期待値を優先します。汎用の期待値を先に、限定した期待値を後に宣言します
+- 失敗を注入した後も呼び出しが続く場合があるため、`WillOnce(Return(nullptr))` の後に `WillRepeatedly(DoDefault())` を付けます
+
+```cpp
+EXPECT_CALL(mock_stdlib, malloc(_, _, _, _))
+    .WillRepeatedly(DoDefault());   // 目的以外の確保は本物へ委譲する
+EXPECT_CALL(mock_stdlib, malloc(_, _, _, 256u))
+    .WillOnce(Return(nullptr))
+    .WillRepeatedly(DoDefault());   // 目的の確保だけを失敗させる
+```
+
+呼び出し順で区別する場合は `WillOnce` を並べます。区別できないときは、Arrange で事前に 1 度実行して対象以外の確保を済ませ、Act 中の呼び出しを目的の 1 つに絞ります。
+
+不透明型 (実体が `.c` 側にある型) は `sizeof` で引数を絞れません。その場合は呼び出し回数で特定し、そう判断できる根拠をコメントに残します。
+
 例:
 
 ```cpp

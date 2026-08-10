@@ -25,6 +25,8 @@ extern "C"
         PRINTF_ATTR(5, 6);
     extern int mock_vfprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, va_list)
         PRINTF_ATTR(5, 0);
+    extern int mock_snprintf(const char *, const int, const char *, char *, size_t, const char *, ...)
+        PRINTF_ATTR(6, 7);
     extern int mock_vsnprintf(const char *, const int, const char *, char *, size_t, PRINTF_FMT const char *, va_list)
         PRINTF_ATTR(6, 0);
     extern int mock_scanf(SCANF_FMT const char *, const int, const char *, const char *, ...) SCANF_ATTR(4, 5);
@@ -48,6 +50,7 @@ extern "C"
     #define printf(format, ...)              mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
     #define fprintf(stream, format, ...)     mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
     #define vfprintf(stream, format, ap)     mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
+    #define snprintf(s, n, format, ...)      mock_snprintf(__FILE__, __LINE__, __func__, s, n, format, ##__VA_ARGS__)
     #define vsnprintf(s, n, format, ap)      mock_vsnprintf(__FILE__, __LINE__, __func__, s, n, format, ap)
     #define scanf(format, ...)               mock_scanf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
     #define fgets(s, n, stream)              mock_fgets(__FILE__, __LINE__, __func__, s, n, stream)
@@ -84,6 +87,7 @@ extern int delegate_real_fprintf(const char *, const int, const char *, FILE *, 
 extern int delegate_fake_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_real_vfprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_fake_vfprintf(const char *, const int, const char *, FILE *, const char *);
+extern int delegate_real_snprintf(const char *, const int, const char *, char *, size_t, const char *);
 extern int delegate_real_vsnprintf(const char *, const int, const char *, char *, size_t, const char *);
 extern int delegate_fake_vsnprintf(const char *, const int, const char *, char *, size_t, const char *);
 extern char *delegate_real_fgets(const char *, const int, const char *, char *, int, FILE *);
@@ -109,6 +113,7 @@ class Mock_stdio
     #endif
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
+    MOCK_METHOD(int, snprintf, (const char *, const int, const char *, char *, size_t, const char *));
     MOCK_METHOD(int, vsnprintf, (const char *, const int, const char *, char *, size_t, const char *));
     MOCK_METHOD(char *, fgets, (const char *, const int, const char *, char *, int, FILE *));
     MOCK_METHOD(size_t, fread, (const char *, const int, const char *, void *, size_t, size_t, FILE *));

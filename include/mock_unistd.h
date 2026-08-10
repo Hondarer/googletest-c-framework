@@ -15,6 +15,8 @@ extern "C"
 
 #ifndef _WIN32
     extern int mock_access(const char *, const int, const char *, const char *, int);
+    extern char *mock_getcwd(const char *, const int, const char *, char *, size_t);
+    extern int mock_ftruncate(const char *, const int, const char *, int, off_t);
     extern pid_t mock_fork(const char *, const int, const char *);
     extern int mock_mkstemp(const char *, const int, const char *, char *);
     extern off_t mock_lseek(const char *, const int, const char *, int, off_t, int);
@@ -41,6 +43,8 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
     #ifndef _WIN32
 
         #define access(path, amode)       mock_access(__FILE__, __LINE__, __func__, path, amode)
+        #define getcwd(buf, size)         mock_getcwd(__FILE__, __LINE__, __func__, buf, size)
+        #define ftruncate(fd, length)     mock_ftruncate(__FILE__, __LINE__, __func__, fd, length)
         #define fork()                    mock_fork(__FILE__, __LINE__, __func__)
         #define mkstemp(tmpl)             mock_mkstemp(__FILE__, __LINE__, __func__, tmpl)
         #define lseek(fd, offset, whence) mock_lseek(__FILE__, __LINE__, __func__, fd, offset, whence)
@@ -74,6 +78,8 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
 
     #ifndef _WIN32
 extern int delegate_real_access(const char *, const int, const char *, const char *, int);
+extern char *delegate_real_getcwd(const char *, const int, const char *, char *, size_t);
+extern int delegate_real_ftruncate(const char *, const int, const char *, int, off_t);
 extern pid_t delegate_real_fork(const char *, const int, const char *);
 extern int delegate_real_mkstemp(const char *, const int, const char *, char *);
 extern off_t delegate_real_lseek(const char *, const int, const char *, int, off_t, int);
@@ -87,6 +93,8 @@ class Mock_unistd
 {
   public:
     MOCK_METHOD(int, access, (const char *, const int, const char *, const char *, int));
+    MOCK_METHOD(char *, getcwd, (const char *, const int, const char *, char *, size_t));
+    MOCK_METHOD(int, ftruncate, (const char *, const int, const char *, int, off_t));
     MOCK_METHOD(pid_t, fork, (const char *, const int, const char *));
     MOCK_METHOD(int, mkstemp, (const char *, const int, const char *, char *));
     MOCK_METHOD(off_t, lseek, (const char *, const int, const char *, int, off_t, int));

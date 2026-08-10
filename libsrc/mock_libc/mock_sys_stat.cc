@@ -7,6 +7,9 @@ Mock_sys_stat *_mock_sys_stat = nullptr;
 Mock_sys_stat::Mock_sys_stat()
 {
     ON_CALL(*this, stat(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_stat));
+#ifndef _WIN32
+    ON_CALL(*this, fstat(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_fstat));
+#endif // _WIN32
 
 #ifdef _WIN32
     ON_CALL(*this, stat64(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_stat64));
