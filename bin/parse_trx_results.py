@@ -56,13 +56,13 @@ def parse_trx(trx_path):
             else:
                 results_map[test_id] = [outcome]
 
-    # メソッド単位でグループ化 (パラメータ付きテスト対応)
+    # メソッド単位でグループ化 (パラメーター付きテスト対応)
     # key: "ClassName.MethodName", value: list of outcomes
     method_outcomes = {}
     for test_id, outcomes in results_map.items():
         if test_id in test_id_map:
             short_class, method_name = test_id_map[test_id]
-            # パラメータ付きテストのメソッド名からパラメータ部分を除去
+            # パラメーター付きテストのメソッド名からパラメーター部分を除去
             # 例: "Add_ShouldReturnCorrectResult(a: 10, b: 20, expected: 30)"
             #  -> "Add_ShouldReturnCorrectResult"
             base_method = method_name.split("(")[0]

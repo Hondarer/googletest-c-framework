@@ -24,7 +24,7 @@
 namespace testing
 {
 
-/* -------- AsyncProcess デストラクタ -------- */
+/* -------- AsyncProcess デストラクター -------- */
 
 AsyncProcess::~AsyncProcess()
 {

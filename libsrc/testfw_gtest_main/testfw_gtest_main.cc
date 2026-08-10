@@ -10,7 +10,7 @@
 
 using namespace testing;
 
-// main() を持たないテストプログラムのエントリ ポイント
+// main() を持たないテスト プログラムのエントリ ポイント
 int main(int argc, char **argv)
 {
     ScopedConsoleUtf8 scoped_console_utf8;

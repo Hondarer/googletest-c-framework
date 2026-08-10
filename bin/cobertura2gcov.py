@@ -53,7 +53,7 @@ def parse_cobertura(xml_path):
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
-    # sources 要素からベースパスを取得
+    # sources 要素からベース パスを取得
     sources = root.findall('.//source')
     base_path = sources[0].text if sources else ''
 
@@ -62,9 +62,9 @@ def parse_cobertura(xml_path):
     for package in root.findall('.//package'):
         for cls in package.findall('.//class'):
             filename = cls.get('filename')
-            # source + filename でフルパスを構成
+            # source + filename で完全なパスを構成
             if base_path:
-                # Windows のドライブレター (例: "D:") の場合、
+                # Windows のドライブ レター (例: "D:") の場合、
                 # os.path.join は "D:" + "path" を "D:path" にしてしまうため
                 # 明示的にパス区切りを追加
                 if len(base_path) == 2 and base_path[1] == ':':
@@ -149,7 +149,7 @@ def generate_gcov(source_path, coverage_info, output_dir):
         f.write(f"        -:    0:Data:cobertura.xml\n")
 
         if source_lines is None:
-            # ソースファイルが読めない場合、カバレッジ情報のみ出力
+            # ソース ファイルが読めない場合、カバレッジ情報のみ出力
             f.write(f"        -:    0:Note:Source file not found\n")
             for line_num in sorted(line_coverage.keys()):
                 hits = line_coverage[line_num]
@@ -159,7 +159,7 @@ def generate_gcov(source_path, coverage_info, output_dir):
                     exec_count = "    #####"
                 f.write(f"{exec_count}:{line_num:5d}:\n")
         else:
-            # ソースコードとともに出力
+            # ソース コードとともに出力
             for i, line_content in enumerate(source_lines, start=1):
                 line_content = line_content.rstrip('\n\r')
 
@@ -214,7 +214,7 @@ def main():
         print("Warning: No coverage data found", file=sys.stderr)
         sys.exit(0)
 
-    # 各ソースファイルの gcov を生成
+    # 各ソース ファイルの gcov を生成
     generated_files = []
     for source_path, coverage_info in coverage_data.items():
         output_path = generate_gcov(source_path, coverage_info, output_dir)

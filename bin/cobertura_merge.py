@@ -75,7 +75,7 @@ def get_common_source_prefix(sources):
     if len(sources) == 1:
         return sources[0]
 
-    # パスを分割して共通部分を見つける (Windows バックスラッシュをフォワードスラッシュに統一)
+    # パスを分割して共通部分を見つける (Windows バックスラッシュをフォワード スラッシュに統一)
     split_paths = [Path(s).as_posix().rstrip('/').split('/') for s in sources]
     common_parts = []
 
@@ -104,7 +104,7 @@ def normalize_filename(source, filename, common_source):
     if filename.startswith('/'):
         full_path = filename
     else:
-        # ドライブレターのみ ("D:") の場合 os.path.join がセパレータを省くため補完する
+        # ドライブ レターのみ ("D:") の場合 os.path.join がセパレータを省くため補完する
         effective_source = source
         if len(source) == 2 and source[1] == ':':
             effective_source = source + '/'
@@ -188,7 +188,7 @@ def merge_coverage_files(coverage_files):
                 key = (pkg_name, norm_filename, line_num)
                 merged_lines[key] = line
 
-    # 2番目以降のファイルを合成
+    # 2 番目以降のファイルを合成
     for xml_path in coverage_files[1:]:
         try:
             tree = ET.parse(xml_path)

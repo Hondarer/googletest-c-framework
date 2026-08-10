@@ -6,7 +6,7 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # ワークスペースのディレクトリ
 WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
-# プロジェクト名 (カレントディレクトリ名から取得)
+# プロジェクト名 (カレント ディレクトリ名から取得)
 PROJECT_NAME=$(basename "$(pwd)")
 
 # 出力ディレクトリ
@@ -19,7 +19,7 @@ SUCCESS_COUNT=0
 WARNING_COUNT=0
 FAILURE_COUNT=0
 
-# テスト結果サマリ (個別テスト用)
+# テスト結果サマリー (個別テスト用)
 test_summary=""
 
 # tput を安全に実行するヘルパー関数
@@ -41,7 +41,7 @@ function run_all_tests_batch() {
     echo -e "Test start on $(export LANG=C && date)." | tee "$RESULTS_DIR/all_tests/summary.log"
     echo -e "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"
 
-    # テスト一覧を取得 (パラメータ付きテストは重複を除去)
+    # テスト一覧を取得 (パラメーター付きテストは重複を除去)
     local tests=$(list_tests | sed 's/(.*//' | sort -u)
 
     if [ -z "$tests" ]; then
@@ -54,7 +54,7 @@ function run_all_tests_batch() {
     echo "" | tee -a "$RESULTS_DIR/all_tests/summary.log"
     safe_tput cr
 
-    # dotnet test を1回だけ一括実行
+    # dotnet test を 1 回だけ一括実行
     local trx_dir=$(mktemp -d)
     local batch_output=$(mktemp)
     local batch_exit_code=0
@@ -98,7 +98,7 @@ function run_all_tests_batch() {
 
     # 各テストについてループ処理
     for test in $tests; do
-        # パラメータ付きテストの場合、パラメータ部分を除去
+        # パラメーター付きテストの場合、パラメーター部分を除去
         local fqn_base=$(echo "$test" | sed 's/(.*//')
 
         # クラス名とメソッド名を分離
@@ -115,11 +115,11 @@ function run_all_tests_batch() {
         echo -e "Running test: $test_id" > "$temp_file"
         echo -e "----" >> "$temp_file"
 
-        # テストファイルを探す
+        # テスト ファイルを探す
         local test_file=$(find . -name "${class_name}.cs" -type f | head -1)
 
         if [ -n "$test_file" ]; then
-            # テストコードを抽出してサマリを生成
+            # テスト コードを抽出してサマリーを生成
             python3 "$SCRIPT_DIR/get_test_code_dotnet.py" "$test_file" "$class_name" "$method_name" 2>/dev/null | \
                 python3 "$SCRIPT_DIR/insert_summary_dotnet.py" >> "$temp_file"
             echo -e "----" >> "$temp_file"
@@ -175,7 +175,7 @@ function run_all_tests_batch() {
     rm -f "$batch_output" "$trx_results"
     rm -rf "$trx_dir"
 
-    # テスト結果サマリを表示
+    # テスト結果サマリーを表示
     printf "%s" "$test_summary"
     # 集計結果を出力
     echo "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"

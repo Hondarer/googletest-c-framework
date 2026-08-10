@@ -15,7 +15,7 @@ ssh_session delegate_fake_ssh_new(const char *file, const int line, const char *
     (void)line;
     (void)func;
 
-    /* ダミーのセッションポインタを返す */
+    /* ダミーのセッション ポインターを返す */
     ssh_session session = (ssh_session)malloc(sizeof(struct ssh_session_struct *));
     return session;
 }

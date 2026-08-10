@@ -9,7 +9,7 @@ MAKEFW_ALLOW_JOB_FALLBACK := 1
 
 .PHONY: default
 ifeq ($(OS),Windows_NT)
-    # Windows: 4種類のランタイムライブラリをビルド
+    # Windows: 4 種類のランタイム ライブラリをビルド
     # Windows: build all 4 runtime library variants.
 default:
 	@$(MAKE) build-all-windows
@@ -28,7 +28,7 @@ endif
 
 .PHONY: clean
 ifeq ($(OS),Windows_NT)
-    # Windows: 4種類のランタイムライブラリをクリーン
+    # Windows: 4 種類のランタイム ライブラリをクリーン
     # Windows: clean all 4 runtime library variants.
 clean:
 	@$(MAKE) clean-all-windows
@@ -55,7 +55,7 @@ test:
 		--app-deps --silent-missing --echo-command --progress \
 		"$$libsrc_jobs" test $(SUBDIRS)
 
-# Windows 用: 4種類のランタイムライブラリをビルド
+# Windows 用: 4 種類のランタイム ライブラリをビルド
 # Build all 4 runtime library variants for Windows.
 .PHONY: build-all-windows
 build-all-windows:
@@ -88,7 +88,7 @@ build-all-windows:
 		--app-deps --silent-missing --echo-command --progress \
 		"$$libsrc_jobs" default $(SUBDIRS)
 
-# Windows 用: 4種類のランタイムライブラリをクリーン
+# Windows 用: 4 種類のランタイム ライブラリをクリーン
 # Clean all 4 runtime library variants for Windows.
 .PHONY: clean-all-windows
 clean-all-windows:

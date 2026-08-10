@@ -31,7 +31,7 @@ void Mock_libssh::switch_to_mock_libssh()
     ON_CALL(*this, ssh_userauth_publickey_auto(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_fake_ssh_userauth_publickey_auto));
 
-    /* チャンネル操作 */
+    /* チャネル操作 */
     ON_CALL(*this, ssh_channel_new(_, _, _, _)).WillByDefault(Invoke(delegate_fake_ssh_channel_new));
 
     ON_CALL(*this, ssh_channel_free(_, _, _, _)).WillByDefault(Invoke(delegate_fake_ssh_channel_free));
@@ -116,7 +116,7 @@ void Mock_libssh::switch_to_mock_libssh()
 
     ON_CALL(*this, sftp_rmdir(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_sftp_rmdir));
 
-    /* SFTP ファイルシステム操作 */
+    /* SFTP ファイル システム操作 */
     ON_CALL(*this, sftp_unlink(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_sftp_unlink));
 
     ON_CALL(*this, sftp_rename(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_sftp_rename));
@@ -148,7 +148,7 @@ void Mock_libssh::switch_to_real_libssh()
     ON_CALL(*this, ssh_userauth_publickey_auto(_, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_ssh_userauth_publickey_auto));
 
-    /* チャンネル操作 */
+    /* チャネル操作 */
     ON_CALL(*this, ssh_channel_new(_, _, _, _)).WillByDefault(Invoke(delegate_real_ssh_channel_new));
 
     ON_CALL(*this, ssh_channel_free(_, _, _, _)).WillByDefault(Invoke(delegate_real_ssh_channel_free));
@@ -233,7 +233,7 @@ void Mock_libssh::switch_to_real_libssh()
 
     ON_CALL(*this, sftp_rmdir(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_sftp_rmdir));
 
-    /* SFTP ファイルシステム操作 */
+    /* SFTP ファイル システム操作 */
     ON_CALL(*this, sftp_unlink(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_sftp_unlink));
 
     ON_CALL(*this, sftp_rename(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_sftp_rename));

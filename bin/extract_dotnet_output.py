@@ -67,11 +67,11 @@ def extract_output(batch_file, test_id, result):
         if fqn_pattern.search(line):
             test_result_lines.append(line)
             in_failure_block = False
-            # 失敗の場合、後続のスタックトレース等を収集
+            # 失敗の場合、後続のスタック トレース等を収集
             if re.search(r'失敗|Failed', line):
                 in_failure_block = True
         elif in_failure_block:
-            # スタックトレースや詳細行 (インデント付き)
+            # スタック トレースや詳細行 (インデント付き)
             if re.match(r'^\s{4,}', line) or re.match(r'^\s*$', line):
                 test_result_lines.append(line)
             else:

@@ -1,4 +1,4 @@
-/* syslog モックライブラリ
+/* syslog モック ライブラリ
  *
  * LD_PRELOAD でロードすることで syslog() をインターセプトする。
  * 環境変数 SYSLOG_TEST_FD にパイプの書き込み端 FD 番号を設定すると、
@@ -23,7 +23,7 @@ void syslog(int priority, const char *fmt, ...)
         int fd = atoi(fd_str);
         if (fd >= 0)
         {
-            /* スタックバッファに <priority>message\n を 1 度に書き込む。
+            /* スタック バッファーに <priority>message\n を 1 度に書き込む。
              * 複数スレッドからの write() 呼び出しが interleave しないよう
              * 単一の write() で完結させる。 */
             char buf[4096];

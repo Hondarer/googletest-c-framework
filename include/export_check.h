@@ -16,7 +16,7 @@ namespace testing
  * EXPORT_ENTRY マクロ テーブルのエントリからシグネチャの static_assert を生成する。
  * GetProcAddress/dlsym 等でアドレスを取得するのではなく、公開ヘッダーの宣言が
  * テーブルの期待シグネチャと一致するかをコンパイル時に検証する。関数は呼び出さない。
- * 関数ポインタ型・オブジェクト ポインタ型 (変数用) のどちらのシグネチャにも使える。
+ * 関数ポインター型・オブジェクト ポインター型 (変数用) のどちらのシグネチャにも使える。
  */
 #define TESTFW_EXPORT_STATIC_ASSERT_ENTRY(name, sig) \
     static_assert(std::is_same<decltype(&name), sig>::value, #name " のエクスポート シグネチャが変更されています");
@@ -28,12 +28,12 @@ namespace testing
  * EXPORT_ENTRY マクロ テーブルのエントリから「名前 → シグネチャ文字列」の
  * map 初期化要素を生成する。シグネチャはソース上の記述がプリプロセッサの # によって
  * そのまま文字列化される (decltype 等の型を実行時にリフレクションで文字列化する
- * ことはできないため、コンパイル時のトークン列を流用する) 。
+ * ことはできないため、コンパイル時のトークン列を流用する)。
  */
 #define TESTFW_EXPORT_SIGNATURE_ENTRY(name, sig) {#name, #sig},
 
 /**
- * 文字列一覧をカンマ区切りで連結する (テスト失敗メッセージの整形用) 。
+ * 文字列一覧をカンマ区切りで連結する (テスト失敗メッセージの整形用)。
  */
 extern string joinNames(const vector<string> &names);
 
@@ -55,7 +55,7 @@ extern set<string> getActualExportNames(const string &dll_or_so_path);
  * Linux の nm -D が返すリンカー合成シンボル (__bss_start / _edata / _end) は
  * 検査対象から除外し、dumpbin /exports との条件差を吸収する。
  *
- * @param signatures  名前 → シグネチャ文字列 (TESTFW_EXPORT_SIGNATURE_ENTRY で生成) 。
+ * @param signatures  名前 → シグネチャ文字列 (TESTFW_EXPORT_SIGNATURE_ENTRY で生成)。
  *                    渡された場合、該当する expected シンボルの stdout にシグネチャを併記する。
  *                    省略した場合、シグネチャなしで名前と OK/MISSING のみ出力する。
  */
@@ -67,7 +67,7 @@ extern void expectExportNamesMatch(const set<string> &expected, const set<string
  * 「extern <型> <名前>;」形式のファイル スコープ変数宣言を検出する。
  * 関数宣言 ('(' を含む行) と extern "C" ブロックの開始行は対象外とする。
  * テンプレートやマクロ展開後にしか判定できない宣言のように、複雑なものは対象外とする
- * (誤検出より見逃しを許容する) 。
+ * (誤検出より見逃しを許容する)。
  *
  * static 専用ライブラリ (DLL/SO を生成しない include サブツリー) には export マクロが
  * そもそも不要なため、呼び出し側は DLL/SO エクスポートに対応する include サブディレクトリ
@@ -83,10 +83,10 @@ extern vector<string> findUndecoratedExternVariables(const string &include_dir, 
  * IDENT 機能 (framework/makefw/bin/gen_ident_manifest.py) が自動生成する
  * ビルド識別データ シンボルの名前を組み立てる。
  * 生成規則は gen_ident_manifest.py の sanitize_symbol() と揃える必要がある
- * (対象名に含まれる英数字・アンダースコア以外の文字はアンダースコアに置換される) 。
+ * (対象名に含まれる英数字・アンダースコア以外の文字はアンダースコアに置換される)。
  * Windows の共有ライブラリ ビルドでのみこのシンボルが実際にエクスポートされる。
  *
- * @param target  makepart.mk の TARGET に対応するファイル名 (拡張子込み、例: "libmylib.dll") 。
+ * @param target  makepart.mk の TARGET に対応するファイル名 (拡張子込み、例: "libmylib.dll")。
  *                sanitize_symbol() は英数字とアンダースコア以外をアンダースコアへ置換するため、
  *                拡張子の "." も "_" になる。
  */

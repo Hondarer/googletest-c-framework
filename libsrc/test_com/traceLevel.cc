@@ -16,7 +16,7 @@ class TraceLevelDictionary
     unordered_map<string, int> data;
     int defaultLavel = TRACE_NONE;
 
-    // コンストラクタを private にする (外部からのインスタンス化禁止)
+    // コンストラクターを private にする (外部からのインスタンス化禁止)
     TraceLevelDictionary() {}
 
   public:
@@ -49,7 +49,7 @@ class TraceLevelDictionary
         data[func] = traceLevel;
     }
 
-    // 値を取得する（キーが存在しない場合は 0 を返す）
+    // 値を取得する (キーが存在しない場合は 0 を返す)
     int get(const string &func) const
     {
         auto it = data.find(func);

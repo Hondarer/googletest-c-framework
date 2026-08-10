@@ -46,13 +46,13 @@ static string getExeDir()
     return (pos != string::npos) ? path.substr(0, pos) : "";
 }
 
-/* dir がファイルシステムのルートであれば true を返す */
+/* dir がファイル システムのルートであれば true を返す */
 static bool isRootDir(const string &dir)
 {
 #ifndef _WIN32
     return dir == "/";
 #else  /* _WIN32 */
-    /* "C:" または "C:\" のようなドライブルート */
+    /* "C:" または "C:\" のようなドライブ ルート */
     return dir.size() >= 2 && dir[1] == ':' && dir.size() <= 3;
 #endif /* _WIN32 */
 }

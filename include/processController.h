@@ -42,7 +42,7 @@ struct ProcessOptions
     bool capture_debug_output = true;
 
     /** ETW (Event Tracing for Windows) イベントをキャプチャする (Windows のみ)。
-     *  プロバイダ GUID 文字列を "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 形式で指定する。
+     *  プロバイダー GUID 文字列を "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 形式で指定する。
      *  空文字列の場合 ETW キャプチャは無効 (デフォルト)。
      *  キャプチャした ETW イベントは OutputDebugString と同じ debug_log_lines に
      *  到着順でマージされ、getDebugLog() で取得できる。
@@ -50,8 +50,8 @@ struct ProcessOptions
      *  グループのメンバーシップが必要。権限不足の場合はサイレントにスキップする。 */
     string etw_provider_guid;
 
-    /** ETW イベントの Service フィールドでフィルタする (Windows のみ)。
-     *  空文字列の場合はフィルタなし (指定プロバイダの全イベントを取得)。
+    /** ETW イベントの Service フィールドでフィルターする (Windows のみ)。
+     *  空文字列の場合はフィルターなし (指定プロバイダーの全イベントを取得)。
      *  非空の場合、etw_provider_write の service 引数と一致するイベントのみ取得する。
      *  etw_provider_guid が空の場合は無視される。 */
     string etw_service_filter;
@@ -76,9 +76,9 @@ struct ProcessResult
  * stdin / stdout / stderr はすべてパイプ経由で制御される。
  *
  * @param path    実行ファイルのパス
- * @param args    コマンドライン引数 (argv[1] 以降)
+ * @param args    コマンド ライン引数 (argv[1] 以降)
  * @param opts    実行オプション (env_set / preload_lib 等)
- * @return        プロセスハンドル。起動失敗時は nullptr。
+ * @return        プロセス ハンドル。起動失敗時は nullptr。
  */
 extern AsyncProcessHandle startProcessAsync(const string &path, const vector<string> &args = {},
                                             const ProcessOptions &opts = ProcessOptions{});
@@ -148,7 +148,7 @@ extern string getStdout(AsyncProcessHandle &handle);
 extern string getStderr(AsyncProcessHandle &handle);
 
 /**
- * 現在の蓄積デバッグログの行数を返す。
+ * 現在の蓄積デバッグ ログの行数を返す。
  *
  * Linux では waitForExit() 後に一括収集されるため、waitForExit() 前は常に 0 を返す。
  * Windows では OutputDebugString 受信時および ETW イベント受信時にリアルタイム収集されるが、
@@ -159,7 +159,7 @@ extern string getStderr(AsyncProcessHandle &handle);
 extern size_t getDebugLogCount(AsyncProcessHandle &handle);
 
 /**
- * 蓄積デバッグログを行単位のコレクションで返す (非破壊)。
+ * 蓄積デバッグ ログを行単位のコレクションで返す (非破壊)。
  *
  * Linux  : LD_PRELOAD した libmock_syslog.so が一時ファイルに書き込んだ内容。
  *          waitForExit() 後に一括収集される。
@@ -177,7 +177,7 @@ extern vector<string> getDebugLog(AsyncProcessHandle &handle, size_t from_index 
  * startProcessAsync() のラッパーとして実装される。
  *
  * @param binary      実行するバイナリの絶対パス
- * @param args        コマンドライン引数 (argv[1] 以降)
+ * @param args        コマンド ライン引数 (argv[1] 以降)
  * @param opts        実行オプション (env_set / preload_lib 等)
  * @param stdin_lines stdin に渡す行リスト (各要素末尾に \n を付加して書き込む)。デフォルト空。
  * @param timeout_ms  タイムアウト (ms)。デフォルト 30000。

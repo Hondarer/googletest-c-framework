@@ -31,7 +31,7 @@ struct AsyncProcess
 
     /** syslog キャプチャ用パイプ read 端 (-1 = preload_lib 未使用)。 */
     int debug_log_fd = -1;
-    /** パイプから受信した途中の行バッファ。 */
+    /** パイプから受信した途中の行バッファー。 */
     std::string debug_log_buf;
 
     /** waitForExit() が返した終了コード (-1 = 未取得)。 */
@@ -96,9 +96,9 @@ struct AsyncProcess
     HANDLE dbwin_mapping = nullptr;
     void *dbwin_view = nullptr;
 
-    /** ETW プロバイダ GUID 文字列 (空 = ETW キャプチャ無効)。 */
+    /** ETW プロバイダー GUID 文字列 (空 = ETW キャプチャ無効)。 */
     std::string etw_provider_guid;
-    /** ETW Service フィールドフィルタ (空 = フィルタなし)。 */
+    /** ETW Service フィールド フィルター (空 = フィルターなし)。 */
     std::string etw_service_filter;
 
     /** waitForExit() が返した終了コード (-1 = 未取得)。 */

@@ -17,7 +17,7 @@ ssh_channel delegate_fake_ssh_channel_new(const char *file, const int line, cons
     (void)func;
     (void)session;
 
-    /* ダミーのチャンネルポインタを返す */
+    /* ダミーのチャネル ポインターを返す */
     ssh_channel channel = (ssh_channel)malloc(sizeof(struct ssh_channel_struct *));
     return channel;
 }

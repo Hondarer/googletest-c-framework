@@ -51,7 +51,7 @@ def parse_cobertura(xml_path):
     tree = ET.parse(xml_path)
     root = tree.getroot()
 
-    # sources 要素からベースパスを取得
+    # sources 要素からベース パスを取得
     sources = root.findall('.//source')
     base_path = sources[0].text if sources else ''
 
@@ -60,9 +60,9 @@ def parse_cobertura(xml_path):
     for package in root.findall('.//package'):
         for cls in package.findall('.//class'):
             filename = cls.get('filename')
-            # source + filename でフルパスを構成
+            # source + filename で完全なパスを構成
             if base_path:
-                # Windows のドライブレター (例: "D:") の場合
+                # Windows のドライブ レター (例: "D:") の場合
                 if len(base_path) == 2 and base_path[1] == ':':
                     full_path = base_path + os.sep + filename
                 else:
@@ -114,7 +114,7 @@ def generate_lcov_info(coverage_data, output_file=None):
         line_coverage = coverage_info['lines']
         branch_coverage = coverage_info.get('branches', {})
 
-        # ファイルヘッダー
+        # ファイル ヘッダー
         lines_output.append("TN:")
         lines_output.append(f"SF:{source_path}")
 

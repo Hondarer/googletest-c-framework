@@ -27,7 +27,7 @@ class AnsiColor:
 # 見出しパターンと色の対応
 # タプル形式: (正規表現パターン, 色)
 #
-# GoogleTest ソースコード (gtest.cc) の PrettyUnitTestResultPrinter に基づく。
+# GoogleTest ソース コード (gtest.cc) の PrettyUnitTestResultPrinter に基づく。
 # 着色は見出し部 (角括弧内) のみに適用され、テスト名や本文には適用されない。
 #
 # 注意: 元の gtest は result()->Passed(), result()->Failed(), result()->Skipped() の
@@ -49,7 +49,7 @@ COLOR_RULES = [
     # 緑: 成功 (OnTestEnd で result()->Passed() の場合)
     (re.compile(r"^\[\s*OK\s*\]"), AnsiColor.GREEN),
 
-    # 緑: 成功サマリ (OnTestProgramEnd)
+    # 緑: 成功サマリー (OnTestProgramEnd)
     (re.compile(r"^\[\s*PASSED\s*\]"), AnsiColor.GREEN),
 
     # 緑: テスト開始 (OnTestStart)
@@ -58,7 +58,7 @@ COLOR_RULES = [
     # 緑: プログラム開始/終了 (OnTestProgramStart, OnTestProgramEnd)
     (re.compile(r"^\[=+\]"), AnsiColor.GREEN),
 
-    # 緑: テストスイート開始/終了 (OnTestSuiteStart, OnTestSuiteEnd)
+    # 緑: テスト スイート開始/終了 (OnTestSuiteStart, OnTestSuiteEnd)
     (re.compile(r"^\[-+\]"), AnsiColor.GREEN),
 
     # 緑: グローバル環境 (OnEnvironmentsSetUpStart 等)

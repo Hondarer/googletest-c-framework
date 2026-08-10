@@ -13,16 +13,16 @@ SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 # ワークスペースのディレクトリ
 WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
 
-# ソースファイルのエンコード指定から LANG を得る
+# ソース ファイルのエンコード指定から LANG を得る
 FILES_LANG=$(bash "$WORKSPACE_DIR/framework/makefw/bin/get_files_lang.sh" "$WORKSPACE_DIR")
 
-# テストバイナリのパス (basename `pwd` 相当)
+# テスト バイナリのパス (basename `pwd` 相当)
 TEST_BINARY=bin/${PWD##*/}
 
-# スタックサイズ制限緩和
-# (1) ハードリミットのスタックサイズを取得
+# スタック サイズ制限緩和
+# (1) ハード リミットのスタック サイズを取得
 hard_limit=$(ulimit -H -s)
-# (2) ハードリミットのスタックサイズをソフトリミットに設定
+# (2) ハード リミットのスタック サイズをソフト リミットに設定
 ulimit -s "$hard_limit"
 
 # 集計値のリセット
@@ -100,9 +100,9 @@ function run_test() {
     local test_name=${1%% *}
 
     # 階層構造の管理上の都合で
-    # パラメータテストの prefix をテストクラスの後に付けた ID を生成する
-    # test_name: google test で内部的に扱うテスト名 (パラメータの prefix がテストクラスの前に付与されているもの)
-    # test_id: 人間系に見せるテスト名 (パラメータの prefix がテストクラス名の後、パラメータ名の前に付与されているもの)
+    # パラメーター テストの prefix をテスト クラスの後に付けた ID を生成する
+    # test_name: google test で内部的に扱うテスト名 (パラメーターの prefix がテスト クラスの前に付与されているもの)
+    # test_id: 人間系に見せるテスト名 (パラメーターの prefix がテスト クラス名の後、パラメーター名の前に付与されているもの)
     local test_id
     # '/' で分割して配列に格納 (awk による処理の代替)
     IFS='/' read -ra parts <<< "$test_name"
@@ -112,7 +112,7 @@ function run_test() {
         test_id="$test_name"
     fi
 
-    # サブフォルダを含めて gcda ファイルをクリア
+    # サブフォルダーを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
     rm -rf obj/*.info gcov lcov > /dev/null
 
@@ -124,7 +124,7 @@ function run_test() {
     safe_tput cr
     echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > $temp_file
 
-    # テストコードに着色する場合:
+    # テスト コードに着色する場合:
     # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk | source-highlight -s cpp -f esc;
 
     if [ $IS_WINDOWS -ne 1 ]; then
@@ -217,19 +217,19 @@ function run_test() {
         # TEST_SRCS が指定されている場合のみカバレッジ情報を取得
         if [ $IS_WINDOWS -ne 1 ]; then
             # Linux
-            # gcov でカバレッジ情報を取得する (サブフォルダを含む)
+            # gcov でカバレッジ情報を取得する (サブフォルダーを含む)
             # Run gcov to collect coverage (including subdirectories)
             local base_dir=$(pwd)
             for obj_dir in $(find . -type d -name obj 2>/dev/null); do
-                # obj ディレクトリ内の gcda ファイルに対応するソースファイルのカバレッジを取得
+                # obj ディレクトリ内の gcda ファイルに対応するソース ファイルのカバレッジを取得
                 for gcda in $obj_dir/*.gcda; do
                     if [ -f "$gcda" ]; then
                         # gcda ファイルからベース名を取得
                         base_name=$(basename "$gcda" .gcda)
-                        # 対応する .c ソースファイルを探す (テストコード .cc は除外)
+                        # 対応する .c ソース ファイルを探す (テスト コード .cc は除外)
                         src_file=$(find . -name "${base_name}.c" 2>/dev/null | head -1)
                         if [ -n "$src_file" ]; then
-                            # ソースファイルのディレクトリで gcov を実行
+                            # ソース ファイルのディレクトリで gcov を実行
                             src_dir=$(dirname "$src_file")
                             src_name=$(basename "$src_file")
                             abs_obj_dir=$(cd "$obj_dir" && pwd)
@@ -278,16 +278,16 @@ function run_test() {
 
 # メイン処理
 function main() {
-    # サブフォルダを含めて gcda ファイルをクリア
+    # サブフォルダーを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
     rm -rf obj/*.info gcov lcov coverage results
     mkdir coverage
     mkdir results
     mkdir -p results/all_tests
 
-    # TEST_SRCS が空の場合、サブフォルダの makepart.mk から TEST_SRCS を収集
+    # TEST_SRCS が空の場合、サブフォルダーの makepart.mk から TEST_SRCS を収集
     if [ -z "$TEST_SRCS" ]; then
-        # カレントディレクトリから app 名を抽出 (MYAPP_DIR 置換用)
+        # カレント ディレクトリから app 名を抽出 (MYAPP_DIR 置換用)
         # Extract app name from current directory for MYAPP_DIR substitution
         local current_app=""
         local rel_from_ws="${PWD#$WORKSPACE_DIR/}"
@@ -298,7 +298,7 @@ function main() {
 
         for makepart in $(find . -mindepth 2 -name "makepart.mk" 2>/dev/null); do
             # makepart.mk から TEST_SRCS の値を抽出 (複数行対応)
-            # TEST_SRCS を含む行とその後の継続行からソースファイルパスを取得
+            # TEST_SRCS を含む行とその後の継続行からソース ファイル パスを取得
             subdir_test_srcs=$(grep -A10 "^TEST_SRCS" "$makepart" 2>/dev/null | \
                 grep -v "^TEST_SRCS" | grep -v "^#" | grep -v "^--$" | \
                 sed -e "s|\\\$(WORKSPACE_DIR)|$WORKSPACE_DIR|g" \
@@ -321,7 +321,7 @@ function main() {
         # Windows
         # OpenCppCoverage のソース指定オプションを生成
         SOURCES_OPTS=""
-        # カレントディレクトリの絶対パスを Windows 形式で取得 (スラッシュをバックスラッシュに変換)
+        # カレント ディレクトリの絶対パスを Windows 形式で取得 (スラッシュをバックスラッシュに変換)
         local current_dir=$(pwd -W 2>/dev/null || cygpath -w "$(pwd)")
         current_dir=${current_dir//\//\\}
         for src in $TEST_SRCS; do
@@ -333,7 +333,7 @@ function main() {
         done
     fi
 
-    # google test は、GTEST_FILTER が定義されている場合は空文字でもフィルタを行う
+    # google test は、GTEST_FILTER が定義されている場合は空文字でもフィルターを行う
     # そのため、指定があるかどうかは環境変数の有無をチェックする必要がある
     if [[ "${GTEST_FILTER+x}" ]]; then
         echo -e "\e[33m"
@@ -347,7 +347,7 @@ function main() {
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
 
-        # Windows では全ファイルのハッシュを1回の powershell.exe 呼び出しで一括取得しキャッシュする
+        # Windows では全ファイルのハッシュを 1 回の powershell.exe 呼び出しで一括取得しキャッシュする
         if [ $IS_WINDOWS -eq 1 ]; then
             local _ps_cmd=""
             if command -v powershell.exe &>/dev/null; then
@@ -455,7 +455,7 @@ function main() {
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
 
     if [ -n "$TEST_SRCS" ] && [ -f coverage/accumulated_coverage.xml ]; then
-        # TEST_SRCS が指定されている場合のみカバレッジレポートを生成
+        # TEST_SRCS が指定されている場合のみカバレッジ レポートを生成
         # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
         python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
 
@@ -487,7 +487,7 @@ function main() {
             ReportGenerator -reports:./coverage/accumulated_coverage.xml -targetdir:results/all_tests/lcov -reporttypes:Html 1> /dev/null 2>&1
         fi
 
-        # lcov の文字コードパッチ処理
+        # lcov の文字コード パッチ処理
         if [ $IS_WINDOWS -ne 1 ]; then
             # Linux
             if ls lcov/* 1> /dev/null 2>&1; then
@@ -513,7 +513,7 @@ function main() {
         echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a results/all_tests/summary.log
     fi
 
-    # Clean (サブフォルダを含めて gcda ファイルをクリア)
+    # Clean (サブフォルダーを含めて gcda ファイルをクリア)
     find . -name "*.gcda" -delete 2>/dev/null
     rm -rf obj/*.info gcov lcov coverage
 

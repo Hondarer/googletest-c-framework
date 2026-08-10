@@ -125,8 +125,8 @@ struct EtwCallbackData
 
 /** UserData から Service と Message を抽出する。
  *  TraceLogging 形式:
- *    2フィールド (Service あり): "Service\0Message\0"
- *    1フィールド (Service なし): "Message\0"
+ *    2 フィールド (Service あり): "Service\0Message\0"
+ *    1 フィールド (Service なし): "Message\0"
  *  戻り値: message (空文字列の場合はイベントにデータなし)。 */
 static void parseUserData(const void *userData, USHORT userDataLength, string &out_service, string &out_message)
 {
@@ -161,7 +161,7 @@ static void parseUserData(const void *userData, USHORT userDataLength, string &o
     }
 }
 
-/** ETW イベントレコードコールバック (ProcessTrace から呼ばれる)。 */
+/** ETW イベント レコード コールバック (ProcessTrace から呼ばれる)。 */
 static VOID WINAPI etwEventCallback(PEVENT_RECORD pEvent)
 {
     if (pEvent == nullptr)
@@ -175,13 +175,13 @@ static VOID WINAPI etwEventCallback(PEVENT_RECORD pEvent)
         return;
     }
 
-    /* プロバイダ GUID フィルタ */
+    /* プロバイダー GUID フィルター */
     if (!guidEqual(&pEvent->EventHeader.ProviderId, &ctx->provider_guid))
     {
         return;
     }
 
-    /* PID フィルタ */
+    /* PID フィルター */
     if (pEvent->EventHeader.ProcessId != ctx->target_pid)
     {
         return;
@@ -191,7 +191,7 @@ static VOID WINAPI etwEventCallback(PEVENT_RECORD pEvent)
     string service, message;
     parseUserData(pEvent->UserData, pEvent->UserDataLength, service, message);
 
-    /* Service フィルタ */
+    /* Service フィルター */
     if (!ctx->service_filter.empty() && service != ctx->service_filter)
     {
         return;
@@ -215,7 +215,7 @@ static VOID WINAPI etwEventCallback(PEVENT_RECORD pEvent)
     }
 }
 
-/** ProcessTrace ワーカースレッド関数。 */
+/** ProcessTrace ワーカー スレッド関数。 */
 static DWORD WINAPI etwTraceThreadProc(LPVOID param)
 {
     TRACEHANDLE *pTraceHandle = static_cast<TRACEHANDLE *>(param);
@@ -223,7 +223,7 @@ static DWORD WINAPI etwTraceThreadProc(LPVOID param)
     return 0;
 }
 
-/** ETW セッション管理構造体 (スレッドローカル)。 */
+/** ETW セッション管理構造体 (スレッド ローカル)。 */
 struct EtwSession
 {
     TRACEHANDLE session_handle = 0;
@@ -294,7 +294,7 @@ struct EtwSession
             return false;
         }
 
-        /* プロバイダを有効化 */
+        /* プロバイダーを有効化 */
         ENABLE_TRACE_PARAMETERS etp = {};
         etp.Version = ENABLE_TRACE_PARAMETERS_VERSION_2;
         status = EnableTraceEx2(session_handle, &guid, EVENT_CONTROL_CODE_ENABLE_PROVIDER, TRACE_LEVEL_VERBOSE,
@@ -319,7 +319,7 @@ struct EtwSession
             return false;
         }
 
-        /* ProcessTrace ワーカースレッドを起動 */
+        /* ProcessTrace ワーカー スレッドを起動 */
         thread_handle = CreateThread(NULL, 0, etwTraceThreadProc, &trace_handle, 0, NULL);
         if (thread_handle == nullptr)
         {
@@ -361,7 +361,7 @@ struct EtwSession
     EtwSession() = default;
 };
 
-/* -------- AsyncProcess デストラクタ -------- */
+/* -------- AsyncProcess デストラクター -------- */
 
 static void releaseDbwinSerializeSem(HANDLE &token);
 static void teardownDbwinCapture(AsyncProcess *p);
@@ -459,7 +459,7 @@ static void releaseDbwinSerializeSem(HANDLE &token)
     token = nullptr;
 }
 
-/* -------- DBWIN 受信バッファのセットアップ -------- */
+/* -------- DBWIN 受信バッファーのセットアップ -------- */
 
 /** AsyncProcess に DBWIN 受信側カーネル オブジェクトをまとめて生成する。
  *  CreateProcess より前に呼び出すことで、子の DllMain が OutputDebugStringW を
@@ -505,7 +505,7 @@ static bool setupDbwinCapture(AsyncProcess *p)
     p->dbwin_mapping = hMapping;
     p->dbwin_view = view;
 
-    /* CreateProcess より前にバッファ受信準備完了を通知しておく。 */
+    /* CreateProcess より前にバッファー受信準備完了を通知しておく。 */
     SetEvent(hBufReady);
     return true;
 }
@@ -585,7 +585,7 @@ AsyncProcessHandle startProcessAsync(const string &path, const vector<string> &a
     SetHandleInformation(stdout_r, HANDLE_FLAG_INHERIT, 0);
     SetHandleInformation(stderr_r, HANDLE_FLAG_INHERIT, 0);
 
-    /* コマンドライン文字列 */
+    /* コマンド ライン文字列 */
     string cmd = "\"" + path + "\"";
     for (const auto &a : args)
     {
@@ -659,7 +659,7 @@ AsyncProcessHandle startProcessAsync(const string &path, const vector<string> &a
         }
         return nullptr;
     }
-    CloseHandle(pi.hThread); /* スレッドハンドルは不要 */
+    CloseHandle(pi.hThread); /* スレッド ハンドルは不要 */
 
     auto proc = make_shared<AsyncProcess>();
     proc->proc_handle = pi.hProcess;
@@ -689,7 +689,7 @@ AsyncProcessHandle startProcessAsync(const string &path, const vector<string> &a
         printf("\n");
     }
 
-    /* ReaderThread: stdout/stderr/デバッグログを並行読み取り */
+    /* ReaderThread: stdout/stderr/デバッグ ログを並行読み取り */
     AsyncProcess *p = proc.get();
     proc->reader_thread = thread(
         [p]()

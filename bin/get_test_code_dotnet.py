@@ -49,7 +49,7 @@ def extract_test_code(file_path, class_name, method_name):
     in_method = False
     # 括弧のカウント
     brace_count = 0
-    # バッファ (コメント・属性用)
+    # バッファー (コメント・属性用)
     buffer = []
     # 出力フラグ
     output_started = False
@@ -93,7 +93,7 @@ def extract_test_code(file_path, class_name, method_name):
                 in_multiline_comment = False
             continue
 
-        # コメント行をバッファに追加 (XML コメント /// を含む)
+        # コメント行をバッファーに追加 (XML コメント /// を含む)
         if re.match(r'^\s*(//|///)', line):
             if not in_method:
                 buffer.append(line)
@@ -101,7 +101,7 @@ def extract_test_code(file_path, class_name, method_name):
                 sys.stdout.write(line)
             continue
 
-        # #pragma をバッファに追加
+        # #pragma をバッファーに追加
         if re.match(r'^\s*#pragma', line):
             if not in_method:
                 buffer.append(line)
@@ -109,10 +109,10 @@ def extract_test_code(file_path, class_name, method_name):
                 sys.stdout.write(line)
             continue
 
-        # 空行でバッファをクリア (メソッド検出前のみ、複数行コメント中を除く)
+        # 空行でバッファーをクリア (メソッド検出前のみ、複数行コメント中を除く)
         if re.match(r'^\s*$', line):
             if not in_method and not in_multiline_comment:
-                # 属性がすでにバッファにある場合はクリアしない
+                # 属性がすでにバッファーにある場合はクリアしない
                 # (属性とメソッド定義の間に空行がある場合に対応)
                 has_attribute = any(re.match(r'^\s*\[', buf_line) for buf_line in buffer)
                 if not has_attribute:
@@ -121,7 +121,7 @@ def extract_test_code(file_path, class_name, method_name):
                 sys.stdout.write(line)
             continue
 
-        # 属性行をバッファに追加
+        # 属性行をバッファーに追加
         if re.match(r'^\s*\[', line):
             if not in_method:
                 buffer.append(line)
@@ -133,14 +133,14 @@ def extract_test_code(file_path, class_name, method_name):
         if re.search(rf'\s+{re.escape(method_name)}\s*\(', line):
             in_method = True
             output_started = True
-            # バッファの内容を出力
+            # バッファーの内容を出力
             for buf_line in buffer:
                 sys.stdout.write(buf_line)
             buffer = []
             sys.stdout.write(line)
             brace_count += line.count('{') - line.count('}')
 
-            # メソッド定義が1行で完結する場合の処理
+            # メソッド定義が 1 行で完結する場合の処理
             if brace_count <= 0 and line.rstrip().endswith(';'):
                 break
             continue
@@ -154,7 +154,7 @@ def extract_test_code(file_path, class_name, method_name):
             if brace_count <= 0:
                 break
         else:
-            # メソッド外はバッファをクリア (属性以外)
+            # メソッド外はバッファーをクリア (属性以外)
             if not re.match(r'^\s*\[', line):
                 buffer = []
 

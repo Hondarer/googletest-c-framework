@@ -34,7 +34,7 @@ extern "C"
     typedef struct ssh_key_struct *ssh_key;
 #endif
 
-/* SSH 公開鍵ハッシュタイプ定義 */
+/* SSH 公開鍵ハッシュ タイプ定義 */
 #ifndef SSH_PUBLICKEY_HASH_TYPE_DEFINED
     #define SSH_PUBLICKEY_HASH_TYPE_DEFINED
     enum ssh_publickey_hash_type
@@ -114,7 +114,7 @@ extern "C"
     #endif // _WIN32
 #endif
 
-/* SFTP ファイルタイプ定義 */
+/* SFTP ファイル タイプ定義 */
 #ifndef SFTP_TYPE_DEFINED
     #define SFTP_TYPE_DEFINED
     #define SSH_FILEXFER_TYPE_REGULAR   1
@@ -124,7 +124,7 @@ extern "C"
     #define SSH_FILEXFER_TYPE_UNKNOWN   5
 #endif
 
-/* SFTP アクセスフラグ定義 */
+/* SFTP アクセス フラグ定義 */
 #ifndef SFTP_FLAGS_DEFINED
     #define SFTP_FLAGS_DEFINED
     #define O_RDONLY 0x0000
@@ -136,7 +136,7 @@ extern "C"
     #define O_APPEND 0x2000
 #endif
 
-/* SFTP エラーコード定義 */
+/* SFTP エラー コード定義 */
 #ifndef SFTP_ERROR_DEFINED
     #define SFTP_ERROR_DEFINED
     #define SSH_FX_OK                  0
@@ -208,7 +208,7 @@ extern "C"
     };
 #endif
 
-/* libssh のエラーコード定義 */
+/* libssh のエラー コード定義 */
 #ifndef SSH_ERROR_DEFINED
     #define SSH_ERROR_DEFINED
     #define SSH_OK    0
@@ -234,7 +234,7 @@ extern "C"
     extern int mock_ssh_userauth_publickey_auto(const char *, const int, const char *, ssh_session, const char *,
                                                 const char *);
 
-    /* チャンネル操作 */
+    /* チャネル操作 */
     extern ssh_channel mock_ssh_channel_new(const char *, const int, const char *, ssh_session);
     extern void mock_ssh_channel_free(const char *, const int, const char *, ssh_channel);
     extern int mock_ssh_channel_open_session(const char *, const int, const char *, ssh_channel);
@@ -285,7 +285,7 @@ extern "C"
     extern int mock_sftp_mkdir(const char *, const int, const char *, sftp_session, const char *, mode_t);
     extern int mock_sftp_rmdir(const char *, const int, const char *, sftp_session, const char *);
 
-    /* SFTP ファイルシステム操作 */
+    /* SFTP ファイル システム操作 */
     extern int mock_sftp_unlink(const char *, const int, const char *, sftp_session, const char *);
     extern int mock_sftp_rename(const char *, const int, const char *, sftp_session, const char *, const char *);
     extern sftp_attributes mock_sftp_stat(const char *, const int, const char *, sftp_session, const char *);
@@ -365,7 +365,7 @@ extern "C"
     #define sftp_mkdir(sftp, directory, mode) mock_sftp_mkdir(__FILE__, __LINE__, __func__, sftp, directory, mode)
     #define sftp_rmdir(sftp, directory)       mock_sftp_rmdir(__FILE__, __LINE__, __func__, sftp, directory)
 
-    /* SFTP ファイルシステム操作 */
+    /* SFTP ファイル システム操作 */
     #define sftp_unlink(sftp, file)              mock_sftp_unlink(__FILE__, __LINE__, __func__, sftp, file)
     #define sftp_rename(sftp, original, newname) mock_sftp_rename(__FILE__, __LINE__, __func__, sftp, original, newname)
     #define sftp_stat(sftp, path)                mock_sftp_stat(__FILE__, __LINE__, __func__, sftp, path)
@@ -374,7 +374,7 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_LIBSSH_H
 
-    /* C++ テストコード用: Google Mock クラス定義 */
+    /* C++ テスト コード用: Google Mock クラス定義 */
     #ifndef _WIN32
         #pragma GCC diagnostic push
         #pragma GCC diagnostic ignored "-Wpadded"
@@ -410,7 +410,7 @@ extern int delegate_real_ssh_userauth_publickey_auto(const char *, const int, co
 extern int delegate_fake_ssh_userauth_publickey_auto(const char *, const int, const char *, ssh_session, const char *,
                                                      const char *);
 
-/* delegate 関数宣言 - チャンネル操作 */
+/* delegate 関数宣言 - チャネル操作 */
 extern ssh_channel delegate_real_ssh_channel_new(const char *, const int, const char *, ssh_session);
 extern ssh_channel delegate_fake_ssh_channel_new(const char *, const int, const char *, ssh_session);
 extern void delegate_real_ssh_channel_free(const char *, const int, const char *, ssh_channel);
@@ -504,7 +504,7 @@ extern int delegate_fake_sftp_mkdir(const char *, const int, const char *, sftp_
 extern int delegate_real_sftp_rmdir(const char *, const int, const char *, sftp_session, const char *);
 extern int delegate_fake_sftp_rmdir(const char *, const int, const char *, sftp_session, const char *);
 
-/* delegate 関数宣言 - SFTP ファイルシステム操作 */
+/* delegate 関数宣言 - SFTP ファイル システム操作 */
 extern int delegate_real_sftp_unlink(const char *, const int, const char *, sftp_session, const char *);
 extern int delegate_fake_sftp_unlink(const char *, const int, const char *, sftp_session, const char *);
 extern int delegate_real_sftp_rename(const char *, const int, const char *, sftp_session, const char *, const char *);
@@ -535,7 +535,7 @@ class Mock_libssh
     MOCK_METHOD(int, ssh_userauth_publickey_auto,
                 (const char *, const int, const char *, ssh_session, const char *, const char *));
 
-    /* チャンネル操作 */
+    /* チャネル操作 */
     MOCK_METHOD(ssh_channel, ssh_channel_new, (const char *, const int, const char *, ssh_session));
     MOCK_METHOD(void, ssh_channel_free, (const char *, const int, const char *, ssh_channel));
     MOCK_METHOD(int, ssh_channel_open_session, (const char *, const int, const char *, ssh_channel));
@@ -588,7 +588,7 @@ class Mock_libssh
     MOCK_METHOD(int, sftp_mkdir, (const char *, const int, const char *, sftp_session, const char *, mode_t));
     MOCK_METHOD(int, sftp_rmdir, (const char *, const int, const char *, sftp_session, const char *));
 
-    /* SFTP ファイルシステム操作 */
+    /* SFTP ファイル システム操作 */
     MOCK_METHOD(int, sftp_unlink, (const char *, const int, const char *, sftp_session, const char *));
     MOCK_METHOD(int, sftp_rename, (const char *, const int, const char *, sftp_session, const char *, const char *));
     MOCK_METHOD(sftp_attributes, sftp_stat, (const char *, const int, const char *, sftp_session, const char *));

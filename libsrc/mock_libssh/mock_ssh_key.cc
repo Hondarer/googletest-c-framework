@@ -18,7 +18,7 @@ int delegate_fake_ssh_get_server_publickey(const char *file, const int line, con
     (void)func;
     (void)session;
 
-    /* ダミーの鍵ポインタを返す */
+    /* ダミーの鍵ポインターを返す */
     if (key != NULL)
     {
         *key = (ssh_key)malloc(sizeof(struct ssh_key_struct *));

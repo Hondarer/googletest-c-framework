@@ -3,7 +3,7 @@
 
 using namespace testing;
 
-/* フェイクエラーメッセージ用の静的バッファ */
+/* フェイク エラー メッセージ用の静的バッファー */
 static const char *fake_error_message = "No error";
 
 /* ========================================

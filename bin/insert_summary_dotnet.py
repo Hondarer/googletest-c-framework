@@ -74,7 +74,7 @@ def format_cycle_section(cycle, multi, state, act, pre_step, pre_chk, asrt_chk,
     for s in state:
         out.append(s + "\n")
 
-    # --- 手順 (Act優先 → Pre-Assert) ---
+    # --- 手順 (Act 優先 → Pre-Assert) ---
     # 状態がある場合のみ前改行を入れる
     if len(state) > 0:
         out.append(f"\n### 手順{suffix}\n\n")
@@ -97,7 +97,7 @@ def format_cycle_section(cycle, multi, state, act, pre_step, pre_chk, asrt_chk,
         else:
             check_header = f"### 確認内容{suffix} ({check_unspecified})\n\n"
     else:
-        # 正常系 / 異常系 / カテゴリ未指定をカテゴリ別に表示（Theory対応）
+        # 正常系 / 異常系 / カテゴリ未指定をカテゴリ別に表示 (Theory 対応)
         categories = []
 
         if check_normal > 0:
@@ -153,7 +153,7 @@ def insert_summary():
     cur_cycle = 1
     max_cycle = 1
 
-    # パラメータテスト検出用
+    # パラメーター テスト検出用
     is_theory = False
     param_count = 0
 
@@ -165,7 +165,7 @@ def insert_summary():
         if re.search(r'\[Theory\]', line):
             is_theory = True
 
-        # [InlineData(...)] を検出してパラメータ数をカウント
+        # [InlineData(...)] を検出してパラメーター数をカウント
         if re.search(r'\[InlineData\(', line):
             param_count += 1
 
@@ -269,10 +269,10 @@ def insert_summary():
                     check_unspecified[cur_cycle] = check_unspecified.get(cur_cycle, 0) + 1
             continue
 
-    # サマリ項目が存在するかチェック
+    # サマリー項目が存在するかチェック
     has_summary = any_content
 
-    # サマリを出力 (AWK版と完全に同じロジック)
+    # サマリーを出力 (AWK 版と完全に同じロジック)
     if has_summary:
         sys.stdout.write("## テスト項目\n")
 

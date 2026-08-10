@@ -5,7 +5,7 @@
 
 // ---------------------------------------------------------------------------
 
-// mock 対象の関数宣言が含まれているヘッダを include
+// mock 対象の関数宣言が含まれているヘッダーを include
 // #include "testfunc.h"
 
 //
@@ -64,7 +64,7 @@
 #define VA_NARGS_IMPL(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, N, ...) N
 #define VA_NARGS(...) VA_NARGS_IMPL(_, ##__VA_ARGS__, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
-// VOID / NONVOIDの文字列化
+// VOID / NONVOID の文字列化
 #define VOID    VOID
 #define NONVOID NONVOID
 
@@ -97,7 +97,7 @@
 // エントリ ポイント
 #define MOCK_C_METHOD(ret, name, ...) DISPATCH_VOID_NONVOID(IS_VOID(ret), VA_NARGS(__VA_ARGS__), ret, name, __VA_ARGS__)
 
-// .h と .cc の内容セレクタ
+// .h と .cc の内容セレクター
 #ifndef _IN_MOCK_FACTORY_SRC_
 
     #define MOCK_C_METHOD0_NONVOID(ret, name, default_lambda) MOCK_C_METHOD0_NONVOID_H(ret, name, default_lambda)
