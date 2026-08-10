@@ -1,5 +1,7 @@
-#include <test_com.h>
-#include <mock_unistd.h>
+#ifndef _WIN32
+
+    #include <test_com.h>
+    #include <mock_unistd.h>
 
 using namespace testing;
 
@@ -41,3 +43,5 @@ int mock_ftruncate(const char *file, const int line, const char *func, int fd, o
 
     return result;
 }
+
+#endif // _WIN32

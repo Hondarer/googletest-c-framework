@@ -1,5 +1,7 @@
-#include <test_com.h>
-#include <mock_unistd.h>
+#ifndef _WIN32
+
+    #include <test_com.h>
+    #include <mock_unistd.h>
 
 using namespace testing;
 
@@ -41,3 +43,5 @@ char *mock_getcwd(const char *file, const int line, const char *func, char *buf,
 
     return result;
 }
+
+#endif // _WIN32
