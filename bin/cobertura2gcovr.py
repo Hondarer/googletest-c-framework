@@ -123,6 +123,23 @@ def format_missing(missing_lines):
     return ", ".join(ranges)
 
 
+def format_rate(covered, total):
+    """
+    網羅率を百分率の文字列に整形する。
+
+    Args:
+        covered: 網羅した件数
+        total: 総件数
+
+    Returns:
+        "100%" のような文字列。総件数が 0 の場合は "0%"
+    """
+    if total <= 0:
+        return "0%"
+
+    return f"{(covered / total) * 100:.0f}%"
+
+
 def print_report(coverage_data):
     """
     gcovr 形式のレポートを出力する。
@@ -136,45 +153,53 @@ def print_report(coverage_data):
     print(separator)
     print(f"{header:^78}")
     print(separator)
-    print(f"{'File':<40} {'Lines':>7} {'Exec':>7} {'Cover':>6}   Missing")
+    print(f"{'File':<32} {'Lines':>6} {'Exec':>6} {'Cover':>6} "
+          f"{'Branch':>7} {'BrCov':>6}   Missing")
     print(separator)
 
     total_lines = 0
     total_exec = 0
+    total_branches = 0
+    total_branches_exec = 0
 
     for data in coverage_data:
         filename, lines, exec_lines, missing = data[0], data[1], data[2], data[3]
+        branches, branches_exec = data[4], data[5]
 
         total_lines += lines
         total_exec += exec_lines
+        total_branches += branches
+        total_branches_exec += branches_exec
 
-        if lines > 0:
-            cover = (exec_lines / lines) * 100
-            cover_str = f"{cover:.0f}%"
-        else:
-            cover_str = "0%"
+        cover_str = format_rate(exec_lines, lines)
+        # 分岐情報を持たない計測 (OpenCppCoverage は行カバレッジのみ) は 0% と区別して "-" を表示する
+        # see: https://github.com/OpenCppCoverage/OpenCppCoverage#features
+        branch_str = str(branches) if branches > 0 else "-"
+        br_cover_str = format_rate(branches_exec, branches) if branches > 0 else "-"
 
         missing_str = format_missing(missing)
 
         # ファイル名が長い場合は切り詰め
-        if len(filename) > 40:
-            filename = filename[:37] + "..."
+        if len(filename) > 32:
+            filename = filename[:29] + "..."
 
+        row = (f"{filename:<32} {lines:>6} {exec_lines:>6} {cover_str:>6} "
+               f"{branch_str:>7} {br_cover_str:>6}")
         if missing_str:
-            print(f"{filename:<40} {lines:>7} {exec_lines:>7} {cover_str:>6}   {missing_str}")
+            print(f"{row}   {missing_str}")
         else:
-            print(f"{filename:<40} {lines:>7} {exec_lines:>7} {cover_str:>6}")
+            print(row)
 
     print(separator)
 
     # 合計行
-    if total_lines > 0:
-        total_cover = (total_exec / total_lines) * 100
-        total_cover_str = f"{total_cover:.0f}%"
-    else:
-        total_cover_str = "0%"
+    total_cover_str = format_rate(total_exec, total_lines)
+    total_branch_str = str(total_branches) if total_branches > 0 else "-"
+    total_br_cover_str = (format_rate(total_branches_exec, total_branches)
+                          if total_branches > 0 else "-")
 
-    print(f"{'TOTAL':<40} {total_lines:>7} {total_exec:>7} {total_cover_str:>6}")
+    print(f"{'TOTAL':<32} {total_lines:>6} {total_exec:>6} {total_cover_str:>6} "
+          f"{total_branch_str:>7} {total_br_cover_str:>6}")
     print(separator)
 
 

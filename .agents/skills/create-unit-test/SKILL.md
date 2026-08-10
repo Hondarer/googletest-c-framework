@@ -47,6 +47,8 @@ mock を新規追加する作業は `create-mock` を使い、この文書では
 - `main()` テストは `app/<name>/test/src/main/<name>Test/` を使います
 - `makefile` は近い既存テストからそのまま揃え、差分は `makepart.mk` だけに入れます
 
+テスト ディレクトリの粒度と命名、`TEST_SRCS` と `LIBS` の指定方針は `framework/testfw/docs/how-to-test.md` の「テストの構成単位」に従います。対象ソース 1 本につきテスト ディレクトリは 1 つとし、同じソースを複数のテスト ディレクトリの `TEST_SRCS` に指定しません。
+
 `app/calc` の規範例:
 
 - 関数単体: `app/calc/test/src/libcalcbaseTest/addTest/`
