@@ -76,7 +76,7 @@ EXPECT_CALL(mock, DoSomething(_))
 - `Times(Between(a, b))`: a 回以上、b 回以下の呼び出しを期待
 - `Times(AnyNumber())`: 何回でもよい
 
-例:
+例を示します。
 
 ```cpp
 // ちょうど 2 回呼び出される
