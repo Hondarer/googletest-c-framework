@@ -19,6 +19,7 @@ extern "C"
 #ifdef _WIN32
     extern errno_t mock_fopen_s(const char *, const int, const char *, FILE **, const char *, const char *);
     extern errno_t mock__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *);
+    extern FILE *mock__wfsopen(const char *, const int, const char *, const wchar_t *, const wchar_t *, int);
 #endif
     extern int mock_printf(PRINTF_FMT const char *, const int, const char *, const char *, ...) PRINTF_ATTR(4, 5);
     extern int mock_fprintf(PRINTF_FMT const char *, const int, const char *, FILE *, const char *, ...)
@@ -46,6 +47,7 @@ extern "C"
     #ifdef _WIN32
         #define fopen_s(pFile, filename, modes)   mock_fopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
         #define _wfopen_s(pFile, filename, modes) mock__wfopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
+        #define _wfsopen(filename, modes, shflag) mock__wfsopen(__FILE__, __LINE__, __func__, filename, modes, shflag)
     #endif
     #define printf(format, ...)              mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
     #define fprintf(stream, format, ...)     mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
@@ -82,6 +84,8 @@ extern errno_t delegate_real__wfopen_s(const char *, const int, const char *, FI
                                        const wchar_t *);
 extern errno_t delegate_fake__wfopen_s(const char *, const int, const char *, FILE **, const wchar_t *,
                                        const wchar_t *);
+extern FILE *delegate_real__wfsopen(const char *, const int, const char *, const wchar_t *, const wchar_t *, int);
+extern FILE *delegate_fake__wfsopen(const char *, const int, const char *, const wchar_t *, const wchar_t *, int);
     #endif
 extern int delegate_real_fprintf(const char *, const int, const char *, FILE *, const char *);
 extern int delegate_fake_fprintf(const char *, const int, const char *, FILE *, const char *);
@@ -110,6 +114,7 @@ class Mock_stdio
     #ifdef _WIN32
     MOCK_METHOD(errno_t, fopen_s, (const char *, const int, const char *, FILE **, const char *, const char *));
     MOCK_METHOD(errno_t, _wfopen_s, (const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *));
+    MOCK_METHOD(FILE *, _wfsopen, (const char *, const int, const char *, const wchar_t *, const wchar_t *, int));
     #endif
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
