@@ -45,7 +45,9 @@ extern "C"
 }
         #endif
 
-        #ifdef _IN_OVERRIDE_HEADER_WINSOCK_H
+        /* C ソースでは再入経路で置換フラグが一時的に外れる場合も、       */
+        /* Google Mock を取り込まず、C 用の置換マクロを有効にする。       */
+        #if defined(_IN_OVERRIDE_HEADER_WINSOCK_H) || !defined(__cplusplus)
 
             #define WSAStartup(version_required, wsa_data) \
                 mock_WSAStartup(__FILE__, __LINE__, __func__, version_required, wsa_data)
@@ -79,7 +81,7 @@ extern "C"
                 mock_getaddrinfo(__FILE__, __LINE__, __func__, node_name, service_name, hints, result)
             #define freeaddrinfo(addr_info) mock_freeaddrinfo(__FILE__, __LINE__, __func__, addr_info)
 
-        #else // _IN_OVERRIDE_HEADER_WINSOCK_H
+        #else // _IN_OVERRIDE_HEADER_WINSOCK_H || !__cplusplus
 
             #include <gmock/gmock.h>
 
@@ -138,7 +140,7 @@ class Mock_winsock
 
 extern Mock_winsock *_mock_winsock;
 
-        #endif // _IN_OVERRIDE_HEADER_WINSOCK_H
+        #endif // _IN_OVERRIDE_HEADER_WINSOCK_H || !__cplusplus
 
     #endif // _MOCK_WINSOCK_H
 
