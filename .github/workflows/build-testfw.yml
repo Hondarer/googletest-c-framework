@@ -19,9 +19,15 @@ jobs:
     strategy:
       matrix:
         include:
-          - distro: el8
+          # os-name は CI と artifact の表示名、target-arch は makefw の出力ディレクトリ名に使用する。
+          - os-name: ol8
+            target-arch: el8
             image: ghcr.io/hondarer/oracle-linux-container/oracle-linux-8-dev:latest
-          - distro: el10
+          - os-name: ol9
+            target-arch: el9
+            image: ghcr.io/hondarer/oracle-linux-container/oracle-linux-9-dev:latest
+          - os-name: ol10
+            target-arch: el10
             image: ghcr.io/hondarer/oracle-linux-container/oracle-linux-10-dev:latest
     container:
       image: ${{ matrix.image }}
@@ -69,8 +75,8 @@ jobs:
       - name: Upload Linux libraries
         uses: actions/upload-artifact@v7
         with:
-          name: linux-${{ matrix.distro }}-libraries
-          path: framework/testfw/lib/linux_${{ matrix.distro }}_*
+          name: linux-${{ matrix.os-name }}-libraries
+          path: framework/testfw/lib/linux_${{ matrix.target-arch }}_*
           if-no-files-found: error
 
   build-windows:
@@ -144,16 +150,22 @@ jobs:
   #         rm -rf lib/
   #         mkdir -p lib/
   #
-  #     - name: Download Linux EL8 libraries
+  #     - name: Download Linux OL8 libraries
   #       uses: actions/download-artifact@v8
   #       with:
-  #         name: linux-el8-libraries
+  #         name: linux-ol8-libraries
   #         path: lib/
   #
-  #     - name: Download Linux EL10 libraries
+  #     - name: Download Linux OL9 libraries
   #       uses: actions/download-artifact@v8
   #       with:
-  #         name: linux-el10-libraries
+  #         name: linux-ol9-libraries
+  #         path: lib/
+  #
+  #     - name: Download Linux OL10 libraries
+  #       uses: actions/download-artifact@v8
+  #       with:
+  #         name: linux-ol10-libraries
   #         path: lib/
   #
   #     - name: Download Windows libraries

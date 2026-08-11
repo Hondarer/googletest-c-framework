@@ -27,6 +27,16 @@ make
 make clean
 ```
 
+## Linux ライブラリの配置
+
+Linux の CI 表示名は Oracle Linux に合わせて `ol8`、`ol9`、`ol10` とします。
+
+makefw が生成する `TARGET_ARCH` とライブラリの配置先は、RHEL 系 OS の互換性を示す `el8`、`el9`、`el10` を使用します。
+
+- Oracle Linux 8: `lib/linux_el8_x64/`
+- Oracle Linux 9: `lib/linux_el9_x64/`
+- Oracle Linux 10: `lib/linux_el10_x64/`
+
 ## 依存関係
 
 - GCC

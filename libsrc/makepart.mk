@@ -8,7 +8,7 @@ ifeq ($(wildcard $(TESTFW_HOME)),)
 endif
 
 ifneq ($(OS),Windows_NT)
-    # Linux: TARGET_ARCH (e.g., linux_el8_x64)
+    # Linux: TARGET_ARCH (e.g., linux_el8_x64, linux_el9_x64, linux_el10_x64)
     OUTPUT_DIR := $(TESTFW_HOME)/lib/$(TARGET_ARCH)
 else
     # Windows: TARGET_ARCH/MSVC_CRT_SUBDIR (e.g., windows_x64/md)
