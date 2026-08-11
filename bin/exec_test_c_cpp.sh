@@ -227,7 +227,12 @@ function run_test() {
                         # gcda ファイルからベース名を取得
                         base_name=$(basename "$gcda" .gcda)
                         # 対応する .c ソース ファイルを探す (テスト コード .cc は除外)
-                        src_file=$(find . -name "${base_name}.c" 2>/dev/null | head -1)
+                        # inject 処理済みのソースはテスト実行ディレクトリ直下に生成されるため、
+                        # 元ソースより先に選択する。
+                        src_file=$(find . -maxdepth 1 -type f -name "${base_name}.c" 2>/dev/null | head -1)
+                        if [ -z "$src_file" ]; then
+                            src_file=$(find . -name "${base_name}.c" 2>/dev/null | head -1)
+                        fi
                         if [ -n "$src_file" ]; then
                             # ソース ファイルのディレクトリで gcov を実行
                             src_dir=$(dirname "$src_file")
@@ -457,6 +462,8 @@ function main() {
     if [ -n "$TEST_SRCS" ] && [ -f coverage/accumulated_coverage.xml ]; then
         # TEST_SRCS が指定されている場合のみカバレッジ レポートを生成
         # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
+        # 個別テストの gcov を残したままにせず、累積 XML から生成したファイルだけをコピーする
+        rm -rf gcov/*
         python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
 
         if ls gcov/*.gcov 1> /dev/null 2>&1; then

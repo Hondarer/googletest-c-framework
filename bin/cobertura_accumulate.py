@@ -11,13 +11,13 @@ cobertura_accumulate.py - Cobertura XML のカバレッジ情報を累積する�
     accumulated.xml  - 累積用の Cobertura XML ファイル
 
 動作:
-    - accumulated.xml が存在しない場合、current.xml の内容をコピーする
+    - accumulated.xml が存在しない場合、current.xml から inject 用ソースを除外して保存する
     - accumulated.xml が存在する場合、current.xml の hits を加算する
+    - inject 用ソースは累積対象から除外する
 """
 
 import sys
 import os
-import shutil
 import re
 import xml.etree.ElementTree as ET
 
@@ -40,6 +40,39 @@ def parse_condition_coverage(coverage_str):
     return (0, 0)
 
 
+def is_inject_filename(filename):
+    """
+    Cobertura XML のファイル名が inject 用ソースか判定する。
+
+    Args:
+        filename: Cobertura XML の class 要素に記載されたファイル名
+
+    Returns:
+        inject 用ソースの場合は True、それ以外は False
+    """
+    if not filename:
+        return False
+
+    # Windows で生成された XML を Linux から処理する場合にも、ファイル名
+    # の区切り文字を正しく扱えるようにする。
+    basename = filename.replace('\\', '/').rsplit('/', 1)[-1]
+    return '.inject.' in basename
+
+
+def remove_inject_classes(root):
+    """
+    Cobertura XML から inject 用ソースの class 要素を削除する。
+
+    Args:
+        root: Cobertura XML のルート要素
+    """
+    for package in root.findall('.//package'):
+        for classes in package.findall('.//classes'):
+            for cls in list(classes.findall('class')):
+                if is_inject_filename(cls.get('filename')):
+                    classes.remove(cls)
+
+
 def accumulate_coverage(current_path, accumulated_path):
     """
     2つの Cobertura XML のカバレッジ情報を累積する。
@@ -48,18 +81,26 @@ def accumulate_coverage(current_path, accumulated_path):
         current_path: 今回のテスト結果の XML パス
         accumulated_path: 累積用の XML パス
     """
-    # 累積ファイルが存在しない場合は、今回の結果をコピー
+    # 個別テスト用の coverage.xml は変更せず、累積側だけ inject 用ソースを除外する。
+    current_tree = ET.parse(current_path)
+    current_root = current_tree.getroot()
+    remove_inject_classes(current_root)
+
+    # 累積ファイルが存在しない場合は、inject 用ソースを除外した結果を保存
     if not os.path.exists(accumulated_path):
-        shutil.copy(current_path, accumulated_path)
+        recalculate_coverage_stats(current_root)
+        try:
+            current_tree.write(accumulated_path, encoding='utf-8', xml_declaration=True)
+        except Exception as e:
+            print(f"Error: Failed to write {accumulated_path}: {e}", file=sys.stderr)
+            sys.exit(1)
         print(f"Created: {accumulated_path}")
         return
 
-    # 両方の XML をパース
-    current_tree = ET.parse(current_path)
+    # 累積側も正規化し、以前の実行で残った inject 用ソースを除外
     accumulated_tree = ET.parse(accumulated_path)
-
-    current_root = current_tree.getroot()
     accumulated_root = accumulated_tree.getroot()
+    remove_inject_classes(accumulated_root)
 
     # 累積側の行情報を辞書化 (ファイル名 + 行番号でアクセス)
     accumulated_lines = {}
