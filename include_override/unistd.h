@@ -3,6 +3,9 @@
     #ifndef _OVERRIDE_UNISTD_H
         #define _OVERRIDE_UNISTD_H
 
+        /* signal.h は kill() を宣言するため、kill の mock macro より先に読み込む。 */
+        #include_next <signal.h>
+
         /* 本物を include */
         #include_next <unistd.h>
 

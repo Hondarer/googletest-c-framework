@@ -19,6 +19,14 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, dup2(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_dup2));
     ON_CALL(*this, read(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_read));
     ON_CALL(*this, write(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_write));
+    ON_CALL(*this, geteuid(_, _, _)).WillByDefault(Invoke(delegate_real_geteuid));
+    ON_CALL(*this, getpid(_, _, _)).WillByDefault(Invoke(delegate_real_getpid));
+    ON_CALL(*this, kill(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_kill));
+    ON_CALL(*this, pipe(_, _, _, _)).WillByDefault(Invoke(delegate_real_pipe));
+    ON_CALL(*this, execve(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_execve));
+    ON_CALL(*this, readlink(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_readlink));
+    ON_CALL(*this, usleep(_, _, _, _)).WillByDefault(Invoke(delegate_real_usleep));
+    ON_CALL(*this, sched_yield(_, _, _)).WillByDefault(Invoke(delegate_real_sched_yield));
 
     _mock_unistd = this;
 }

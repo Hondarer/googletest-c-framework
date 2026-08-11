@@ -25,6 +25,14 @@ extern "C"
     extern int mock_dup2(const char *, const int, const char *, int, int);
     extern ssize_t mock_read(const char *, const int, const char *, int, void *, size_t);
     extern ssize_t mock_write(const char *, const int, const char *, int, const void *, size_t);
+    extern uid_t mock_geteuid(const char *, const int, const char *);
+    extern pid_t mock_getpid(const char *, const int, const char *);
+    extern int mock_kill(const char *, const int, const char *, pid_t, int);
+    extern int mock_pipe(const char *, const int, const char *, int[2]);
+    extern int mock_execve(const char *, const int, const char *, const char *, char *const[], char *const[]);
+    extern ssize_t mock_readlink(const char *, const int, const char *, const char *, char *, size_t);
+    extern int mock_usleep(const char *, const int, const char *, useconds_t);
+    extern int mock_sched_yield(const char *, const int, const char *);
 #else  // _WIN32
 extern __int64 mock__lseeki64(const char *, const int, const char *, int, __int64, int);
 extern int mock__close(const char *, const int, const char *, int);
@@ -53,6 +61,14 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
         #define dup2(oldfd, newfd)        mock_dup2(__FILE__, __LINE__, __func__, oldfd, newfd)
         #define read(fd, buf, count)      mock_read(__FILE__, __LINE__, __func__, fd, buf, count)
         #define write(fd, buf, count)     mock_write(__FILE__, __LINE__, __func__, fd, buf, count)
+        #define geteuid()                 mock_geteuid(__FILE__, __LINE__, __func__)
+        #define getpid()                  mock_getpid(__FILE__, __LINE__, __func__)
+        #define kill(pid, signal)         mock_kill(__FILE__, __LINE__, __func__, pid, signal)
+        #define pipe(pipefd)              mock_pipe(__FILE__, __LINE__, __func__, pipefd)
+        #define execve(path, argv, envp)  mock_execve(__FILE__, __LINE__, __func__, path, argv, envp)
+        #define readlink(path, buf, size) mock_readlink(__FILE__, __LINE__, __func__, path, buf, size)
+        #define usleep(usec)              mock_usleep(__FILE__, __LINE__, __func__, usec)
+        #define sched_yield()             mock_sched_yield(__FILE__, __LINE__, __func__)
 
     #else // _WIN32
 
@@ -88,6 +104,14 @@ extern int delegate_real_dup(const char *, const int, const char *, int);
 extern int delegate_real_dup2(const char *, const int, const char *, int, int);
 extern ssize_t delegate_real_read(const char *, const int, const char *, int, void *, size_t);
 extern ssize_t delegate_real_write(const char *, const int, const char *, int, const void *, size_t);
+extern uid_t delegate_real_geteuid(const char *, const int, const char *);
+extern pid_t delegate_real_getpid(const char *, const int, const char *);
+extern int delegate_real_kill(const char *, const int, const char *, pid_t, int);
+extern int delegate_real_pipe(const char *, const int, const char *, int[2]);
+extern int delegate_real_execve(const char *, const int, const char *, const char *, char *const[], char *const[]);
+extern ssize_t delegate_real_readlink(const char *, const int, const char *, const char *, char *, size_t);
+extern int delegate_real_usleep(const char *, const int, const char *, useconds_t);
+extern int delegate_real_sched_yield(const char *, const int, const char *);
 
 class Mock_unistd
 {
@@ -103,6 +127,14 @@ class Mock_unistd
     MOCK_METHOD(int, dup2, (const char *, const int, const char *, int, int));
     MOCK_METHOD(ssize_t, read, (const char *, const int, const char *, int, void *, size_t));
     MOCK_METHOD(ssize_t, write, (const char *, const int, const char *, int, const void *, size_t));
+    MOCK_METHOD(uid_t, geteuid, (const char *, const int, const char *));
+    MOCK_METHOD(pid_t, getpid, (const char *, const int, const char *));
+    MOCK_METHOD(int, kill, (const char *, const int, const char *, pid_t, int));
+    MOCK_METHOD(int, pipe, (const char *, const int, const char *, int[2]));
+    MOCK_METHOD(int, execve, (const char *, const int, const char *, const char *, char *const[], char *const[]));
+    MOCK_METHOD(ssize_t, readlink, (const char *, const int, const char *, const char *, char *, size_t));
+    MOCK_METHOD(int, usleep, (const char *, const int, const char *, useconds_t));
+    MOCK_METHOD(int, sched_yield, (const char *, const int, const char *));
 
     Mock_unistd();
     ~Mock_unistd();
