@@ -10,6 +10,7 @@ Mock_stdlib::Mock_stdlib()
     ON_CALL(*this, realloc(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_realloc));
     ON_CALL(*this, calloc(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_calloc));
     ON_CALL(*this, getenv(_, _, _, _)).WillByDefault(Invoke(delegate_real_getenv));
+    ON_CALL(*this, atexit(_, _, _, _)).WillByDefault(Invoke(delegate_real_atexit));
 #ifndef _WIN32
     ON_CALL(*this, realpath(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_realpath));
 #endif // _WIN32
