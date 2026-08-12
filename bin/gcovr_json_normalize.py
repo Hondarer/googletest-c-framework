@@ -10,6 +10,9 @@ from pathlib import Path
 
 def build_source_map(workspace_dir, test_sources):
     """TEST_SRCS のベース名からワークスペース相対パスへの対応を作る。"""
+    # Windows では短縮パス (8.3 形式) と長いパスが混在しうるため、
+    # test_sources 側の resolve() と表記を揃えるために workspace_dir も解決する。
+    workspace_dir = Path(workspace_dir).resolve()
     source_map = {}
     duplicate_names = set()
 
