@@ -79,6 +79,16 @@ def main():
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
+    if not normalized["files"] and data.get("files"):
+        # TEST_SRCS がカバレッジ結果と 1 件も対応しない状態は、指定の誤りか、
+        # 呼び出し側での単語分割の失敗を示す。空のまま進めるとカバレッジが
+        # 無言で 0% になるため、標準エラーへ通知する。
+        print(
+            "Warning: no TEST_SRCS matched the coverage data: "
+            + ", ".join(sorted(source_map)),
+            file=sys.stderr,
+        )
+
     with args.output_json.open("w", encoding="utf-8", newline="\n") as output_file:
         json.dump(normalized, output_file, ensure_ascii=False, separators=(",", ":"))
         output_file.write("\n")

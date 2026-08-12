@@ -153,8 +153,11 @@ function run_test() {
             gcovr --root "$WORKSPACE_DIR" --exclude-unreachable-branches --exclude-throw-branches \
                 --json --output coverage/coverage.raw.json 1> /dev/null 2>&1
             if [ -f coverage/coverage.raw.json ]; then
+                # 大域の IFS の状態に依存せず、TEST_SRCS を空白区切りで分割する
+                local -a test_src_list
+                IFS=$' \t\n' read -r -a test_src_list <<< "$TEST_SRCS"
                 python "$SCRIPT_DIR/gcovr_json_normalize.py" \
-                    coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" $TEST_SRCS
+                    coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" "${test_src_list[@]}"
                 gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/coverage.json \
                     --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
             fi
@@ -450,17 +453,22 @@ function main() {
     echo "Found $test_count test(s)."
     safe_tput cr
 
-    IFS=$'\n'
-        for test_name_w_comment in $tests; do
-            run_test "$test_name_w_comment"
-            # すべてのテストをやり切ったほうが使い勝手が良い
-            # 失敗しない前提であれば、以下を活かしても良い
-            #local result=$?
-            #if [ "$result" -ne 0 ]; then
-            #    return 1
-            #fi
-        done
-    unset IFS
+    # IFS を大域へ設定したままにすると、run_test の内側で $TEST_SRCS が単語分割されず、
+    # 複数ソースを指定したテストのカバレッジ集計が空になる。
+    # テスト名の行分割は read の一時的な IFS で行い、大域の IFS は既定のままにする。
+    # テスト バイナリが標準入力を消費しないように、専用の記述子から読み取る。
+    while IFS= read -r test_name_w_comment <&3; do
+        if [ -z "$test_name_w_comment" ]; then
+            continue
+        fi
+        run_test "$test_name_w_comment"
+        # すべてのテストをやり切ったほうが使い勝手が良い
+        # 失敗しない前提であれば、以下を活かしても良い
+        #local result=$?
+        #if [ "$result" -ne 0 ]; then
+        #    return 1
+        #fi
+    done 3<<< "$tests"
 
     # 全体結果を出力
     if [[ "${GTEST_FILTER+x}" ]]; then
