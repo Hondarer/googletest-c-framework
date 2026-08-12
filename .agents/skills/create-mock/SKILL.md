@@ -31,6 +31,9 @@ app 向け mock はアプリケーション層の関数 (`calcHandler`, `add` �
 テスト コード側で `EXPECT_CALL` / `ON_CALL` を上書きして `com_util` 単体および `com_util` 利用モジュールの単体テストを行います。  
 `app/com_util/test/` 配下を扱うときは `.agents/skills/create-mock-com-mock/SKILL.md` を優先します。
 
+`mock_lua`、`mock_sqlite3`、`mock_cjson` も既定で実ライブラリへ委譲します。  
+API 表から生成する第三者共有ライブラリ mock を扱うときは `.agents/skills/create-mock-shared-lib/SKILL.md` を優先します。
+
 標準ライブラリのモックが不足している場合は `create-testfw-mock` スキルを使い、`framework/testfw/libsrc/` 配下にモックを追加します。
 
 ## 方針
@@ -300,3 +303,5 @@ TEST_F(MyTest, example)
 
 `mock_com_util` だけは上記確認項目のうち既定値と未注入時動作が異なり、  
 全関数で real delegate を持つことを前提に `create-mock-com-mock` の確認項目を使います。
+
+`mock_lua`、`mock_sqlite3`、`mock_cjson` は `create-mock-shared-lib` の確認項目を使います。

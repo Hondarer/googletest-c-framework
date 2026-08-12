@@ -33,6 +33,7 @@ mock を新規追加する作業は `create-mock` を使い、この文書では
 - 依存する関数の mock がすでにあるか
     - アプリケーション関数 (`calcHandler`, `add` 等) の mock が不足する場合は `create-mock` を使う
     - 標準ライブラリ関数 (`printf`, `fopen` 等) の mock が不足する場合は `create-testfw-mock` を使い、`framework/testfw/libsrc/` 配下にモックを追加する
+    - lua / sqlite / cjson を差し替える場合は `create-mock-shared-lib` を使い、実ライブラリの代わりに `mock_lua` / `mock_sqlite3` / `mock_cjson` をリンクする
 
 参照先:
 
