@@ -50,6 +50,10 @@ class GcovrJsonNormalizeTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate basenames"):
                 MODULE.build_source_map(workspace, sources)
 
+    @unittest.skipUnless(
+        sys.platform == "linux",
+        "gcovr の分岐統合テストは Linux のカバレッジ環境で実行します。",
+    )
     def test_gcovr_merge_preserves_branch_identity(self):
         with tempfile.TemporaryDirectory() as temp_dir_text:
             temp_dir = Path(temp_dir_text)
