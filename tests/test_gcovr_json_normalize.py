@@ -160,14 +160,18 @@ class GcovrJsonNormalizeTest(unittest.TestCase):
                             "line_number": 1,
                             "count": 1,
                             "branches": [
+                                # gcovr は分岐を始点と終点のブロック ID で識別する。
+                                # see: https://gcovr.com/en/8.6/output/json.html#branch-entries
                                 {
                                     "source_block_id": 0,
+                                    "destination_block_id": 1,
                                     "count": fallthrough_count,
                                     "fallthrough": True,
                                     "throw": False,
                                 },
                                 {
                                     "source_block_id": 0,
+                                    "destination_block_id": 2,
                                     "count": taken_count,
                                     "fallthrough": False,
                                     "throw": False,
