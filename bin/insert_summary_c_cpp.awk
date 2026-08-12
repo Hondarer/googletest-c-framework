@@ -85,6 +85,7 @@ function print_cycle(cycle, multi,   suffix, check_header, first, has_step) {
   } else {
     print check_header
   }
+  for (i = 1; i <= state_c_idx[cycle]; i++) print state_chk[cycle, i]
   for (i = 1; i <= pre_c_idx[cycle]; i++) print pre_chk[cycle, i]
   for (i = 1; i <= as_c_idx[cycle]; i++) print asrt_chk[cycle, i]
 }
@@ -123,7 +124,20 @@ BEGIN {
   if (cur_cycle > max_cycle) max_cycle = cur_cycle
 
   # タグを検出（より具体的なパターンを先にチェック）
-  if (match($0, /\[状態\]/)) {
+  if (match($0, /\[状態確認\]/)) {
+    s = trim(substr($0, RSTART + RLENGTH))
+    if (s != "") {
+      # Arrange フェーズの資源確認は確認件数に計上せず、リスト記号を括弧書きへ整形する
+      if (is_list_item(s)) {
+        body = s
+        sub(/^[-*+][ \t]*/, "", body)
+        sub(/^[0-9]+\.[ \t]*/, "", body)
+        s = "- (" body ")"
+      }
+      state_chk[cur_cycle, ++state_c_idx[cur_cycle]] = s
+      any_content = 1
+    }
+  } else if (match($0, /\[状態\]/)) {
     s = trim(substr($0, RSTART + RLENGTH))
     if (s != "") { state[cur_cycle, ++s_idx[cur_cycle]] = s; any_content = 1 }
   } else if (match($0, /\[手順\]/)) {

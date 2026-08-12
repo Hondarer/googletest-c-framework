@@ -21,6 +21,7 @@ Output:
 
 タグ:
     [状態] - テストの前提条件
+    [状態確認] - Arrange で確保した資源の確認 (確認件数には計上しない)
     [手順] - 実行手順 (Act)
     [Pre-Assert手順] - Assert 前の手順
     [確認] - Assert による確認内容
@@ -62,7 +63,7 @@ def phase_cycle_number(line):
     return 1
 
 
-def format_cycle_section(cycle, multi, state, act, pre_step, pre_chk, asrt_chk,
+def format_cycle_section(cycle, multi, state, state_chk, act, pre_step, pre_chk, asrt_chk,
                           check_normal, check_abnormal, check_unspecified,
                           is_theory, param_count):
     """1 サイクル分のセクション (状態 / 手順 / 確認内容) を文字列で返す。multi が真のとき見出しに "_cycle" を付与する"""
@@ -125,6 +126,8 @@ def format_cycle_section(cycle, multi, state, act, pre_step, pre_chk, asrt_chk,
         out.append("\n" + check_header)
     else:
         out.append(check_header)
+    for s in state_chk:
+        out.append(s + "\n")
     for s in pre_chk:
         out.append(s + "\n")
     for s in asrt_chk:
@@ -139,6 +142,7 @@ def insert_summary():
 
     # カテゴリ別の配列 (サイクル番号 -> リスト)
     state = {}
+    state_chk = {}
     act = {}
     pre_step = {}
     pre_chk = {}
@@ -175,6 +179,19 @@ def insert_summary():
             cur_cycle = ph_num
         if cur_cycle > max_cycle:
             max_cycle = cur_cycle
+
+        # [状態確認] (Arrange で確保した資源の確認。確認件数には計上しない)
+        match = re.search(r'\[状態確認\]', line)
+        if match:
+            s = trim(line[match.end():])
+            if s:
+                if is_list_item(s):
+                    body = re.sub(r'^[-*+][ \t]*', '', s)
+                    body = re.sub(r'^[0-9]+\.[ \t]*', '', body)
+                    s = f"- ({body})"
+                state_chk.setdefault(cur_cycle, []).append(s)
+                any_content = True
+            continue
 
         # [状態]
         match = re.search(r'\[状態\]', line)
@@ -281,7 +298,7 @@ def insert_summary():
         for cycle in cycles:
             sys.stdout.write(format_cycle_section(
                 cycle, multi,
-                state.get(cycle, []), act.get(cycle, []), pre_step.get(cycle, []),
+                state.get(cycle, []), state_chk.get(cycle, []), act.get(cycle, []), pre_step.get(cycle, []),
                 pre_chk.get(cycle, []), asrt_chk.get(cycle, []),
                 check_normal.get(cycle, 0), check_abnormal.get(cycle, 0), check_unspecified.get(cycle, 0),
                 is_theory, param_count))
