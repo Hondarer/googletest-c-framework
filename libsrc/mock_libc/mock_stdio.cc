@@ -19,6 +19,10 @@ void Mock_stdio::switch_to_mock_fileio()
 {
     ON_CALL(*this, fclose(_, _, _, _)).WillByDefault(Invoke(delegate_fake_fclose));
 
+    ON_CALL(*this, feof(_, _, _, _)).WillByDefault(Invoke(delegate_fake_feof));
+
+    ON_CALL(*this, ferror(_, _, _, _)).WillByDefault(Invoke(delegate_fake_ferror));
+
     ON_CALL(*this, fflush(_, _, _, _)).WillByDefault(Invoke(delegate_fake_fflush));
 
     ON_CALL(*this, fopen(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fopen));
@@ -48,6 +52,10 @@ void Mock_stdio::switch_to_mock_fileio()
 void Mock_stdio::switch_to_real_fileio()
 {
     ON_CALL(*this, fclose(_, _, _, _)).WillByDefault(Invoke(delegate_real_fclose));
+
+    ON_CALL(*this, feof(_, _, _, _)).WillByDefault(Invoke(delegate_real_feof));
+
+    ON_CALL(*this, ferror(_, _, _, _)).WillByDefault(Invoke(delegate_real_ferror));
 
     ON_CALL(*this, fflush(_, _, _, _)).WillByDefault(Invoke(delegate_real_fflush));
 

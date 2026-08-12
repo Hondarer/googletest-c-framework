@@ -96,6 +96,7 @@ clean : $(SUBDIRS)
 
 .PHONY: test
 test : $(SUBDIRS)
+	python -m unittest discover -s tests -p 'test_*.py'
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :

@@ -33,6 +33,7 @@ extern "C"
     extern ssize_t mock_readlink(const char *, const int, const char *, const char *, char *, size_t);
     extern int mock_usleep(const char *, const int, const char *, useconds_t);
     extern int mock_sched_yield(const char *, const int, const char *);
+    extern int mock_rmdir(const char *, const int, const char *, const char *);
 #else  // _WIN32
 extern __int64 mock__lseeki64(const char *, const int, const char *, int, __int64, int);
 extern int mock__close(const char *, const int, const char *, int);
@@ -69,6 +70,7 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
         #define readlink(path, buf, size) mock_readlink(__FILE__, __LINE__, __func__, path, buf, size)
         #define usleep(usec)              mock_usleep(__FILE__, __LINE__, __func__, usec)
         #define sched_yield()             mock_sched_yield(__FILE__, __LINE__, __func__)
+        #define rmdir(path)               mock_rmdir(__FILE__, __LINE__, __func__, path)
 
     #else // _WIN32
 
@@ -112,6 +114,7 @@ extern int delegate_real_execve(const char *, const int, const char *, const cha
 extern ssize_t delegate_real_readlink(const char *, const int, const char *, const char *, char *, size_t);
 extern int delegate_real_usleep(const char *, const int, const char *, useconds_t);
 extern int delegate_real_sched_yield(const char *, const int, const char *);
+extern int delegate_real_rmdir(const char *, const int, const char *, const char *);
 
 class Mock_unistd
 {
@@ -135,6 +138,7 @@ class Mock_unistd
     MOCK_METHOD(ssize_t, readlink, (const char *, const int, const char *, const char *, char *, size_t));
     MOCK_METHOD(int, usleep, (const char *, const int, const char *, useconds_t));
     MOCK_METHOD(int, sched_yield, (const char *, const int, const char *));
+    MOCK_METHOD(int, rmdir, (const char *, const int, const char *, const char *));
 
     Mock_unistd();
     ~Mock_unistd();

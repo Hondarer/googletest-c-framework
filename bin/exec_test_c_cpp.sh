@@ -150,7 +150,14 @@ function run_test() {
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
         if [ -n "$TEST_SRCS" ]; then
             # TEST_SRCS が指定されている場合のみカバレッジ計測
-            gcovr --exclude-unreachable-branches --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
+            gcovr --root "$WORKSPACE_DIR" --exclude-unreachable-branches --exclude-throw-branches \
+                --json --output coverage/coverage.raw.json 1> /dev/null 2>&1
+            if [ -f coverage/coverage.raw.json ]; then
+                python "$SCRIPT_DIR/gcovr_json_normalize.py" \
+                    coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" $TEST_SRCS
+                gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/coverage.json \
+                    --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
+            fi
         fi
     else
         # Windows
@@ -267,7 +274,17 @@ function run_test() {
         fi
 
         # 各回のテスト結果を積み上げ
-        if [ -f coverage/coverage.xml ]; then
+        if [ $IS_WINDOWS -ne 1 ] && [ -f coverage/coverage.json ]; then
+            if [ -f coverage/accumulated_coverage.json ]; then
+                gcovr --root "$WORKSPACE_DIR" \
+                    --add-tracefile coverage/accumulated_coverage.json \
+                    --add-tracefile coverage/coverage.json \
+                    --json --output coverage/merged_coverage.json 1> /dev/null 2>&1
+                mv coverage/merged_coverage.json coverage/accumulated_coverage.json
+            else
+                cp -p coverage/coverage.json coverage/accumulated_coverage.json
+            fi
+        elif [ -f coverage/coverage.xml ]; then
             python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
         else
             echo -e "\e[33m[ WARNING ]\e[0m Coverage file was not generated: coverage/coverage.xml" | tee -a results/all_tests/summary.log
@@ -277,6 +294,7 @@ function run_test() {
     # 各テストの coverage.xml を退避 (デバッグ用)
     #mv coverage/coverage.xml results/$test_id/.
     rm -f coverage/coverage.xml 1> /dev/null 2>&1
+    rm -f coverage/coverage.json coverage/coverage.raw.json 1> /dev/null 2>&1
 
     return $result
 }
@@ -459,6 +477,11 @@ function main() {
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
 
+    if [ $IS_WINDOWS -ne 1 ] && [ -f coverage/accumulated_coverage.json ]; then
+        gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/accumulated_coverage.json \
+            --cobertura-pretty --output coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+    fi
+
     if [ -n "$TEST_SRCS" ] && [ -f coverage/accumulated_coverage.xml ]; then
         # TEST_SRCS が指定されている場合のみカバレッジ レポートを生成
         # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
@@ -516,6 +539,9 @@ function main() {
 
         # 全体カバレッジ計測用に、カバレッジ xml を保持
         cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
+        if [ -f coverage/accumulated_coverage.json ]; then
+            cp -p coverage/accumulated_coverage.json results/all_tests/coverage.json
+        fi
     elif [ -n "$TEST_SRCS" ] && [ "$test_count" -gt 0 ]; then
         echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a results/all_tests/summary.log
     fi

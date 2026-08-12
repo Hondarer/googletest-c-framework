@@ -12,6 +12,7 @@ Mock_dlfcn::Mock_dlfcn()
     ON_CALL(*this, dlopen(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_dlopen));
     ON_CALL(*this, dlsym(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_dlsym));
     ON_CALL(*this, dlclose(_, _, _, _)).WillByDefault(Invoke(delegate_real_dlclose));
+    ON_CALL(*this, dladdr(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_dladdr));
 
     _mock_dlfcn = this;
 }
@@ -134,6 +135,44 @@ int mock_dlclose(const char *file, const int line, const char *func, void *handl
     }
 
     return result;
+}
+
+int delegate_real_dladdr(const char *file, const int line, const char *func, const void *address, void *info)
+{
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return dladdr(address, static_cast<Dl_info *>(info));
+}
+
+int mock_dladdr(const char *file, const int line, const char *func, const void *address, void *info)
+{
+    int ret;
+
+    if (_mock_dlfcn != nullptr)
+    {
+        ret = _mock_dlfcn->dladdr(file, line, func, address, info);
+    }
+    else
+    {
+        ret = delegate_real_dladdr(file, line, func, address, info);
+    }
+
+    if (getTraceLevel() > TRACE_NONE)
+    {
+        printf("  > dladdr 0x%p, 0x%p", address, (void *)info);
+        if (getTraceLevel() >= TRACE_DETAIL)
+        {
+            printf(" from %s:%d -> %d\n", file, line, ret);
+        }
+        else
+        {
+            printf("\n");
+        }
+    }
+
+    return ret;
 }
 
 #endif // _WIN32

@@ -12,6 +12,7 @@ extern "C"
 #ifndef _WIN32
     /* fstat は POSIX のみ。Windows は GetFileInformationByHandle を使うためモック対象外 */
     extern int mock_fstat(const char *, const int, const char *, int, struct stat *);
+    extern int mock_mkdir(const char *, const int, const char *, const char *, mode_t);
 #endif // _WIN32
 
 #ifdef _WIN32
@@ -27,7 +28,8 @@ extern "C"
     #define stat(path, buf) mock_stat(__FILE__, __LINE__, __func__, path, buf)
 
     #ifndef _WIN32
-        #define fstat(fd, buf) mock_fstat(__FILE__, __LINE__, __func__, fd, buf)
+        #define fstat(fd, buf)    mock_fstat(__FILE__, __LINE__, __func__, fd, buf)
+        #define mkdir(path, mode) mock_mkdir(__FILE__, __LINE__, __func__, path, mode)
     #endif // _WIN32
 
     #ifdef _WIN32
@@ -49,6 +51,7 @@ extern int delegate_real_stat(const char *, const int, const char *, const char 
 
     #ifndef _WIN32
 extern int delegate_real_fstat(const char *, const int, const char *, int, struct stat *);
+extern int delegate_real_mkdir(const char *, const int, const char *, const char *, mode_t);
     #endif // _WIN32
 
     #ifdef _WIN32
@@ -62,6 +65,7 @@ class Mock_sys_stat
 
     #ifndef _WIN32
     MOCK_METHOD(int, fstat, (const char *, const int, const char *, int, struct stat *));
+    MOCK_METHOD(int, mkdir, (const char *, const int, const char *, const char *, mode_t));
     #endif // _WIN32
 
     #ifdef _WIN32

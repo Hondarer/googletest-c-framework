@@ -16,6 +16,7 @@ extern "C"
     extern void *mock_dlopen(const char *, const int, const char *, const char *, int);
     extern void *mock_dlsym(const char *, const int, const char *, void *, const char *);
     extern int mock_dlclose(const char *, const int, const char *, void *);
+    extern int mock_dladdr(const char *, const int, const char *, const void *, void *);
 
     #ifdef __cplusplus
 }
@@ -23,12 +24,10 @@ extern "C"
 
     #ifdef _IN_OVERRIDE_HEADER_DLFCN_H
 
-        #define dlopen(filename, flags) \
-            mock_dlopen(__FILE__, __LINE__, __func__, filename, flags)
-        #define dlsym(handle, symbol) \
-            mock_dlsym(__FILE__, __LINE__, __func__, handle, symbol)
-        #define dlclose(handle) \
-            mock_dlclose(__FILE__, __LINE__, __func__, handle)
+        #define dlopen(filename, flags) mock_dlopen(__FILE__, __LINE__, __func__, filename, flags)
+        #define dlsym(handle, symbol)   mock_dlsym(__FILE__, __LINE__, __func__, handle, symbol)
+        #define dlclose(handle)         mock_dlclose(__FILE__, __LINE__, __func__, handle)
+        #define dladdr(address, info)   mock_dladdr(__FILE__, __LINE__, __func__, address, info)
 
     #else // _IN_OVERRIDE_HEADER_DLFCN_H
 
@@ -40,6 +39,7 @@ extern "C"
 extern void *delegate_real_dlopen(const char *, const int, const char *, const char *, int);
 extern void *delegate_real_dlsym(const char *, const int, const char *, void *, const char *);
 extern int delegate_real_dlclose(const char *, const int, const char *, void *);
+extern int delegate_real_dladdr(const char *, const int, const char *, const void *, void *);
 
 class Mock_dlfcn
 {
@@ -47,6 +47,7 @@ class Mock_dlfcn
     MOCK_METHOD(void *, dlopen, (const char *, const int, const char *, const char *, int));
     MOCK_METHOD(void *, dlsym, (const char *, const int, const char *, void *, const char *));
     MOCK_METHOD(int, dlclose, (const char *, const int, const char *, void *));
+    MOCK_METHOD(int, dladdr, (const char *, const int, const char *, const void *, void *));
 
     Mock_dlfcn();
     ~Mock_dlfcn();
