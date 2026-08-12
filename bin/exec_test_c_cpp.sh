@@ -80,6 +80,76 @@ function get_md5_checksum() {
     md5sum "$src" 2>/dev/null | awk 'NR == 1 { print $1 }'
 }
 
+# 引数に渡したファイル一覧の MD5 を、1 回の powershell.exe 呼び出しで一括取得し
+# _MD5_CACHE へキャッシュする (Windows 専用。get_md5_checksum の高速化用)
+function populate_md5_cache_windows() {
+    local _ps_cmd=""
+    if command -v powershell.exe &>/dev/null; then
+        _ps_cmd="powershell.exe"
+    elif [ -f "/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" ]; then
+        _ps_cmd="/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
+    fi
+    if [ -z "$_ps_cmd" ]; then
+        return 0
+    fi
+
+    declare -gA _MD5_CACHE
+    local _src_keys=()
+    local ps_script=""
+    local src
+    for src in "$@"; do
+        local win_path
+        win_path=$(cygpath -w "$src" 2>/dev/null || printf '%s\n' "$src")
+        ps_script+="(Get-FileHash -LiteralPath '${win_path//\'/\'\'}' -Algorithm MD5).Hash.ToLower();"
+        _src_keys+=("$src")
+    done
+    local ps_output
+    ps_output=$("$_ps_cmd" -NoProfile -Command "$ps_script" 2>/dev/null)
+    local _i=0
+    while IFS= read -r _line; do
+        # PowerShell の出力は CRLF のため末尾の \r を除去する
+        _line="${_line%$'\r'}"
+        if [ -n "$_line" ] && [ $_i -lt ${#_src_keys[@]} ]; then
+            _MD5_CACHE["${_src_keys[$_i]}"]="$_line"
+        fi
+        ((_i++))
+    done <<< "$ps_output"
+}
+
+# leaf ディレクトリの再テスト スキップ判定に使うシグネチャを生成する。
+# TEST_SRCS / ADD_SRCS / このディレクトリ直下の makepart.mk・makelocal.mk を対象に
+# MD5 チェックサムを計算し、ソート済みの "<hash>  <相対パス>" 形式で出力する。
+# 対象ファイルが1つも無い場合、またはいずれかの MD5 計算に失敗した場合は
+# 何も出力せず終了コード 1 を返す (呼び出し側はスキップ判定・スタンプ書き込みの
+# 両方を諦め、必ずテストを実行する)。
+function compute_test_signature() {
+    local -a sig_srcs=()
+    local src
+
+    for src in $TEST_SRCS $ADD_SRCS; do
+        [ -n "$src" ] && sig_srcs+=("$src")
+    done
+    for src in makepart.mk makelocal.mk; do
+        [ -f "$src" ] && sig_srcs+=("$src")
+    done
+
+    if [ ${#sig_srcs[@]} -eq 0 ]; then
+        return 1
+    fi
+
+    local entries=""
+    for src in "${sig_srcs[@]}"; do
+        local checksum
+        checksum=$(get_md5_checksum "$src")
+        if [ -z "$checksum" ]; then
+            return 1
+        fi
+        entries+="$checksum  $(format_src_path_for_display "$src")"$'\n'
+    done
+
+    printf '%s' "$entries" | LC_ALL=C sort
+}
+
 # テスト一覧を取得
 function list_tests() {
     ./$TEST_BINARY --gtest_list_tests | awk '
@@ -315,10 +385,6 @@ function run_test() {
 function main() {
     # サブフォルダーを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
-    rm -rf obj/*.info gcov lcov coverage results
-    mkdir coverage
-    mkdir results
-    mkdir -p results/all_tests
 
     # TEST_SRCS が空の場合、サブフォルダーの makepart.mk から TEST_SRCS を収集
     if [ -z "$TEST_SRCS" ]; then
@@ -352,6 +418,47 @@ function main() {
         TEST_SRCS=$(echo "$TEST_SRCS" | xargs)  # トリム
     fi
 
+    # 再テスト スキップ判定
+    # TEST_SRCS / ADD_SRCS / ローカル makepart.mk・makelocal.mk のハッシュが前回のクリーンな成功時から
+    # 変わっておらず、GTEST_FILTER によるフィルター実行でもない場合は、実際のテスト実行そのものを省略する。
+    # MAKEFW_TEST_FORCE=1 を指定すると、このスキップを無視して必ず実行する。
+    local test_stamp_file="test.stamp"
+    local test_signature_file
+    test_signature_file=$(mktemp)
+    local test_signature_ok=1
+
+    if [ $IS_WINDOWS -eq 1 ]; then
+        local -a signature_srcs_for_cache=()
+        local ssrc
+        for ssrc in $TEST_SRCS $ADD_SRCS; do
+            [ -n "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
+        done
+        for ssrc in makepart.mk makelocal.mk; do
+            [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
+        done
+        if [ ${#signature_srcs_for_cache[@]} -gt 0 ]; then
+            populate_md5_cache_windows "${signature_srcs_for_cache[@]}"
+        fi
+    fi
+
+    if ! compute_test_signature > "$test_signature_file"; then
+        test_signature_ok=0
+        rm -f "$test_signature_file"
+    fi
+
+    if [ $test_signature_ok -eq 1 ] && [ -s "$test_signature_file" ] \
+        && [ -z "${GTEST_FILTER+x}" ] && [ "${MAKEFW_TEST_FORCE:-0}" != "1" ] \
+        && [ -f "$test_stamp_file" ] && cmp -s "$test_signature_file" "$test_stamp_file"; then
+        echo "INFO: Skipping test (dependencies are unchanged and clean)"
+        rm -f "$test_signature_file"
+        return 0
+    fi
+
+    rm -rf obj/*.info gcov lcov coverage results
+    mkdir coverage
+    mkdir results
+    mkdir -p results/all_tests
+
     if [ $IS_WINDOWS -eq 1 ]; then
         # Windows
         # OpenCppCoverage のソース指定オプションを生成
@@ -381,38 +488,8 @@ function main() {
     echo -e "----" | tee -a results/all_tests/summary.log
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
-
-        # Windows では全ファイルのハッシュを 1 回の powershell.exe 呼び出しで一括取得しキャッシュする
-        if [ $IS_WINDOWS -eq 1 ]; then
-            local _ps_cmd=""
-            if command -v powershell.exe &>/dev/null; then
-                _ps_cmd="powershell.exe"
-            elif [ -f "/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" ]; then
-                _ps_cmd="/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-            fi
-            if [ -n "$_ps_cmd" ]; then
-                declare -gA _MD5_CACHE
-                local _src_keys=()
-                local ps_script=""
-                for src in $TEST_SRCS; do
-                    local win_path
-                    win_path=$(cygpath -w "$src" 2>/dev/null || printf '%s\n' "$src")
-                    ps_script+="(Get-FileHash -LiteralPath '${win_path//\'/\'\'}' -Algorithm MD5).Hash.ToLower();"
-                    _src_keys+=("$src")
-                done
-                local ps_output
-                ps_output=$("$_ps_cmd" -NoProfile -Command "$ps_script" 2>/dev/null)
-                local _i=0
-                while IFS= read -r _line; do
-                    # PowerShell の出力は CRLF のため末尾の \r を除去する
-                    _line="${_line%$'\r'}"
-                    if [ -n "$_line" ] && [ $_i -lt ${#_src_keys[@]} ]; then
-                        _MD5_CACHE["${_src_keys[$_i]}"]="$_line"
-                    fi
-                    ((_i++))
-                done <<< "$ps_output"
-            fi
-        fi
+        # (Windows での _MD5_CACHE 一括取得は、再テスト スキップ判定のシグネチャ計算時に
+        #  ADD_SRCS・ローカル makefile も含めてすでに実施済み)
 
         safe_tput cr
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
@@ -425,6 +502,7 @@ function main() {
             if [ -z "$checksum" ]; then
                 echo -e "\e[31mError: Failed to calculate MD5: $src\e[0m" | tee -a results/all_tests/summary.log
                 bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+                rm -f "$test_stamp_file" "$test_signature_file"
                 return 1
             fi
 
@@ -440,6 +518,7 @@ function main() {
     if [ ! -f "$TEST_BINARY" ]; then
         echo -e "\e[31mError: Test binary not found: $TEST_BINARY\e[0m" | tee -a results/all_tests/summary.log
         bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        rm -f "$test_stamp_file" "$test_signature_file"
         return 1
     fi
 
@@ -450,6 +529,7 @@ function main() {
         echo -e "\e[31mError: Failed to execute test binary: $TEST_BINARY (exit code: $list_exit_code)\e[0m" | tee -a results/all_tests/summary.log
         bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
         echo ""
+        rm -f "$test_stamp_file" "$test_signature_file"
         return 1
     fi
     # テスト数をカウント (wc -l 相当)
@@ -493,6 +573,17 @@ function main() {
 
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
     echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
+
+    # 再テスト スキップ判定用スタンプの更新
+    # GTEST_FILTER によるフィルター実行ではなく、かつ全件失敗なし (クリーン) の場合のみ
+    # スタンプを更新する。それ以外は、次回必ず再実行されるようスタンプを削除する。
+    if [ $test_signature_ok -eq 1 ] && [ -s "$test_signature_file" ] \
+        && [ -z "${GTEST_FILTER+x}" ] && [ $FAILURE_COUNT -eq 0 ]; then
+        cp "$test_signature_file" "$test_stamp_file"
+    else
+        rm -f "$test_stamp_file"
+    fi
+    rm -f "$test_signature_file"
 
     if [ $IS_WINDOWS -ne 1 ] && [ -f coverage/accumulated_coverage.json ]; then
         gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/accumulated_coverage.json \

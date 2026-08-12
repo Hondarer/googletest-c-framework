@@ -166,3 +166,28 @@ make test
 ...
 export -n GTEST_FILTER # フィルター不要になったら、GTEST_FILTER 環境変数を削除
 ```
+
+### 再テストのスキップ
+
+テスト対象フォルダー (leaf ディレクトリ) 単位で、`TEST_SRCS`・`ADD_SRCS`・ローカルの `makepart.mk`/`makelocal.mk` の MD5 が
+前回のクリーンな成功時 (`Failed` が 0 件) から変化していない場合、`make test` は実際のテスト実行を省略します。  
+スキップした場合は `results/` 以下を前回のまま残し、以下を表示します。
+
+```text
+INFO: Skipping test (dependencies are unchanged and clean)
+```
+
+判定用のシグネチャは、テスト対象フォルダー直下の `test.stamp` に保存されます。  
+`GTEST_FILTER` を指定した実行は、テスト対象の一部のみを検証したものであり「クリーンな全件成功」の証拠にならないため、
+スキップ判定にもスタンプの更新にも使われません。
+
+`MAKEFW_TEST_FORCE=1` を指定すると、スタンプの内容に関わらず必ずテストを実行します。
+
+```bash
+MAKEFW_TEST_FORCE=1 make test
+```
+
+この仕組みは `app/<name>/makefile` の `test:` ターゲットが持つ app 単位のスキップ (`make_test.stamp`) とは独立しています。  
+app 単位のスキップは、途中で 1 つでもテストが失敗すると `make_test.stamp` が更新されないため全 leaf の再実行に戻りますが、
+leaf 単位の `test.stamp` はテスト対象フォルダーごとに個別に維持されるため、失敗箇所を修正した後の再実行では、
+変更されていない leaf だけが引き続きスキップされます。
