@@ -150,8 +150,17 @@ function run_test() {
             echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
         if [ -n "$TEST_SRCS" ]; then
             # TEST_SRCS が指定されている場合のみカバレッジ計測
-            gcovr --root "$WORKSPACE_DIR" --exclude-unreachable-branches --exclude-throw-branches \
-                --json --output coverage/coverage.raw.json 1> /dev/null 2>&1
+            # 探索範囲をテスト ディレクトリへ限定する。
+            # --root だけを指定すると gcovr はワークスペース全体を走査し、
+            # 他のディレクトリに残った無関係な gcda で読み取りに失敗すると、
+            # そのテストの計測結果が失われる。
+            local gcovr_error
+            gcovr_error=$(gcovr --root "$WORKSPACE_DIR" . --exclude-unreachable-branches \
+                --exclude-throw-branches --json --output coverage/coverage.raw.json 2>&1 1> /dev/null)
+            if [ ! -f coverage/coverage.raw.json ]; then
+                echo -e "\e[33m[ WARNING ]\e[0m Coverage data could not be read:" | tee -a results/all_tests/summary.log
+                echo "$gcovr_error" | tee -a results/all_tests/summary.log
+            fi
             if [ -f coverage/coverage.raw.json ]; then
                 # 大域の IFS の状態に依存せず、TEST_SRCS を空白区切りで分割する
                 local -a test_src_list
