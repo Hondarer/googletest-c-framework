@@ -24,6 +24,14 @@ extern "C"
     extern BOOL mock_SetConsoleMode(const char *, const int, const char *, HANDLE, DWORD);
     extern DWORD mock_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
     extern BOOL mock_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
+    extern HANDLE mock_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD,
+                                          DWORD, DWORD, LPCSTR);
+    extern LPVOID mock_MapViewOfFile(const char *, const int, const char *, HANDLE, DWORD, DWORD, DWORD, SIZE_T);
+    extern BOOL mock_UnmapViewOfFile(const char *, const int, const char *, LPCVOID);
+    extern BOOL mock_FlushViewOfFile(const char *, const int, const char *, LPCVOID, SIZE_T);
+    extern BOOL mock_FlushFileBuffers(const char *, const int, const char *, HANDLE);
+    extern BOOL mock_CloseHandle(const char *, const int, const char *, HANDLE);
+    extern DWORD mock_GetLastError(const char *, const int, const char *);
 
         #ifdef __cplusplus
 }
@@ -43,6 +51,16 @@ extern "C"
                 mock_WaitForSingleObject(__FILE__, __LINE__, __func__, handle, milliseconds)
             #define ReadFile(file_handle, buffer, bytes_to_read, bytes_read, overlapped) \
                 mock_ReadFile(__FILE__, __LINE__, __func__, file_handle, buffer, bytes_to_read, bytes_read, overlapped)
+            #define CreateFileMappingA(file, attributes, protect, size_high, size_low, name) \
+                mock_CreateFileMappingA(__FILE__, __LINE__, __func__, file, attributes, protect, size_high, size_low, \
+                                        name)
+            #define MapViewOfFile(mapping, access, offset_high, offset_low, bytes) \
+                mock_MapViewOfFile(__FILE__, __LINE__, __func__, mapping, access, offset_high, offset_low, bytes)
+            #define UnmapViewOfFile(address)        mock_UnmapViewOfFile(__FILE__, __LINE__, __func__, address)
+            #define FlushViewOfFile(address, bytes) mock_FlushViewOfFile(__FILE__, __LINE__, __func__, address, bytes)
+            #define FlushFileBuffers(file)          mock_FlushFileBuffers(__FILE__, __LINE__, __func__, file)
+            #define CloseHandle(handle)             mock_CloseHandle(__FILE__, __LINE__, __func__, handle)
+            #define GetLastError()                  mock_GetLastError(__FILE__, __LINE__, __func__)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -56,8 +74,15 @@ extern HANDLE delegate_real_GetStdHandle(const char *, const int, const char *, 
 extern BOOL delegate_real_GetConsoleMode(const char *, const int, const char *, HANDLE, LPDWORD);
 extern BOOL delegate_real_SetConsoleMode(const char *, const int, const char *, HANDLE, DWORD);
 extern DWORD delegate_real_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
-extern BOOL delegate_real_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD,
-                                   LPOVERLAPPED);
+extern BOOL delegate_real_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
+extern HANDLE delegate_real_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES,
+                                               DWORD, DWORD, DWORD, LPCSTR);
+extern LPVOID delegate_real_MapViewOfFile(const char *, const int, const char *, HANDLE, DWORD, DWORD, DWORD, SIZE_T);
+extern BOOL delegate_real_UnmapViewOfFile(const char *, const int, const char *, LPCVOID);
+extern BOOL delegate_real_FlushViewOfFile(const char *, const int, const char *, LPCVOID, SIZE_T);
+extern BOOL delegate_real_FlushFileBuffers(const char *, const int, const char *, HANDLE);
+extern BOOL delegate_real_CloseHandle(const char *, const int, const char *, HANDLE);
+extern DWORD delegate_real_GetLastError(const char *, const int, const char *);
 
 class Mock_windows
 {
@@ -69,6 +94,14 @@ class Mock_windows
     MOCK_METHOD(BOOL, SetConsoleMode, (const char *, const int, const char *, HANDLE, DWORD));
     MOCK_METHOD(DWORD, WaitForSingleObject, (const char *, const int, const char *, HANDLE, DWORD));
     MOCK_METHOD(BOOL, ReadFile, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED));
+    MOCK_METHOD(HANDLE, CreateFileMappingA,
+                (const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR));
+    MOCK_METHOD(LPVOID, MapViewOfFile, (const char *, const int, const char *, HANDLE, DWORD, DWORD, DWORD, SIZE_T));
+    MOCK_METHOD(BOOL, UnmapViewOfFile, (const char *, const int, const char *, LPCVOID));
+    MOCK_METHOD(BOOL, FlushViewOfFile, (const char *, const int, const char *, LPCVOID, SIZE_T));
+    MOCK_METHOD(BOOL, FlushFileBuffers, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(BOOL, CloseHandle, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(DWORD, GetLastError, (const char *, const int, const char *));
 
     void switch_to_real_time();
     void switch_to_mock_time();

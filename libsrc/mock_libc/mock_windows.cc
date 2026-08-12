@@ -15,6 +15,14 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, SetConsoleMode(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleMode));
     ON_CALL(*this, WaitForSingleObject(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_WaitForSingleObject));
     ON_CALL(*this, ReadFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadFile));
+    ON_CALL(*this, CreateFileMappingA(_, _, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_CreateFileMappingA));
+    ON_CALL(*this, MapViewOfFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_MapViewOfFile));
+    ON_CALL(*this, UnmapViewOfFile(_, _, _, _)).WillByDefault(Invoke(delegate_real_UnmapViewOfFile));
+    ON_CALL(*this, FlushViewOfFile(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_FlushViewOfFile));
+    ON_CALL(*this, FlushFileBuffers(_, _, _, _)).WillByDefault(Invoke(delegate_real_FlushFileBuffers));
+    ON_CALL(*this, CloseHandle(_, _, _, _)).WillByDefault(Invoke(delegate_real_CloseHandle));
+    ON_CALL(*this, GetLastError(_, _, _)).WillByDefault(Invoke(delegate_real_GetLastError));
 
     _mock_windows = this;
 }
