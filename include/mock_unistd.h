@@ -20,6 +20,8 @@ extern "C"
     extern int mock_fsync(const char *, const int, const char *, int);
     extern pid_t mock_fork(const char *, const int, const char *);
     extern int mock_mkstemp(const char *, const int, const char *, char *);
+    extern int mock_mkostemp(const char *, const int, const char *, char *, int);
+    extern int mock_unlink(const char *, const int, const char *, const char *);
     extern off_t mock_lseek(const char *, const int, const char *, int, off_t, int);
     extern int mock_close(const char *, const int, const char *, int);
     extern int mock_dup(const char *, const int, const char *, int);
@@ -35,6 +37,7 @@ extern "C"
     extern int mock_usleep(const char *, const int, const char *, useconds_t);
     extern int mock_sched_yield(const char *, const int, const char *);
     extern int mock_rmdir(const char *, const int, const char *, const char *);
+    extern int mock_isatty(const char *, const int, const char *, int);
 #else  // _WIN32
 extern __int64 mock__lseeki64(const char *, const int, const char *, int, __int64, int);
 extern int mock__close(const char *, const int, const char *, int);
@@ -58,6 +61,8 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
         #define fsync(fd)                 mock_fsync(__FILE__, __LINE__, __func__, fd)
         #define fork()                    mock_fork(__FILE__, __LINE__, __func__)
         #define mkstemp(tmpl)             mock_mkstemp(__FILE__, __LINE__, __func__, tmpl)
+        #define mkostemp(tmpl, flags)     mock_mkostemp(__FILE__, __LINE__, __func__, tmpl, flags)
+        #define unlink(path)              mock_unlink(__FILE__, __LINE__, __func__, path)
         #define lseek(fd, offset, whence) mock_lseek(__FILE__, __LINE__, __func__, fd, offset, whence)
         #define close(fd)                 mock_close(__FILE__, __LINE__, __func__, fd)
         #define dup(fd)                   mock_dup(__FILE__, __LINE__, __func__, fd)
@@ -73,6 +78,7 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
         #define usleep(usec)              mock_usleep(__FILE__, __LINE__, __func__, usec)
         #define sched_yield()             mock_sched_yield(__FILE__, __LINE__, __func__)
         #define rmdir(path)               mock_rmdir(__FILE__, __LINE__, __func__, path)
+        #define isatty(fd)                mock_isatty(__FILE__, __LINE__, __func__, fd)
 
     #else // _WIN32
 
@@ -103,6 +109,8 @@ extern int delegate_real_ftruncate(const char *, const int, const char *, int, o
 extern int delegate_real_fsync(const char *, const int, const char *, int);
 extern pid_t delegate_real_fork(const char *, const int, const char *);
 extern int delegate_real_mkstemp(const char *, const int, const char *, char *);
+extern int delegate_real_mkostemp(const char *, const int, const char *, char *, int);
+extern int delegate_real_unlink(const char *, const int, const char *, const char *);
 extern off_t delegate_real_lseek(const char *, const int, const char *, int, off_t, int);
 extern int delegate_real_close(const char *, const int, const char *, int);
 extern int delegate_real_dup(const char *, const int, const char *, int);
@@ -118,6 +126,7 @@ extern ssize_t delegate_real_readlink(const char *, const int, const char *, con
 extern int delegate_real_usleep(const char *, const int, const char *, useconds_t);
 extern int delegate_real_sched_yield(const char *, const int, const char *);
 extern int delegate_real_rmdir(const char *, const int, const char *, const char *);
+extern int delegate_real_isatty(const char *, const int, const char *, int);
 
 class Mock_unistd
 {
@@ -128,6 +137,8 @@ class Mock_unistd
     MOCK_METHOD(int, fsync, (const char *, const int, const char *, int));
     MOCK_METHOD(pid_t, fork, (const char *, const int, const char *));
     MOCK_METHOD(int, mkstemp, (const char *, const int, const char *, char *));
+    MOCK_METHOD(int, mkostemp, (const char *, const int, const char *, char *, int));
+    MOCK_METHOD(int, unlink, (const char *, const int, const char *, const char *));
     MOCK_METHOD(off_t, lseek, (const char *, const int, const char *, int, off_t, int));
     MOCK_METHOD(int, close, (const char *, const int, const char *, int));
     MOCK_METHOD(int, dup, (const char *, const int, const char *, int));
@@ -143,6 +154,7 @@ class Mock_unistd
     MOCK_METHOD(int, usleep, (const char *, const int, const char *, useconds_t));
     MOCK_METHOD(int, sched_yield, (const char *, const int, const char *));
     MOCK_METHOD(int, rmdir, (const char *, const int, const char *, const char *));
+    MOCK_METHOD(int, isatty, (const char *, const int, const char *, int));
 
     Mock_unistd();
     ~Mock_unistd();

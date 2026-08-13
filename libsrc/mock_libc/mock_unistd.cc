@@ -14,6 +14,8 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, fsync(_, _, _, _)).WillByDefault(Invoke(delegate_real_fsync));
     ON_CALL(*this, fork(_, _, _)).WillByDefault(Invoke(delegate_real_fork));
     ON_CALL(*this, mkstemp(_, _, _, _)).WillByDefault(Invoke(delegate_real_mkstemp));
+    ON_CALL(*this, mkostemp(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_mkostemp));
+    ON_CALL(*this, unlink(_, _, _, _)).WillByDefault(Invoke(delegate_real_unlink));
     ON_CALL(*this, lseek(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_lseek));
     ON_CALL(*this, close(_, _, _, _)).WillByDefault(Invoke(delegate_real_close));
     ON_CALL(*this, dup(_, _, _, _)).WillByDefault(Invoke(delegate_real_dup));
@@ -29,6 +31,7 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, usleep(_, _, _, _)).WillByDefault(Invoke(delegate_real_usleep));
     ON_CALL(*this, sched_yield(_, _, _)).WillByDefault(Invoke(delegate_real_sched_yield));
     ON_CALL(*this, rmdir(_, _, _, _)).WillByDefault(Invoke(delegate_real_rmdir));
+    ON_CALL(*this, isatty(_, _, _, _)).WillByDefault(Invoke(delegate_real_isatty));
 
     _mock_unistd = this;
 }

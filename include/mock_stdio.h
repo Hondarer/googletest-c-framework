@@ -45,6 +45,7 @@ extern "C"
     extern int mock_remove(const char *, const int, const char *, const char *);
     extern int mock_rename(const char *, const int, const char *, const char *, const char *);
 #ifndef _WIN32
+    extern FILE *mock_fdopen(const char *, const int, const char *, int, const char *);
     extern int mock_fseeko(const char *, const int, const char *, FILE *, off_t, int);
     extern off_t mock_ftello(const char *, const int, const char *, FILE *);
 #else
@@ -83,6 +84,7 @@ extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
     #define remove(path)                     mock_remove(__FILE__, __LINE__, __func__, path)
     #define rename(oldpath, newpath)         mock_rename(__FILE__, __LINE__, __func__, oldpath, newpath)
     #ifndef _WIN32
+        #define fdopen(fd, modes)              mock_fdopen(__FILE__, __LINE__, __func__, fd, modes)
         #define fseeko(stream, offset, whence) mock_fseeko(__FILE__, __LINE__, __func__, stream, offset, whence)
         #define ftello(stream)                 mock_ftello(__FILE__, __LINE__, __func__, stream)
     #else
@@ -147,6 +149,8 @@ extern int delegate_fake_remove(const char *, const int, const char *, const cha
 extern int delegate_real_rename(const char *, const int, const char *, const char *, const char *);
 extern int delegate_fake_rename(const char *, const int, const char *, const char *, const char *);
     #ifndef _WIN32
+extern FILE *delegate_real_fdopen(const char *, const int, const char *, int, const char *);
+extern FILE *delegate_fake_fdopen(const char *, const int, const char *, int, const char *);
 extern int delegate_real_fseeko(const char *, const int, const char *, FILE *, off_t, int);
 extern int delegate_fake_fseeko(const char *, const int, const char *, FILE *, off_t, int);
 extern off_t delegate_real_ftello(const char *, const int, const char *, FILE *);
@@ -191,6 +195,7 @@ class Mock_stdio
     MOCK_METHOD(int, remove, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, rename, (const char *, const int, const char *, const char *, const char *));
     #ifndef _WIN32
+    MOCK_METHOD(FILE *, fdopen, (const char *, const int, const char *, int, const char *));
     MOCK_METHOD(int, fseeko, (const char *, const int, const char *, FILE *, off_t, int));
     MOCK_METHOD(off_t, ftello, (const char *, const int, const char *, FILE *));
     #else

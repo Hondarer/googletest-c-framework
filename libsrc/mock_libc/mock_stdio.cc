@@ -59,6 +59,8 @@ void Mock_stdio::switch_to_mock_fileio()
     ON_CALL(*this, rename(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_rename));
 
 #ifndef _WIN32
+    ON_CALL(*this, fdopen(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fdopen));
+
     ON_CALL(*this, fseeko(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fseeko));
 
     ON_CALL(*this, ftello(_, _, _, _)).WillByDefault(Invoke(delegate_fake_ftello));
@@ -108,6 +110,8 @@ void Mock_stdio::switch_to_real_fileio()
     ON_CALL(*this, rename(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_rename));
 
 #ifndef _WIN32
+    ON_CALL(*this, fdopen(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_fdopen));
+
     ON_CALL(*this, fseeko(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fseeko));
 
     ON_CALL(*this, ftello(_, _, _, _)).WillByDefault(Invoke(delegate_real_ftello));
