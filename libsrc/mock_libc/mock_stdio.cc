@@ -12,6 +12,10 @@ Mock_stdio::Mock_stdio()
 
     ON_CALL(*this, scanf(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_scanf));
 
+    ON_CALL(*this, vscanf(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_vscanf));
+
+    ON_CALL(*this, vfscanf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_vfscanf));
+
     _mock_stdio = this;
 }
 
@@ -47,6 +51,22 @@ void Mock_stdio::switch_to_mock_fileio()
     ON_CALL(*this, fread(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fread));
 
     ON_CALL(*this, fwrite(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fwrite));
+
+    ON_CALL(*this, freopen(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_freopen));
+
+    ON_CALL(*this, remove(_, _, _, _)).WillByDefault(Invoke(delegate_fake_remove));
+
+    ON_CALL(*this, rename(_, _, _, _, _)).WillByDefault(Invoke(delegate_fake_rename));
+
+#ifndef _WIN32
+    ON_CALL(*this, fseeko(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake_fseeko));
+
+    ON_CALL(*this, ftello(_, _, _, _)).WillByDefault(Invoke(delegate_fake_ftello));
+#else
+    ON_CALL(*this, _fseeki64(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_fake__fseeki64));
+
+    ON_CALL(*this, _ftelli64(_, _, _, _)).WillByDefault(Invoke(delegate_fake__ftelli64));
+#endif
 }
 
 void Mock_stdio::switch_to_real_fileio()
@@ -80,6 +100,22 @@ void Mock_stdio::switch_to_real_fileio()
     ON_CALL(*this, fread(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fread));
 
     ON_CALL(*this, fwrite(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fwrite));
+
+    ON_CALL(*this, freopen(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_freopen));
+
+    ON_CALL(*this, remove(_, _, _, _)).WillByDefault(Invoke(delegate_real_remove));
+
+    ON_CALL(*this, rename(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_rename));
+
+#ifndef _WIN32
+    ON_CALL(*this, fseeko(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fseeko));
+
+    ON_CALL(*this, ftello(_, _, _, _)).WillByDefault(Invoke(delegate_real_ftello));
+#else
+    ON_CALL(*this, _fseeki64(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real__fseeki64));
+
+    ON_CALL(*this, _ftelli64(_, _, _, _)).WillByDefault(Invoke(delegate_real__ftelli64));
+#endif
 }
 
 Mock_stdio::~Mock_stdio()

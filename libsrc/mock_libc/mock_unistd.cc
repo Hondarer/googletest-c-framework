@@ -11,6 +11,7 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, access(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_access));
     ON_CALL(*this, getcwd(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_getcwd));
     ON_CALL(*this, ftruncate(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_ftruncate));
+    ON_CALL(*this, fsync(_, _, _, _)).WillByDefault(Invoke(delegate_real_fsync));
     ON_CALL(*this, fork(_, _, _)).WillByDefault(Invoke(delegate_real_fork));
     ON_CALL(*this, mkstemp(_, _, _, _)).WillByDefault(Invoke(delegate_real_mkstemp));
     ON_CALL(*this, lseek(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_lseek));
