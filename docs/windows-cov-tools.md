@@ -10,16 +10,16 @@ Windows 向けのオープンソース カバレッジ ツールです。gcov �
 
 **特徴**
 
-- コマンド ラインから実行できる
-- PDB (Program Database) ファイルを使ってカバレッジを取得する
-- HTML、Cobertura、Binary 形式でレポート出力できる
+- コマンド ラインから実行できます。
+- PDB (Program Database) ファイルを使ってカバレッジを取得します。
+- HTML、Cobertura、Binary 形式でレポート出力できます。
 - CI/CD パイプラインに組み込みやすい
 - オープンソースで無料
 - C 言語と C++ の両方に対応
 
 **導入方法**
 
-- インストーラーをダウンロードして実行する
+- インストーラーをダウンロードして実行します。
 - Chocolatey を使う場合: `choco install opencppcoverage`
 
 関連リンク: [OpenCppCoverage GitHub](https://github.com/OpenCppCoverage/OpenCppCoverage)
@@ -56,7 +56,7 @@ OpenCppCoverage.exe --sources "C:\your\source\path" -- your_program.exe
 
 ### 推奨ビルド オプション
 
-- `/Zi`: デバッグ情報 (PDB ファイル) を生成する
+- `/Zi`: デバッグ情報 (PDB ファイル) を生成します。
 - `/Od`: 最適化を無効にする (カバレッジの精度が上がる)
 
 最適化を有効にすると、コンパイラがコードを変形するため、カバレッジ結果が実際のソース コードと対応しにくくなることがあります。

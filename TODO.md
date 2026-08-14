@@ -2,8 +2,8 @@
 
 ## include_override の自動検出
 
-include と立ち並んで include_override が存在した場合には、テスト用の override として扱う。
+include と立ち並んで include_override が存在した場合には、テスト用の override として扱います。
 
 ## _IN_TEST_SRC の説明
 
-`_IN_TEST_SRC` をドキュメント化する。
+`_IN_TEST_SRC` をドキュメント化します。

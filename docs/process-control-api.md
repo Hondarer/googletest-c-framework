@@ -47,8 +47,8 @@ struct ProcessOptions {
 | フィールド | 説明 |
 |---|---|
 | `env_set` | 追加または上書きする環境変数 |
-| `preload_lib` | LD_PRELOAD に追加するライブラリの絶対パス **(Linux のみ)**。`framework/testfw/lib/$(TARGET_ARCH)/libmock_syslog.so` を指定すると syslog 出力を `getDebugLog()` でキャプチャできる |
-| `capture_debug_output` | OutputDebugString 出力をキャプチャする **(Windows のみ)**。`true` にすると `getDebugLog()` でキャプチャできる。Linux の `preload_lib` に相当する。**デフォルト `true`** |
+| `preload_lib` | LD_PRELOAD に追加するライブラリの絶対パス **(Linux のみ)**。`framework/testfw/lib/$(TARGET_ARCH)/libmock_syslog.so` を指定すると syslog 出力を `getDebugLog()` でキャプチャできます。 |
+| `capture_debug_output` | OutputDebugString 出力をキャプチャする **(Windows のみ)**。`true` にすると `getDebugLog()` でキャプチャできます。Linux の `preload_lib` に相当します。**デフォルト `true`** |
 
 ### ProcessResult
 

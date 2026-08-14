@@ -24,7 +24,7 @@ When a shared library `libcalc.so` references functions from a static library `l
 
 **2. 最終アプリケーションで両方をリンク**
 
-- `libcalc.so` は未解決シンボルを含む
+- `libcalc.so` は未解決シンボルを含みます。
 - 最終アプリケーションが両方のライブラリをリンク
 - 配布時に複数のライブラリが必要となり管理が煩雑
 
@@ -132,7 +132,7 @@ LIB_TYPE = shared
 
 **動作:**
 
-- `libcalcbase.a` が `app/calc/prod/lib` に存在 → 静的リンク
+- `libexample.a` が `app/example/prod/lib` に存在 → 静的リンク
 - `-lm` → 動的リンク
 
 **結果:**
@@ -143,7 +143,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm
 
 **Operation:**
 
-- `libcalcbase.a` found in `app/calc/prod/lib` → static linking
+- `libexample.a` found in `app/example/prod/lib` → static linking
 - `-lm` → dynamic linking
 
 ### 例 2: -L オプションを使用 / Example 2: Using -L option
@@ -156,7 +156,7 @@ LIB_TYPE = shared
 
 **動作:**
 
-- `libcalcbase.a` が `app/calc/test/lib` に存在 → 静的リンク
+- `libexample.a` が `app/example/test/lib` に存在 → 静的リンク
 - `-lm` → 動的リンク
 - `-L` オプションもリンク コマンドに渡される
 
@@ -168,7 +168,7 @@ gcc -shared -o libcalc.so obj/*.o /path/to/libcalcbase.a -lm -L/path/to/test/lib
 
 **Operation:**
 
-- `libcalcbase.a` found in `app/calc/test/lib` → static linking
+- `libexample.a` found in `app/example/test/lib` → static linking
 - `-lm` → dynamic linking
 - `-L` option is also passed to link command
 
@@ -246,9 +246,9 @@ Only `.a` files are searched. Even if both `.so` and `.a` exist with the same na
 
 ### 検索パスの順序
 
-最初に見つかった `.a` ファイルが使用されます。複数のパスに同名のライブラリがある場合は、検索パスの順序 (`LIBSDIR` → `-L` → `app/calc/test/lib` → システム パス) に注意してください。
+最初に見つかった `.a` ファイルが使用されます。複数のパスに同名のライブラリがある場合は、検索パスの順序 (`LIBSDIR` → `-L` → `app/example/test/lib` → システム パス) に注意してください。
 
-The first found `.a` file is used. When multiple paths contain libraries with the same name, be aware of the search order (`LIBSDIR` → `-L` → `app/calc/test/lib` → system paths).
+The first found `.a` file is used. When multiple paths contain libraries with the same name, be aware of the search order (`LIBSDIR` → `-L` → `app/example/test/lib` → system paths).
 
 ### アーキテクチャー依存パス
 

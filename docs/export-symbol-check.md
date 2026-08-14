@@ -22,8 +22,8 @@ Linux の `nm -D --defined-only` が返すリンカー合成シンボル (`__bss
 | `TESTFW_EXPORT_NAME_ENTRY(name, sig)` | EXPORT_ENTRY マクロ テーブルから期待シンボル名配列の要素を生成する定型マクロ |
 | `TESTFW_EXPORT_SIGNATURE_ENTRY(name, sig)` | EXPORT_ENTRY マクロ テーブルから「名前 → シグネチャ文字列」の map 要素を生成する定型マクロ |
 | `testing::getActualExportNames(dll_or_so_path)` | 実際の DLL/SO からエクスポート シンボル名一覧を取得する (`dumpbin`/`nm` をプラットフォームに応じて内部で実行する) |
-| `testing::expectExportNamesMatch(expected, actual, signatures = {})` | 期待値と実際値を突き合わせ、不足と想定外の両方を Windows / Linux 共通で `EXPECT_TRUE` で報告する (完全一致)。Linux のリンカー合成シンボルは除外する。`signatures` を渡すと stdout の各シンボルにシグネチャを併記する |
-| `testing::findUndecoratedExternVariables(include_dir, export_macro_name)` | 指定ディレクトリ配下のヘッダーから、export マクロを伴わない `extern` 変数宣言を検出する |
+| `testing::expectExportNamesMatch(expected, actual, signatures = {})` | 期待値と実際値を突き合わせ、不足と想定外の両方を Windows / Linux 共通で `EXPECT_TRUE` で報告する (完全一致)。Linux のリンカー合成シンボルは除外します。`signatures` を渡すと stdout の各シンボルにシグネチャを併記します。 |
+| `testing::findUndecoratedExternVariables(include_dir, export_macro_name)` | 指定ディレクトリ配下のヘッダーから、export マクロを伴わない `extern` 変数宣言を検出します。 |
 | `testing::identManifestSymbolName(target)` | IDENT 機能 ([ident.md](../../makefw/docs/ident.md)) が自動生成するシンボル名を組み立てる |
 | `testing::joinNames(names)` | 文字列一覧をカンマ区切りで連結する (失敗メッセージ整形用) |
 

@@ -5,11 +5,11 @@
 `framework/testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`  
 でコンソール出力を制御する仕組みを提供している。  
 現在この仕組みはモック関数 (`mock_calcHandler` 等) にのみ使われており、  
-プロセス制御関数群 (`startProcessAsync`, `waitForOutput` 等) には適用されていない。
+プロセス制御関数群 (`startProcessAsync`, `waitForOutput` 等) には適用されていません。
 
 インテグレーション テスト (porter の `porterSendRecvTest` 等) では複数プロセスを起動・対話させるため、  
 テスト失敗時にどの操作がどのタイミングで行われたかを追跡しにくい。  
-traceLevel をプロセス制御関数にも対応させることで、テスト失敗時の原因調査を容易にする。
+traceLevel をプロセス制御関数にも対応させることで、テスト失敗時の原因調査を容易にします。
 
 ### traceLevel 機構の概要
 
@@ -68,8 +68,8 @@ void SetUp() override
 
 ### 対象関数と出力仕様
 
-processController は全体で 1 つの機能であり、キーは `processController` 1 つとする。  
-それぞれの機能で出力を以下のようにする。
+processController は全体で 1 つの機能であり、キーは `processController` 1 つとします。  
+それぞれの機能で出力を以下のようにします。
 
 | 機能 | TRACE_INFO の出力 | TRACE_DETAIL の追加出力 |
 |---|---|---|
@@ -111,7 +111,7 @@ void SetUp() override
 ## 実装後の検証方法
 
 1. `make -C framework/testfw` でビルド エラーがないことを確認
-2. `app/override-sample/test/src/override-sampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
-3. `app/porter/test/src/integration/porterSendRecvTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加
+2. `app/example-a/test/src/exampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加します。
+3. `app/example-b/test/src/integration/exampleIntegrationTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加します。
 4. テスト出力に `> startProcessAsync ...` 等のトレースが表示されることを確認
 5. `resetTraceLevel()` のみの状態 (デフォルト) でトレース出力が出ないことを確認

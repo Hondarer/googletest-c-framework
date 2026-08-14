@@ -94,7 +94,7 @@ export GTEST_COLOR=0    # 色を無効化
 
 `--gtest_color=auto` (デフォルト) の場合、以下の条件をすべて満たすときに色が有効になります。
 
-- 出力先がターミナル (TTY) である
+- 出力先がターミナル (TTY) です。
 - UNIX 系 OS の場合、環境変数 `TERM` が `xterm` または `xterm-color` に設定されている
 - Windows の場合、コンソールがカラー出力をサポートしている
 
