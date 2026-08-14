@@ -68,7 +68,7 @@ extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
         #define fopen_s(pFile, filename, modes)   mock_fopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
         #define _wfopen_s(pFile, filename, modes) mock__wfopen_s(__FILE__, __LINE__, __func__, pFile, filename, modes)
         #define _wfsopen(filename, modes, shflag) mock__wfsopen(__FILE__, __LINE__, __func__, filename, modes, shflag)
-    #endif
+    #endif /* _WIN32 */
     #define printf(format, ...)              mock_printf(__FILE__, __LINE__, __func__, format, ##__VA_ARGS__)
     #define fprintf(stream, format, ...)     mock_fprintf(__FILE__, __LINE__, __func__, stream, format, ##__VA_ARGS__)
     #define vfprintf(stream, format, ap)     mock_vfprintf(__FILE__, __LINE__, __func__, stream, format, ap)
@@ -81,8 +81,11 @@ extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
     #define fread(ptr, size, count, stream)  mock_fread(__FILE__, __LINE__, __func__, ptr, size, count, stream)
     #define fwrite(ptr, size, count, stream) mock_fwrite(__FILE__, __LINE__, __func__, ptr, size, count, stream)
     #define freopen(path, modes, stream)     mock_freopen(__FILE__, __LINE__, __func__, path, modes, stream)
-    #define remove(path)                     mock_remove(__FILE__, __LINE__, __func__, path)
-    #define rename(oldpath, newpath)         mock_rename(__FILE__, __LINE__, __func__, oldpath, newpath)
+    /* C++ 標準ライブラリの std::remove と衝突するため、C のテスト対象だけを置換する。 */
+    #ifndef __cplusplus
+        #define remove(path)             mock_remove(__FILE__, __LINE__, __func__, path)
+        #define rename(oldpath, newpath) mock_rename(__FILE__, __LINE__, __func__, oldpath, newpath)
+    #endif /* !__cplusplus */
     #ifndef _WIN32
         #define fdopen(fd, modes)              mock_fdopen(__FILE__, __LINE__, __func__, fd, modes)
         #define fseeko(stream, offset, whence) mock_fseeko(__FILE__, __LINE__, __func__, stream, offset, whence)

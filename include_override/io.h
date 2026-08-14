@@ -5,8 +5,14 @@
 
         /* 本物を include */
         #pragma push_macro("_INC_IO")
+        #pragma push_macro("remove")
+        #pragma push_macro("rename")
         #undef _INC_IO
+        #undef remove
+        #undef rename
         #include <../ucrt/io.h>
+        #pragma pop_macro("rename")
+        #pragma pop_macro("remove")
         #pragma pop_macro("_INC_IO")
 
         /* モックにすげ替え */

@@ -22,7 +22,18 @@ FILE *delegate_real_freopen(const char *file, const int line, const char *func, 
     (void)line;
     (void)func;
 
-    return ::freopen(path, modes, stream);
+#ifdef _WIN32
+    /* 元 API の戻り値規約を保持するため freopen_s へ置き換えず、MSVC の非推奨警告だけを抑制する。
+     * see: https://learn.microsoft.com/cpp/c-runtime-library/reference/freopen-wfreopen */
+    #pragma warning(push)
+    #pragma warning(disable : 4996)
+#endif /* _WIN32 */
+    FILE *reopened_stream = ::freopen(path, modes, stream);
+#ifdef _WIN32
+    #pragma warning(pop)
+#endif /* _WIN32 */
+
+    return reopened_stream;
 }
 
 FILE *mock_freopen(const char *file, const int line, const char *func, const char *path, const char *modes,
