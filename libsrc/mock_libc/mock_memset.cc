@@ -15,15 +15,15 @@ void *delegate_real_memset(const char *file, const int line, const char *func, v
 
 void *mock_memset(const char *file, const int line, const char *func, void *s, int c, size_t n)
 {
-    void *result = NULL;
+    void *mock_ret = NULL;
 
     if (_mock_string != nullptr)
     {
-        result = _mock_string->memset(file, line, func, s, c, n);
+        mock_ret = _mock_string->memset(file, line, func, s, c, n);
     }
     else
     {
-        result = delegate_real_memset(file, line, func, s, c, n);
+        mock_ret = delegate_real_memset(file, line, func, s, c, n);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -31,13 +31,13 @@ void *mock_memset(const char *file, const int line, const char *func, void *s, i
         printf("  > memset 0x%p, 0x%02x, %zd", s, c, n);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (result == NULL)
+            if (mock_ret == NULL)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
             else
             {
-                printf(" from %s:%d -> 0x%p\n", file, line, result);
+                printf(" from %s:%d -> 0x%p\n", file, line, mock_ret);
             }
         }
         else
@@ -46,5 +46,5 @@ void *mock_memset(const char *file, const int line, const char *func, void *s, i
         }
     }
 
-    return result;
+    return mock_ret;
 }

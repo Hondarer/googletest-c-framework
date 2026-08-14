@@ -17,15 +17,15 @@ int delegate_real_access(const char *file, const int line, const char *func, con
 
 int mock_access(const char *file, const int line, const char *func, const char *path, int amode)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->access(file, line, func, path, amode);
+        mock_ret = _mock_unistd->access(file, line, func, path, amode);
     }
     else
     {
-        rtc = delegate_real_access(file, line, func, path, amode);
+        mock_ret = delegate_real_access(file, line, func, path, amode);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_access(const char *file, const int line, const char *func, const char *
         printf("  > access %s, %d", path, amode);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ int mock_access(const char *file, const int line, const char *func, const char *
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

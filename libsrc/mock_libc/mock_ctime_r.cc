@@ -37,15 +37,15 @@ char *delegate_real_ctime_r(const char *file, const int line, const char *func, 
 
 char *mock_ctime_r(const char *file, const int line, const char *func, const time_t *timep, char *buf)
 {
-    char *rtc;
+    char *mock_ret;
 
     if (_mock_time != nullptr)
     {
-        rtc = _mock_time->ctime_r(file, line, func, timep, buf);
+        mock_ret = _mock_time->ctime_r(file, line, func, timep, buf);
     }
     else
     {
-        rtc = delegate_real_ctime_r(file, line, func, timep, buf);
+        mock_ret = delegate_real_ctime_r(file, line, func, timep, buf);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -53,13 +53,13 @@ char *mock_ctime_r(const char *file, const int line, const char *func, const tim
         printf("  > ctime_r 0x%p, 0x%p", (const void *)timep, (void *)buf);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (rtc == NULL)
+            if (mock_ret == NULL)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
             else
             {
-                printf(" from %s:%d -> %.24s\n", file, line, rtc);
+                printf(" from %s:%d -> %.24s\n", file, line, mock_ret);
             }
         }
         else
@@ -68,7 +68,7 @@ char *mock_ctime_r(const char *file, const int line, const char *func, const tim
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

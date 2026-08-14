@@ -15,15 +15,15 @@ int delegate_real_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const ch
 
 int mock_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_openssl != nullptr)
     {
-        result = _mock_openssl->EVP_CIPHER_CTX_ctrl(file, line, func, ctx, type, arg, ptr);
+        mock_ret = _mock_openssl->EVP_CIPHER_CTX_ctrl(file, line, func, ctx, type, arg, ptr);
     }
     else
     {
-        result = delegate_real_EVP_CIPHER_CTX_ctrl(file, line, func, ctx, type, arg, ptr);
+        mock_ret = delegate_real_EVP_CIPHER_CTX_ctrl(file, line, func, ctx, type, arg, ptr);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -39,5 +39,5 @@ int mock_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const char *func,
         }
     }
 
-    return result;
+    return mock_ret;
 }

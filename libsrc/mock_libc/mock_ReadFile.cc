@@ -19,15 +19,15 @@ BOOL delegate_real_ReadFile(const char *file, const int line, const char *func, 
 BOOL mock_ReadFile(const char *file, const int line, const char *func, HANDLE file_handle, LPVOID buffer,
                    DWORD bytes_to_read, LPDWORD bytes_read, LPOVERLAPPED overlapped)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->ReadFile(file, line, func, file_handle, buffer, bytes_to_read, bytes_read, overlapped);
+        mock_ret = _mock_windows->ReadFile(file, line, func, file_handle, buffer, bytes_to_read, bytes_read, overlapped);
     }
     else
     {
-        rtc = delegate_real_ReadFile(file, line, func, file_handle, buffer, bytes_to_read, bytes_read, overlapped);
+        mock_ret = delegate_real_ReadFile(file, line, func, file_handle, buffer, bytes_to_read, bytes_read, overlapped);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -36,7 +36,7 @@ BOOL mock_ReadFile(const char *file, const int line, const char *func, HANDLE fi
                (void *)bytes_read, (void *)overlapped);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -44,7 +44,7 @@ BOOL mock_ReadFile(const char *file, const int line, const char *func, HANDLE fi
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

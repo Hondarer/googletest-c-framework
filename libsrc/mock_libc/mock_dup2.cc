@@ -17,15 +17,15 @@ int delegate_real_dup2(const char *file, const int line, const char *func, int o
 
 int mock_dup2(const char *file, const int line, const char *func, int oldfd, int newfd)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->dup2(file, line, func, oldfd, newfd);
+        mock_ret = _mock_unistd->dup2(file, line, func, oldfd, newfd);
     }
     else
     {
-        rtc = delegate_real_dup2(file, line, func, oldfd, newfd);
+        mock_ret = delegate_real_dup2(file, line, func, oldfd, newfd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_dup2(const char *file, const int line, const char *func, int oldfd, int
         printf("  > dup2 %d, %d", oldfd, newfd);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ int mock_dup2(const char *file, const int line, const char *func, int oldfd, int
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #else // _WIN32
@@ -58,15 +58,15 @@ int delegate_real__dup2(const char *file, const int line, const char *func, int 
 
 int mock__dup2(const char *file, const int line, const char *func, int oldfd, int newfd)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->_dup2(file, line, func, oldfd, newfd);
+        mock_ret = _mock_unistd->_dup2(file, line, func, oldfd, newfd);
     }
     else
     {
-        rtc = delegate_real__dup2(file, line, func, oldfd, newfd);
+        mock_ret = delegate_real__dup2(file, line, func, oldfd, newfd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -74,7 +74,7 @@ int mock__dup2(const char *file, const int line, const char *func, int oldfd, in
         printf("  > _dup2 %d, %d", oldfd, newfd);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -82,7 +82,7 @@ int mock__dup2(const char *file, const int line, const char *func, int oldfd, in
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

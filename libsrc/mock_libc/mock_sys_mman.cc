@@ -39,15 +39,15 @@ void *delegate_real_mmap(const char *file, const int line, const char *func, voi
 void *mock_mmap(const char *file, const int line, const char *func, void *addr, size_t length, int prot, int flags,
                 int fd, off_t offset)
 {
-    void *result;
+    void *mock_ret;
 
     if (_mock_sys_mman != nullptr)
     {
-        result = _mock_sys_mman->mmap(file, line, func, addr, length, prot, flags, fd, offset);
+        mock_ret = _mock_sys_mman->mmap(file, line, func, addr, length, prot, flags, fd, offset);
     }
     else
     {
-        result = delegate_real_mmap(file, line, func, addr, length, prot, flags, fd, offset);
+        mock_ret = delegate_real_mmap(file, line, func, addr, length, prot, flags, fd, offset);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -63,7 +63,7 @@ void *mock_mmap(const char *file, const int line, const char *func, void *addr, 
         }
     }
 
-    return result;
+    return mock_ret;
 }
 int delegate_real_munmap(const char *file, const int line, const char *func, void *addr, size_t length)
 {
@@ -77,15 +77,15 @@ int delegate_real_munmap(const char *file, const int line, const char *func, voi
 
 int mock_munmap(const char *file, const int line, const char *func, void *addr, size_t length)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_mman != nullptr)
     {
-        result = _mock_sys_mman->munmap(file, line, func, addr, length);
+        mock_ret = _mock_sys_mman->munmap(file, line, func, addr, length);
     }
     else
     {
-        result = delegate_real_munmap(file, line, func, addr, length);
+        mock_ret = delegate_real_munmap(file, line, func, addr, length);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -101,7 +101,7 @@ int mock_munmap(const char *file, const int line, const char *func, void *addr, 
         }
     }
 
-    return result;
+    return mock_ret;
 }
 int delegate_real_msync(const char *file, const int line, const char *func, void *addr, size_t length, int flags)
 {
@@ -115,15 +115,15 @@ int delegate_real_msync(const char *file, const int line, const char *func, void
 
 int mock_msync(const char *file, const int line, const char *func, void *addr, size_t length, int flags)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_mman != nullptr)
     {
-        result = _mock_sys_mman->msync(file, line, func, addr, length, flags);
+        mock_ret = _mock_sys_mman->msync(file, line, func, addr, length, flags);
     }
     else
     {
-        result = delegate_real_msync(file, line, func, addr, length, flags);
+        mock_ret = delegate_real_msync(file, line, func, addr, length, flags);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -139,7 +139,7 @@ int mock_msync(const char *file, const int line, const char *func, void *addr, s
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_mlock(const char *file, const int line, const char *func, const void *addr, size_t length)

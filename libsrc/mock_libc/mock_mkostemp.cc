@@ -21,15 +21,15 @@ int delegate_real_mkostemp(const char *file, const int line, const char *func, c
 
 int mock_mkostemp(const char *file, const int line, const char *func, char *tmpl, int flags)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->mkostemp(file, line, func, tmpl, flags);
+        mock_ret = _mock_unistd->mkostemp(file, line, func, tmpl, flags);
     }
     else
     {
-        rtc = delegate_real_mkostemp(file, line, func, tmpl, flags);
+        mock_ret = delegate_real_mkostemp(file, line, func, tmpl, flags);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -37,7 +37,7 @@ int mock_mkostemp(const char *file, const int line, const char *func, char *tmpl
         printf("  > mkostemp %s, %d", tmpl, flags);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -45,7 +45,7 @@ int mock_mkostemp(const char *file, const int line, const char *func, char *tmpl
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* !_WIN32 */

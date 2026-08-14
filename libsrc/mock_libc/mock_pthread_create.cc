@@ -19,15 +19,15 @@ int delegate_real_pthread_create(const char *file, const int line, const char *f
 int mock_pthread_create(const char *file, const int line, const char *func, pthread_t *thread,
                         const pthread_attr_t *attr, void *(*start_routine)(void *), void *arg)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_pthread != nullptr)
     {
-        result = _mock_pthread->pthread_create(file, line, func, thread, attr, start_routine, arg);
+        mock_ret = _mock_pthread->pthread_create(file, line, func, thread, attr, start_routine, arg);
     }
     else
     {
-        result = delegate_real_pthread_create(file, line, func, thread, attr, start_routine, arg);
+        mock_ret = delegate_real_pthread_create(file, line, func, thread, attr, start_routine, arg);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -35,7 +35,7 @@ int mock_pthread_create(const char *file, const int line, const char *func, pthr
         printf("  > pthread_create");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -43,7 +43,7 @@ int mock_pthread_create(const char *file, const int line, const char *func, pthr
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

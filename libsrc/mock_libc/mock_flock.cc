@@ -17,15 +17,15 @@ int delegate_real_flock(const char *file, const int line, const char *func, int 
 
 int mock_flock(const char *file, const int line, const char *func, int fd, int operation)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_file != nullptr)
     {
-        result = _mock_sys_file->flock(file, line, func, fd, operation);
+        mock_ret = _mock_sys_file->flock(file, line, func, fd, operation);
     }
     else
     {
-        result = delegate_real_flock(file, line, func, fd, operation);
+        mock_ret = delegate_real_flock(file, line, func, fd, operation);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_flock(const char *file, const int line, const char *func, int fd, int o
         printf("  > flock %d, %d", fd, operation);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ int mock_flock(const char *file, const int line, const char *func, int fd, int o
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

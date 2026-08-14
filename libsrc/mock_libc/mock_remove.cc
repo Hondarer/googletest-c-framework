@@ -24,15 +24,15 @@ int delegate_real_remove(const char *file, const int line, const char *func, con
 
 int mock_remove(const char *file, const int line, const char *func, const char *path)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->remove(file, line, func, path);
+        mock_ret = _mock_stdio->remove(file, line, func, path);
     }
     else
     {
-        rtc = delegate_real_remove(file, line, func, path);
+        mock_ret = delegate_real_remove(file, line, func, path);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -40,7 +40,7 @@ int mock_remove(const char *file, const int line, const char *func, const char *
         printf("  > remove %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -48,5 +48,5 @@ int mock_remove(const char *file, const int line, const char *func, const char *
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

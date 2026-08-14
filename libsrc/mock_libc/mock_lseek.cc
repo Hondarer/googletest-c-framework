@@ -17,15 +17,15 @@ off_t delegate_real_lseek(const char *file, const int line, const char *func, in
 
 off_t mock_lseek(const char *file, const int line, const char *func, int fd, off_t offset, int whence)
 {
-    off_t rtc;
+    off_t mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->lseek(file, line, func, fd, offset, whence);
+        mock_ret = _mock_unistd->lseek(file, line, func, fd, offset, whence);
     }
     else
     {
-        rtc = delegate_real_lseek(file, line, func, fd, offset, whence);
+        mock_ret = delegate_real_lseek(file, line, func, fd, offset, whence);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ off_t mock_lseek(const char *file, const int line, const char *func, int fd, off
         printf("  > lseek %d, %lld, %d", fd, (long long)offset, whence);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lld\n", file, line, (long long)rtc);
+            printf(" from %s:%d -> %lld\n", file, line, (long long)mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ off_t mock_lseek(const char *file, const int line, const char *func, int fd, off
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #else // _WIN32
@@ -58,15 +58,15 @@ __int64 delegate_real__lseeki64(const char *file, const int line, const char *fu
 
 __int64 mock__lseeki64(const char *file, const int line, const char *func, int fd, __int64 offset, int whence)
 {
-    __int64 rtc;
+    __int64 mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->_lseeki64(file, line, func, fd, offset, whence);
+        mock_ret = _mock_unistd->_lseeki64(file, line, func, fd, offset, whence);
     }
     else
     {
-        rtc = delegate_real__lseeki64(file, line, func, fd, offset, whence);
+        mock_ret = delegate_real__lseeki64(file, line, func, fd, offset, whence);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -74,7 +74,7 @@ __int64 mock__lseeki64(const char *file, const int line, const char *func, int f
         printf("  > _lseeki64 %d, %lld, %d", fd, (long long)offset, whence);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lld\n", file, line, (long long)rtc);
+            printf(" from %s:%d -> %lld\n", file, line, (long long)mock_ret);
         }
         else
         {
@@ -82,7 +82,7 @@ __int64 mock__lseeki64(const char *file, const int line, const char *func, int f
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

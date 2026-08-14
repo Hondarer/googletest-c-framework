@@ -18,15 +18,15 @@ DWORD delegate_real_GetModuleFileNameW(const char *file, const int line, const c
 DWORD mock_GetModuleFileNameW(const char *file, const int line, const char *func, HMODULE module, LPWSTR filename,
                               DWORD size)
 {
-    DWORD rtc;
+    DWORD mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->GetModuleFileNameW(file, line, func, module, filename, size);
+        mock_ret = _mock_windows->GetModuleFileNameW(file, line, func, module, filename, size);
     }
     else
     {
-        rtc = delegate_real_GetModuleFileNameW(file, line, func, module, filename, size);
+        mock_ret = delegate_real_GetModuleFileNameW(file, line, func, module, filename, size);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -34,7 +34,7 @@ DWORD mock_GetModuleFileNameW(const char *file, const int line, const char *func
         printf("  > GetModuleFileNameW 0x%p, %lu", (void *)module, size);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lu\n", file, line, rtc);
+            printf(" from %s:%d -> %lu\n", file, line, mock_ret);
         }
         else
         {
@@ -42,7 +42,7 @@ DWORD mock_GetModuleFileNameW(const char *file, const int line, const char *func
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

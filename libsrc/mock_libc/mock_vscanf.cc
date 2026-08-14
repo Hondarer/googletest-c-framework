@@ -16,15 +16,15 @@ int delegate_real_vscanf(const char *file, const int line, const char *func, con
 
 int mock_vscanf(const char *file, const int line, const char *func, const char *format, va_list arg_ptr)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->vscanf(file, line, func, format, arg_ptr);
+        mock_ret = _mock_stdio->vscanf(file, line, func, format, arg_ptr);
     }
     else
     {
-        rtc = delegate_real_vscanf(file, line, func, format, arg_ptr);
+        mock_ret = delegate_real_vscanf(file, line, func, format, arg_ptr);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ int mock_vscanf(const char *file, const int line, const char *func, const char *
         printf("  > vscanf %s", format);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,5 +40,5 @@ int mock_vscanf(const char *file, const int line, const char *func, const char *
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

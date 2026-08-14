@@ -27,16 +27,16 @@ int delegate_real_fclose(const char *file, const int line, const char *func, FIL
 
 int mock_fclose(const char *file, const int line, const char *func, FILE *fp)
 {
-    int rtc;
+    int mock_ret;
     void *_fp = fp; // fclose 内にて初期化されるため、退避
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fclose(file, line, func, fp);
+        mock_ret = _mock_stdio->fclose(file, line, func, fp);
     }
     else
     {
-        rtc = delegate_real_fclose(file, line, func, fp);
+        mock_ret = delegate_real_fclose(file, line, func, fp);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -44,7 +44,7 @@ int mock_fclose(const char *file, const int line, const char *func, FILE *fp)
         printf("  > fclose 0x%p", (void *)_fp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -52,5 +52,5 @@ int mock_fclose(const char *file, const int line, const char *func, FILE *fp)
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

@@ -15,15 +15,15 @@ int delegate_real_atexit(const char *file, const int line, const char *func, moc
 
 int mock_atexit(const char *file, const int line, const char *func, mock_atexit_fn callback)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdlib != nullptr)
     {
-        rtc = _mock_stdlib->atexit(file, line, func, callback);
+        mock_ret = _mock_stdlib->atexit(file, line, func, callback);
     }
     else
     {
-        rtc = delegate_real_atexit(file, line, func, callback);
+        mock_ret = delegate_real_atexit(file, line, func, callback);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -31,7 +31,7 @@ int mock_atexit(const char *file, const int line, const char *func, mock_atexit_
         printf("  > atexit");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -39,5 +39,5 @@ int mock_atexit(const char *file, const int line, const char *func, mock_atexit_
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

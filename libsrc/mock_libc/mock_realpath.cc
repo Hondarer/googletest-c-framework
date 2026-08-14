@@ -17,15 +17,15 @@ char *delegate_real_realpath(const char *file, const int line, const char *func,
 
 char *mock_realpath(const char *file, const int line, const char *func, const char *path, char *resolved)
 {
-    char *result;
+    char *mock_ret;
 
     if (_mock_stdlib != nullptr)
     {
-        result = _mock_stdlib->realpath(file, line, func, path, resolved);
+        mock_ret = _mock_stdlib->realpath(file, line, func, path, resolved);
     }
     else
     {
-        result = delegate_real_realpath(file, line, func, path, resolved);
+        mock_ret = delegate_real_realpath(file, line, func, path, resolved);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -41,7 +41,7 @@ char *mock_realpath(const char *file, const int line, const char *func, const ch
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

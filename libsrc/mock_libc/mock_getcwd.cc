@@ -17,15 +17,15 @@ char *delegate_real_getcwd(const char *file, const int line, const char *func, c
 
 char *mock_getcwd(const char *file, const int line, const char *func, char *buf, size_t size)
 {
-    char *result;
+    char *mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        result = _mock_unistd->getcwd(file, line, func, buf, size);
+        mock_ret = _mock_unistd->getcwd(file, line, func, buf, size);
     }
     else
     {
-        result = delegate_real_getcwd(file, line, func, buf, size);
+        mock_ret = delegate_real_getcwd(file, line, func, buf, size);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -41,7 +41,7 @@ char *mock_getcwd(const char *file, const int line, const char *func, char *buf,
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -16,15 +16,15 @@ BOOL delegate_real_UnmapViewOfFile(const char *file, const int line, const char 
 
 BOOL mock_UnmapViewOfFile(const char *file, const int line, const char *func, LPCVOID address)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->UnmapViewOfFile(file, line, func, address);
+        mock_ret = _mock_windows->UnmapViewOfFile(file, line, func, address);
     }
     else
     {
-        rtc = delegate_real_UnmapViewOfFile(file, line, func, address);
+        mock_ret = delegate_real_UnmapViewOfFile(file, line, func, address);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ BOOL mock_UnmapViewOfFile(const char *file, const int line, const char *func, LP
         printf("  > UnmapViewOfFile 0x%p", address);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ BOOL mock_UnmapViewOfFile(const char *file, const int line, const char *func, LP
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

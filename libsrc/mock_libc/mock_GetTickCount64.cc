@@ -27,15 +27,15 @@ ULONGLONG delegate_real_GetTickCount64(const char *file, const int line, const c
 
 ULONGLONG mock_GetTickCount64(const char *file, const int line, const char *func)
 {
-    ULONGLONG rtc;
+    ULONGLONG mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->GetTickCount64(file, line, func);
+        mock_ret = _mock_windows->GetTickCount64(file, line, func);
     }
     else
     {
-        rtc = delegate_real_GetTickCount64(file, line, func);
+        mock_ret = delegate_real_GetTickCount64(file, line, func);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -43,7 +43,7 @@ ULONGLONG mock_GetTickCount64(const char *file, const int line, const char *func
         printf("  > GetTickCount64");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %llu\n", file, line, (unsigned long long)rtc);
+            printf(" from %s:%d -> %llu\n", file, line, (unsigned long long)mock_ret);
         }
         else
         {
@@ -51,7 +51,7 @@ ULONGLONG mock_GetTickCount64(const char *file, const int line, const char *func
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

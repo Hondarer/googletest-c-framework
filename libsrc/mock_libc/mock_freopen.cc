@@ -39,15 +39,15 @@ FILE *delegate_real_freopen(const char *file, const int line, const char *func, 
 FILE *mock_freopen(const char *file, const int line, const char *func, const char *path, const char *modes,
                    FILE *stream)
 {
-    FILE *rtc;
+    FILE *mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->freopen(file, line, func, path, modes, stream);
+        mock_ret = _mock_stdio->freopen(file, line, func, path, modes, stream);
     }
     else
     {
-        rtc = delegate_real_freopen(file, line, func, path, modes, stream);
+        mock_ret = delegate_real_freopen(file, line, func, path, modes, stream);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -55,7 +55,7 @@ FILE *mock_freopen(const char *file, const int line, const char *func, const cha
         printf("  > freopen %s, %s, 0x%p", path, modes, (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> 0x%p\n", file, line, (void *)rtc);
+            printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -63,5 +63,5 @@ FILE *mock_freopen(const char *file, const int line, const char *func, const cha
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

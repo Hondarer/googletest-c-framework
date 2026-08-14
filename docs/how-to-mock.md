@@ -35,6 +35,38 @@ mock 関数を追加するときの共通ルールを示します。
 変数名 `mock_` や `mock` は、どの Mock クラスかを表さないため使いません。  
 判定手順と検証コマンドは [コーディング規範](../../../app/general/docs/coding-guideline.md) の「テストのモック オブジェクト変数」を正とします。
 
+### mock 関数本体の一時受け
+
+mock 関数本体は、戻り値の意味を解釈せず、委譲先の値を受けて返すだけです。  
+ここでの変数名は意味論よりもテンプレート性を優先します。  
+どの mock ファイルも、次の形に揃えます。
+
+```cpp
+T mock_ret;
+
+if (_mock_sample != nullptr)
+{
+    mock_ret = _mock_sample->sample_func(...);
+}
+else
+{
+    mock_ret = delegate_real_sample_func(...);
+}
+
+return mock_ret;
+```
+
+`rtc`、`ret`、同じ役の `result` は使いません。  
+`T` がポインターやハンドルでも `mock_ret` です。  
+生産コードの結果コード一時受け `ret` と名前を分け、中継変数であることが分かるようにします。
+
+この例外は `framework/testfw/libsrc/mock_*/` と `app/*/test/libsrc/mock_*/` の mock 関数本体に限ります。  
+対象外は次のとおりです。
+
+- 本物 API の出力引数名 (`gmtime_r` の `struct tm *result` など)
+- テスト本体の `int rtc = func(); EXPECT_*`
+- 生産コードの結果コード変数 (規範本則の `ret` / `result`)
+
 ## Mock クラスの追加
 
 `MOCK_METHOD` に、テストから制御したい関数を追加します。

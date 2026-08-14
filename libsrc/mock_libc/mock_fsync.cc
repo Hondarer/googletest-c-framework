@@ -16,15 +16,15 @@ int delegate_real_fsync(const char *file, const int line, const char *func, int 
 
 int mock_fsync(const char *file, const int line, const char *func, int fd)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        result = _mock_unistd->fsync(file, line, func, fd);
+        mock_ret = _mock_unistd->fsync(file, line, func, fd);
     }
     else
     {
-        result = delegate_real_fsync(file, line, func, fd);
+        mock_ret = delegate_real_fsync(file, line, func, fd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -40,7 +40,7 @@ int mock_fsync(const char *file, const int line, const char *func, int fd)
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

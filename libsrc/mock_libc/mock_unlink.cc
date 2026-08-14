@@ -16,15 +16,15 @@ int delegate_real_unlink(const char *file, const int line, const char *func, con
 
 int mock_unlink(const char *file, const int line, const char *func, const char *path)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->unlink(file, line, func, path);
+        mock_ret = _mock_unistd->unlink(file, line, func, path);
     }
     else
     {
-        rtc = delegate_real_unlink(file, line, func, path);
+        mock_ret = delegate_real_unlink(file, line, func, path);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ int mock_unlink(const char *file, const int line, const char *func, const char *
         printf("  > unlink %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ int mock_unlink(const char *file, const int line, const char *func, const char *
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* !_WIN32 */

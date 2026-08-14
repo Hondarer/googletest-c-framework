@@ -33,9 +33,9 @@ int delegate_real_sigaction(const char *file, const int line, const char *func, 
 int mock_sigaction(const char *file, const int line, const char *func, int signum, const struct sigaction *act,
                    struct sigaction *oldact)
 {
-    int result = (_mock_signal != nullptr) ? _mock_signal->sigaction(file, line, func, signum, act, oldact)
+    int mock_ret = (_mock_signal != nullptr) ? _mock_signal->sigaction(file, line, func, signum, act, oldact)
                                            : delegate_real_sigaction(file, line, func, signum, act, oldact);
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_sigemptyset(const char *file, const int line, const char *func, sigset_t *set)

@@ -26,15 +26,15 @@ int delegate_real_fflush(const char *file, const int line, const char *func, FIL
 
 int mock_fflush(const char *file, const int line, const char *func, FILE *fp)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fflush(file, line, func, fp);
+        mock_ret = _mock_stdio->fflush(file, line, func, fp);
     }
     else
     {
-        rtc = delegate_real_fflush(file, line, func, fp);
+        mock_ret = delegate_real_fflush(file, line, func, fp);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -42,7 +42,7 @@ int mock_fflush(const char *file, const int line, const char *func, FILE *fp)
         printf("  > fflush 0x%p", (void *)fp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -50,5 +50,5 @@ int mock_fflush(const char *file, const int line, const char *func, FILE *fp)
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

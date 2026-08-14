@@ -38,15 +38,15 @@ int delegate_real_clock_gettime(const char *file, const int line, const char *fu
 
 int mock_clock_gettime(const char *file, const int line, const char *func, clockid_t clk_id, struct timespec *tp)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_time != nullptr)
     {
-        rtc = _mock_time->clock_gettime(file, line, func, clk_id, tp);
+        mock_ret = _mock_time->clock_gettime(file, line, func, clk_id, tp);
     }
     else
     {
-        rtc = delegate_real_clock_gettime(file, line, func, clk_id, tp);
+        mock_ret = delegate_real_clock_gettime(file, line, func, clk_id, tp);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -54,9 +54,9 @@ int mock_clock_gettime(const char *file, const int line, const char *func, clock
         printf("  > clock_gettime %d, 0x%p", (int)clk_id, (void *)tp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (rtc != 0 || tp == NULL)
+            if (mock_ret != 0 || tp == NULL)
             {
-                printf(" from %s:%d -> %d\n", file, line, rtc);
+                printf(" from %s:%d -> %d\n", file, line, mock_ret);
             }
             else
             {
@@ -69,7 +69,7 @@ int mock_clock_gettime(const char *file, const int line, const char *func, clock
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

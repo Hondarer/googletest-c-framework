@@ -17,15 +17,15 @@ int delegate_real_unsetenv(const char *file, const int line, const char *func, c
 
 int mock_unsetenv(const char *file, const int line, const char *func, const char *name)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdlib != nullptr)
     {
-        rtc = _mock_stdlib->unsetenv(file, line, func, name);
+        mock_ret = _mock_stdlib->unsetenv(file, line, func, name);
     }
     else
     {
-        rtc = delegate_real_unsetenv(file, line, func, name);
+        mock_ret = delegate_real_unsetenv(file, line, func, name);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_unsetenv(const char *file, const int line, const char *func, const char
         printf("  > unsetenv %s", name != nullptr ? name : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ int mock_unsetenv(const char *file, const int line, const char *func, const char
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -16,15 +16,15 @@ int delegate_real_mkdir(const char *file, const int line, const char *func, cons
 
 int mock_mkdir(const char *file, const int line, const char *func, const char *path, mode_t mode)
 {
-    int ret;
+    int mock_ret;
 
     if (_mock_sys_stat != nullptr)
     {
-        ret = _mock_sys_stat->mkdir(file, line, func, path, mode);
+        mock_ret = _mock_sys_stat->mkdir(file, line, func, path, mode);
     }
     else
     {
-        ret = delegate_real_mkdir(file, line, func, path, mode);
+        mock_ret = delegate_real_mkdir(file, line, func, path, mode);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ int mock_mkdir(const char *file, const int line, const char *func, const char *p
         printf("  > mkdir %s, %o", path, mode);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, ret);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ int mock_mkdir(const char *file, const int line, const char *func, const char *p
         }
     }
 
-    return ret;
+    return mock_ret;
 }
 
 #endif // _WIN32

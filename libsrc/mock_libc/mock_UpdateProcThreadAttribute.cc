@@ -21,16 +21,16 @@ BOOL mock_UpdateProcThreadAttribute(const char *file, const int line, const char
                                     LPPROC_THREAD_ATTRIBUTE_LIST attribute_list, DWORD flags, DWORD_PTR attribute,
                                     PVOID value, SIZE_T size, PVOID previous, PSIZE_T return_size)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value, size,
+        mock_ret = _mock_windows->UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value, size,
                                                        previous, return_size);
     }
     else
     {
-        rtc = delegate_real_UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value, size,
+        mock_ret = delegate_real_UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value, size,
                                                       previous, return_size);
     }
 
@@ -40,7 +40,7 @@ BOOL mock_UpdateProcThreadAttribute(const char *file, const int line, const char
                (unsigned long long)attribute, value, (unsigned long long)size);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -48,7 +48,7 @@ BOOL mock_UpdateProcThreadAttribute(const char *file, const int line, const char
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

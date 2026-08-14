@@ -30,15 +30,15 @@ int delegate_real__fseeki64(const char *file, const int line, const char *func, 
 
 int mock__fseeki64(const char *file, const int line, const char *func, FILE *stream, __int64 offset, int whence)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->_fseeki64(file, line, func, stream, offset, whence);
+        mock_ret = _mock_stdio->_fseeki64(file, line, func, stream, offset, whence);
     }
     else
     {
-        rtc = delegate_real__fseeki64(file, line, func, stream, offset, whence);
+        mock_ret = delegate_real__fseeki64(file, line, func, stream, offset, whence);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -46,7 +46,7 @@ int mock__fseeki64(const char *file, const int line, const char *func, FILE *str
         printf("  > _fseeki64 0x%p, %lld, %d", (void *)stream, (long long)offset, whence);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -54,7 +54,7 @@ int mock__fseeki64(const char *file, const int line, const char *func, FILE *str
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* _WIN32 */

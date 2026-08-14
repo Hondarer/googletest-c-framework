@@ -23,7 +23,7 @@ int mock_snprintf(const char *file, const int line, const char *func, char *s, c
 {
     va_list args;
     char *str;
-    int rtc;
+    int mock_ret;
 
     va_start(args, format);
     str = allocvprintf(format, args);
@@ -31,15 +31,15 @@ int mock_snprintf(const char *file, const int line, const char *func, char *s, c
 
     if (str == NULL)
     {
-        rtc = -1;
+        mock_ret = -1;
     }
     else if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->snprintf(file, line, func, s, n, str);
+        mock_ret = _mock_stdio->snprintf(file, line, func, s, n, str);
     }
     else
     {
-        rtc = delegate_real_snprintf(file, line, func, s, n, str);
+        mock_ret = delegate_real_snprintf(file, line, func, s, n, str);
     }
 
     if (getTraceLevel() > TRACE_NONE && str != NULL)
@@ -47,7 +47,7 @@ int mock_snprintf(const char *file, const int line, const char *func, char *s, c
         printf("  > snprintf 0x%p, %zu, %s", (void *)s, n, str);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -56,5 +56,5 @@ int mock_snprintf(const char *file, const int line, const char *func, char *s, c
     }
 
     free(str);
-    return rtc;
+    return mock_ret;
 }

@@ -15,15 +15,15 @@ int delegate_real_EVP_DigestUpdate(const char *file, const int line, const char 
 
 int mock_EVP_DigestUpdate(const char *file, const int line, const char *func, EVP_MD_CTX *ctx, const void *d, size_t cnt)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_openssl != nullptr)
     {
-        result = _mock_openssl->EVP_DigestUpdate(file, line, func, ctx, d, cnt);
+        mock_ret = _mock_openssl->EVP_DigestUpdate(file, line, func, ctx, d, cnt);
     }
     else
     {
-        result = delegate_real_EVP_DigestUpdate(file, line, func, ctx, d, cnt);
+        mock_ret = delegate_real_EVP_DigestUpdate(file, line, func, ctx, d, cnt);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -39,5 +39,5 @@ int mock_EVP_DigestUpdate(const char *file, const int line, const char *func, EV
         }
     }
 
-    return result;
+    return mock_ret;
 }

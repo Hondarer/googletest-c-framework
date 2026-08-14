@@ -17,15 +17,15 @@ char *delegate_real_strdup(const char *file, const int line, const char *func, c
 
 char *mock_strdup(const char *file, const int line, const char *func, const char *s)
 {
-    char *result = NULL;
+    char *mock_ret = NULL;
 
     if (_mock_string != nullptr)
     {
-        result = _mock_string->strdup(file, line, func, s);
+        mock_ret = _mock_string->strdup(file, line, func, s);
     }
     else
     {
-        result = delegate_real_strdup(file, line, func, s);
+        mock_ret = delegate_real_strdup(file, line, func, s);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ char *mock_strdup(const char *file, const int line, const char *func, const char
         printf("  > strdup %s", s != nullptr ? s : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %s\n", file, line, result != nullptr ? "0x(dup)" : "NULL");
+            printf(" from %s:%d -> %s\n", file, line, mock_ret != nullptr ? "0x(dup)" : "NULL");
         }
         else
         {
@@ -41,7 +41,7 @@ char *mock_strdup(const char *file, const int line, const char *func, const char
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -20,16 +20,16 @@ BOOL mock_InitializeProcThreadAttributeList(const char *file, const int line, co
                                             LPPROC_THREAD_ATTRIBUTE_LIST attribute_list, DWORD attribute_count,
                                             DWORD flags, PSIZE_T size)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count, flags,
+        mock_ret = _mock_windows->InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count, flags,
                                                                size);
     }
     else
     {
-        rtc = delegate_real_InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count, flags,
+        mock_ret = delegate_real_InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count, flags,
                                                               size);
     }
 
@@ -39,7 +39,7 @@ BOOL mock_InitializeProcThreadAttributeList(const char *file, const int line, co
                flags, (void *)size);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -47,7 +47,7 @@ BOOL mock_InitializeProcThreadAttributeList(const char *file, const int line, co
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

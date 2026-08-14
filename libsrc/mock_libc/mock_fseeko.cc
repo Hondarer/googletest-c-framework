@@ -28,15 +28,15 @@ int delegate_real_fseeko(const char *file, const int line, const char *func, FIL
 
 int mock_fseeko(const char *file, const int line, const char *func, FILE *stream, off_t offset, int whence)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fseeko(file, line, func, stream, offset, whence);
+        mock_ret = _mock_stdio->fseeko(file, line, func, stream, offset, whence);
     }
     else
     {
-        rtc = delegate_real_fseeko(file, line, func, stream, offset, whence);
+        mock_ret = delegate_real_fseeko(file, line, func, stream, offset, whence);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -44,7 +44,7 @@ int mock_fseeko(const char *file, const int line, const char *func, FILE *stream
         printf("  > fseeko 0x%p, %lld, %d", (void *)stream, (long long)offset, whence);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -52,7 +52,7 @@ int mock_fseeko(const char *file, const int line, const char *func, FILE *stream
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* !_WIN32 */

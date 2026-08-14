@@ -154,15 +154,15 @@ int delegate_real_ssh_connect(const char *file, const int line, const char *func
 
 int mock_ssh_connect(const char *file, const int line, const char *func, ssh_session session)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_connect(file, line, func, session);
+        mock_ret = _mock_libssh->ssh_connect(file, line, func, session);
     }
     else
     {
-        result = delegate_real_ssh_connect(file, line, func, session);
+        mock_ret = delegate_real_ssh_connect(file, line, func, session);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -170,7 +170,7 @@ int mock_ssh_connect(const char *file, const int line, const char *func, ssh_ses
         printf("  > ssh_connect %p", (void *)session);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -178,7 +178,7 @@ int mock_ssh_connect(const char *file, const int line, const char *func, ssh_ses
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -268,15 +268,15 @@ int delegate_real_ssh_options_set(const char *file, const int line, const char *
 int mock_ssh_options_set(const char *file, const int line, const char *func, ssh_session session,
                          enum ssh_options_e type, const void *value)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_options_set(file, line, func, session, type, value);
+        mock_ret = _mock_libssh->ssh_options_set(file, line, func, session, type, value);
     }
     else
     {
-        result = delegate_real_ssh_options_set(file, line, func, session, type, value);
+        mock_ret = delegate_real_ssh_options_set(file, line, func, session, type, value);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -284,7 +284,7 @@ int mock_ssh_options_set(const char *file, const int line, const char *func, ssh
         printf("  > ssh_options_set %p, type=%d", (void *)session, (int)type);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -292,5 +292,5 @@ int mock_ssh_options_set(const char *file, const int line, const char *func, ssh
         }
     }
 
-    return result;
+    return mock_ret;
 }

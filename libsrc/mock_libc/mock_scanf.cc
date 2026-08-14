@@ -18,18 +18,18 @@ int delegate_real_scanf(const char *file, const int line, const char *func, cons
 int mock_scanf(const char *file, const int line, const char *func, const char *fmt, ...)
 {
     va_list args;
-    int rtc;
+    int mock_ret;
 
     // 可変引数リストを初期化
     va_start(args, fmt);
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->scanf(file, line, func, fmt, args);
+        mock_ret = _mock_stdio->scanf(file, line, func, fmt, args);
     }
     else
     {
-        rtc = delegate_real_scanf(file, line, func, fmt, args);
+        mock_ret = delegate_real_scanf(file, line, func, fmt, args);
     }
 
     va_end(args);
@@ -39,7 +39,7 @@ int mock_scanf(const char *file, const int line, const char *func, const char *f
         printf("  > scanf %s", fmt);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -47,5 +47,5 @@ int mock_scanf(const char *file, const int line, const char *func, const char *f
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

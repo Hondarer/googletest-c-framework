@@ -38,15 +38,15 @@ int delegate_real_ssh_userauth_password(const char *file, const int line, const 
 int mock_ssh_userauth_password(const char *file, const int line, const char *func, ssh_session session,
                                const char *username, const char *password)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_userauth_password(file, line, func, session, username, password);
+        mock_ret = _mock_libssh->ssh_userauth_password(file, line, func, session, username, password);
     }
     else
     {
-        result = delegate_real_ssh_userauth_password(file, line, func, session, username, password);
+        mock_ret = delegate_real_ssh_userauth_password(file, line, func, session, username, password);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -54,7 +54,7 @@ int mock_ssh_userauth_password(const char *file, const int line, const char *fun
         printf("  > ssh_userauth_password %p, user=%s", (void *)session, username ? username : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -62,7 +62,7 @@ int mock_ssh_userauth_password(const char *file, const int line, const char *fun
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -100,15 +100,15 @@ int delegate_real_ssh_userauth_publickey_auto(const char *file, const int line, 
 int mock_ssh_userauth_publickey_auto(const char *file, const int line, const char *func, ssh_session session,
                                      const char *username, const char *passphrase)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_userauth_publickey_auto(file, line, func, session, username, passphrase);
+        mock_ret = _mock_libssh->ssh_userauth_publickey_auto(file, line, func, session, username, passphrase);
     }
     else
     {
-        result = delegate_real_ssh_userauth_publickey_auto(file, line, func, session, username, passphrase);
+        mock_ret = delegate_real_ssh_userauth_publickey_auto(file, line, func, session, username, passphrase);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -116,7 +116,7 @@ int mock_ssh_userauth_publickey_auto(const char *file, const int line, const cha
         printf("  > ssh_userauth_publickey_auto %p, user=%s", (void *)session, username ? username : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -124,5 +124,5 @@ int mock_ssh_userauth_publickey_auto(const char *file, const int line, const cha
         }
     }
 
-    return result;
+    return mock_ret;
 }

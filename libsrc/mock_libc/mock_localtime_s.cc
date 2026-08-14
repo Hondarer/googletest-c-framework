@@ -36,15 +36,15 @@ errno_t delegate_real_localtime_s(const char *file, const int line, const char *
 
 errno_t mock_localtime_s(const char *file, const int line, const char *func, struct tm *local_tm, const time_t *timep)
 {
-    errno_t ret;
+    errno_t mock_ret;
 
     if (_mock_time != nullptr)
     {
-        ret = _mock_time->localtime_s(file, line, func, local_tm, timep);
+        mock_ret = _mock_time->localtime_s(file, line, func, local_tm, timep);
     }
     else
     {
-        ret = delegate_real_localtime_s(file, line, func, local_tm, timep);
+        mock_ret = delegate_real_localtime_s(file, line, func, local_tm, timep);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -52,7 +52,7 @@ errno_t mock_localtime_s(const char *file, const int line, const char *func, str
         printf("  > localtime_s 0x%p, 0x%p", (void *)local_tm, (const void *)timep);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, ret);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -60,7 +60,7 @@ errno_t mock_localtime_s(const char *file, const int line, const char *func, str
         }
     }
 
-    return ret;
+    return mock_ret;
 }
 
 #endif // _WIN32

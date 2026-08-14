@@ -40,15 +40,15 @@ errno_t delegate_real_gmtime_s(const char *file, const int line, const char *fun
 
 errno_t mock_gmtime_s(const char *file, const int line, const char *func, struct tm *utc_tm, const time_t *timep)
 {
-    errno_t rtc;
+    errno_t mock_ret;
 
     if (_mock_time != nullptr)
     {
-        rtc = _mock_time->gmtime_s(file, line, func, utc_tm, timep);
+        mock_ret = _mock_time->gmtime_s(file, line, func, utc_tm, timep);
     }
     else
     {
-        rtc = delegate_real_gmtime_s(file, line, func, utc_tm, timep);
+        mock_ret = delegate_real_gmtime_s(file, line, func, utc_tm, timep);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -56,9 +56,9 @@ errno_t mock_gmtime_s(const char *file, const int line, const char *func, struct
         printf("  > gmtime_s 0x%p, 0x%p", (void *)utc_tm, (const void *)timep);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (rtc != 0 || utc_tm == NULL)
+            if (mock_ret != 0 || utc_tm == NULL)
             {
-                printf(" from %s:%d -> %d\n", file, line, (int)rtc);
+                printf(" from %s:%d -> %d\n", file, line, (int)mock_ret);
             }
             else
             {
@@ -72,7 +72,7 @@ errno_t mock_gmtime_s(const char *file, const int line, const char *func, struct
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

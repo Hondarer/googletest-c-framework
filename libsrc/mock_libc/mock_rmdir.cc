@@ -16,15 +16,15 @@ int delegate_real_rmdir(const char *file, const int line, const char *func, cons
 
 int mock_rmdir(const char *file, const int line, const char *func, const char *path)
 {
-    int ret;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        ret = _mock_unistd->rmdir(file, line, func, path);
+        mock_ret = _mock_unistd->rmdir(file, line, func, path);
     }
     else
     {
-        ret = delegate_real_rmdir(file, line, func, path);
+        mock_ret = delegate_real_rmdir(file, line, func, path);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ int mock_rmdir(const char *file, const int line, const char *func, const char *p
         printf("  > rmdir %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, ret);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ int mock_rmdir(const char *file, const int line, const char *func, const char *p
         }
     }
 
-    return ret;
+    return mock_ret;
 }
 
 #endif // _WIN32

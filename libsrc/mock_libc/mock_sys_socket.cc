@@ -60,20 +60,20 @@ int delegate_real_socket(const char *file, const int line, const char *func, int
 
 int mock_socket(const char *file, const int line, const char *func, int domain, int type, int protocol)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->socket(file, line, func, domain, type, protocol);
+        mock_ret = _mock_sys_socket->socket(file, line, func, domain, type, protocol);
     }
     else
     {
-        result = delegate_real_socket(file, line, func, domain, type, protocol);
+        mock_ret = delegate_real_socket(file, line, func, domain, type, protocol);
     }
 
     TRACE_SOCKET_CALL(socket);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_bind(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
@@ -88,20 +88,20 @@ int delegate_real_bind(const char *file, const int line, const char *func, int s
 
 int mock_bind(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->bind(file, line, func, sockfd, addr, addrlen);
+        mock_ret = _mock_sys_socket->bind(file, line, func, sockfd, addr, addrlen);
     }
     else
     {
-        result = delegate_real_bind(file, line, func, sockfd, addr, addrlen);
+        mock_ret = delegate_real_bind(file, line, func, sockfd, addr, addrlen);
     }
 
     TRACE_SOCKET_CALL(bind);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_listen(const char *file, const int line, const char *func, int sockfd, int backlog)
@@ -116,20 +116,20 @@ int delegate_real_listen(const char *file, const int line, const char *func, int
 
 int mock_listen(const char *file, const int line, const char *func, int sockfd, int backlog)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->listen(file, line, func, sockfd, backlog);
+        mock_ret = _mock_sys_socket->listen(file, line, func, sockfd, backlog);
     }
     else
     {
-        result = delegate_real_listen(file, line, func, sockfd, backlog);
+        mock_ret = delegate_real_listen(file, line, func, sockfd, backlog);
     }
 
     TRACE_SOCKET_CALL(listen);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_accept(const char *file, const int line, const char *func, int sockfd, struct sockaddr *addr, socklen_t *addrlen)
@@ -144,20 +144,20 @@ int delegate_real_accept(const char *file, const int line, const char *func, int
 
 int mock_accept(const char *file, const int line, const char *func, int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->accept(file, line, func, sockfd, addr, addrlen);
+        mock_ret = _mock_sys_socket->accept(file, line, func, sockfd, addr, addrlen);
     }
     else
     {
-        result = delegate_real_accept(file, line, func, sockfd, addr, addrlen);
+        mock_ret = delegate_real_accept(file, line, func, sockfd, addr, addrlen);
     }
 
     TRACE_SOCKET_CALL(accept);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_connect(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
@@ -172,20 +172,20 @@ int delegate_real_connect(const char *file, const int line, const char *func, in
 
 int mock_connect(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->connect(file, line, func, sockfd, addr, addrlen);
+        mock_ret = _mock_sys_socket->connect(file, line, func, sockfd, addr, addrlen);
     }
     else
     {
-        result = delegate_real_connect(file, line, func, sockfd, addr, addrlen);
+        mock_ret = delegate_real_connect(file, line, func, sockfd, addr, addrlen);
     }
 
     TRACE_SOCKET_CALL(connect);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_shutdown(const char *file, const int line, const char *func, int sockfd, int how)
@@ -200,20 +200,20 @@ int delegate_real_shutdown(const char *file, const int line, const char *func, i
 
 int mock_shutdown(const char *file, const int line, const char *func, int sockfd, int how)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->shutdown(file, line, func, sockfd, how);
+        mock_ret = _mock_sys_socket->shutdown(file, line, func, sockfd, how);
     }
     else
     {
-        result = delegate_real_shutdown(file, line, func, sockfd, how);
+        mock_ret = delegate_real_shutdown(file, line, func, sockfd, how);
     }
 
     TRACE_SOCKET_CALL(shutdown);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_setsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, const void *optval, socklen_t optlen)
@@ -228,20 +228,20 @@ int delegate_real_setsockopt(const char *file, const int line, const char *func,
 
 int mock_setsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, const void *optval, socklen_t optlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->setsockopt(file, line, func, sockfd, level, optname, optval, optlen);
+        mock_ret = _mock_sys_socket->setsockopt(file, line, func, sockfd, level, optname, optval, optlen);
     }
     else
     {
-        result = delegate_real_setsockopt(file, line, func, sockfd, level, optname, optval, optlen);
+        mock_ret = delegate_real_setsockopt(file, line, func, sockfd, level, optname, optval, optlen);
     }
 
     TRACE_SOCKET_CALL(setsockopt);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_getsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, void *optval, socklen_t *optlen)
@@ -256,20 +256,20 @@ int delegate_real_getsockopt(const char *file, const int line, const char *func,
 
 int mock_getsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, void *optval, socklen_t *optlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->getsockopt(file, line, func, sockfd, level, optname, optval, optlen);
+        mock_ret = _mock_sys_socket->getsockopt(file, line, func, sockfd, level, optname, optval, optlen);
     }
     else
     {
-        result = delegate_real_getsockopt(file, line, func, sockfd, level, optname, optval, optlen);
+        mock_ret = delegate_real_getsockopt(file, line, func, sockfd, level, optname, optval, optlen);
     }
 
     TRACE_SOCKET_CALL(getsockopt);
 
-    return result;
+    return mock_ret;
 }
 
 ssize_t delegate_real_send(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags)
@@ -284,20 +284,20 @@ ssize_t delegate_real_send(const char *file, const int line, const char *func, i
 
 ssize_t mock_send(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags)
 {
-    ssize_t result;
+    ssize_t mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->send(file, line, func, sockfd, buf, len, flags);
+        mock_ret = _mock_sys_socket->send(file, line, func, sockfd, buf, len, flags);
     }
     else
     {
-        result = delegate_real_send(file, line, func, sockfd, buf, len, flags);
+        mock_ret = delegate_real_send(file, line, func, sockfd, buf, len, flags);
     }
 
     TRACE_SOCKET_CALL(send);
 
-    return result;
+    return mock_ret;
 }
 
 ssize_t delegate_real_recv(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags)
@@ -312,20 +312,20 @@ ssize_t delegate_real_recv(const char *file, const int line, const char *func, i
 
 ssize_t mock_recv(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags)
 {
-    ssize_t result;
+    ssize_t mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->recv(file, line, func, sockfd, buf, len, flags);
+        mock_ret = _mock_sys_socket->recv(file, line, func, sockfd, buf, len, flags);
     }
     else
     {
-        result = delegate_real_recv(file, line, func, sockfd, buf, len, flags);
+        mock_ret = delegate_real_recv(file, line, func, sockfd, buf, len, flags);
     }
 
     TRACE_SOCKET_CALL(recv);
 
-    return result;
+    return mock_ret;
 }
 
 ssize_t delegate_real_sendto(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
@@ -340,20 +340,20 @@ ssize_t delegate_real_sendto(const char *file, const int line, const char *func,
 
 ssize_t mock_sendto(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
 {
-    ssize_t result;
+    ssize_t mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->sendto(file, line, func, sockfd, buf, len, flags, dest_addr, addrlen);
+        mock_ret = _mock_sys_socket->sendto(file, line, func, sockfd, buf, len, flags, dest_addr, addrlen);
     }
     else
     {
-        result = delegate_real_sendto(file, line, func, sockfd, buf, len, flags, dest_addr, addrlen);
+        mock_ret = delegate_real_sendto(file, line, func, sockfd, buf, len, flags, dest_addr, addrlen);
     }
 
     TRACE_SOCKET_CALL(sendto);
 
-    return result;
+    return mock_ret;
 }
 
 ssize_t delegate_real_recvfrom(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
@@ -368,20 +368,20 @@ ssize_t delegate_real_recvfrom(const char *file, const int line, const char *fun
 
 ssize_t mock_recvfrom(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
 {
-    ssize_t result;
+    ssize_t mock_ret;
 
     if (_mock_sys_socket != nullptr)
     {
-        result = _mock_sys_socket->recvfrom(file, line, func, sockfd, buf, len, flags, src_addr, addrlen);
+        mock_ret = _mock_sys_socket->recvfrom(file, line, func, sockfd, buf, len, flags, src_addr, addrlen);
     }
     else
     {
-        result = delegate_real_recvfrom(file, line, func, sockfd, buf, len, flags, src_addr, addrlen);
+        mock_ret = delegate_real_recvfrom(file, line, func, sockfd, buf, len, flags, src_addr, addrlen);
     }
 
     TRACE_SOCKET_CALL(recvfrom);
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

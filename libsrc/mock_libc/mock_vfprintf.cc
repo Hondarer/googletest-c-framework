@@ -30,7 +30,7 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
 {
     va_list args_copy;
     char *str;
-    int rtc;
+    int mock_ret;
 
     va_copy(args_copy, ap);
     str = allocvprintf(fmt, args_copy);
@@ -38,15 +38,15 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
 
     if (str == NULL)
     {
-        rtc = -1;
+        mock_ret = -1;
     }
     else if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->vfprintf(file, line, func, stream, str);
+        mock_ret = _mock_stdio->vfprintf(file, line, func, stream, str);
     }
     else
     {
-        rtc = delegate_real_vfprintf(file, line, func, stream, str);
+        mock_ret = delegate_real_vfprintf(file, line, func, stream, str);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -64,7 +64,7 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
             free(trimmed_str);
             if (getTraceLevel() >= TRACE_DETAIL)
             {
-                printf(" from %s:%d -> %d\n", file, line, rtc);
+                printf(" from %s:%d -> %d\n", file, line, mock_ret);
             }
             else
             {
@@ -75,5 +75,5 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
 
     free(str);
 
-    return rtc;
+    return mock_ret;
 }

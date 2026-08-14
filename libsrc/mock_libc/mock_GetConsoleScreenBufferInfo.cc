@@ -19,15 +19,15 @@ BOOL delegate_real_GetConsoleScreenBufferInfo(const char *file, const int line, 
 BOOL mock_GetConsoleScreenBufferInfo(const char *file, const int line, const char *func, HANDLE console_handle,
                                      PCONSOLE_SCREEN_BUFFER_INFO info)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->GetConsoleScreenBufferInfo(file, line, func, console_handle, info);
+        mock_ret = _mock_windows->GetConsoleScreenBufferInfo(file, line, func, console_handle, info);
     }
     else
     {
-        rtc = delegate_real_GetConsoleScreenBufferInfo(file, line, func, console_handle, info);
+        mock_ret = delegate_real_GetConsoleScreenBufferInfo(file, line, func, console_handle, info);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -35,7 +35,7 @@ BOOL mock_GetConsoleScreenBufferInfo(const char *file, const int line, const cha
         printf("  > GetConsoleScreenBufferInfo 0x%p, 0x%p", (void *)console_handle, (void *)info);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -43,7 +43,7 @@ BOOL mock_GetConsoleScreenBufferInfo(const char *file, const int line, const cha
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -16,15 +16,15 @@ int delegate_real_isatty(const char *file, const int line, const char *func, int
 
 int mock_isatty(const char *file, const int line, const char *func, int fd)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->isatty(file, line, func, fd);
+        mock_ret = _mock_unistd->isatty(file, line, func, fd);
     }
     else
     {
-        rtc = delegate_real_isatty(file, line, func, fd);
+        mock_ret = delegate_real_isatty(file, line, func, fd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ int mock_isatty(const char *file, const int line, const char *func, int fd)
         printf("  > isatty %d", fd);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ int mock_isatty(const char *file, const int line, const char *func, int fd)
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* !_WIN32 */

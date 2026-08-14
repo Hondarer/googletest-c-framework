@@ -15,15 +15,15 @@ int delegate_real_RAND_bytes(const char *file, const int line, const char *func,
 
 int mock_RAND_bytes(const char *file, const int line, const char *func, unsigned char *buf, int num)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_openssl != nullptr)
     {
-        result = _mock_openssl->RAND_bytes(file, line, func, buf, num);
+        mock_ret = _mock_openssl->RAND_bytes(file, line, func, buf, num);
     }
     else
     {
-        result = delegate_real_RAND_bytes(file, line, func, buf, num);
+        mock_ret = delegate_real_RAND_bytes(file, line, func, buf, num);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -39,5 +39,5 @@ int mock_RAND_bytes(const char *file, const int line, const char *func, unsigned
         }
     }
 
-    return result;
+    return mock_ret;
 }

@@ -16,15 +16,15 @@ HANDLE delegate_real_GetCurrentProcess(const char *file, const int line, const c
 
 HANDLE mock_GetCurrentProcess(const char *file, const int line, const char *func)
 {
-    HANDLE rtc;
+    HANDLE mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->GetCurrentProcess(file, line, func);
+        mock_ret = _mock_windows->GetCurrentProcess(file, line, func);
     }
     else
     {
-        rtc = delegate_real_GetCurrentProcess(file, line, func);
+        mock_ret = delegate_real_GetCurrentProcess(file, line, func);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ HANDLE mock_GetCurrentProcess(const char *file, const int line, const char *func
         printf("  > GetCurrentProcess");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> 0x%p\n", file, line, (void *)rtc);
+            printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ HANDLE mock_GetCurrentProcess(const char *file, const int line, const char *func
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

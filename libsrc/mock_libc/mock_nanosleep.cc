@@ -34,15 +34,15 @@ int delegate_real_nanosleep(const char *file, const int line, const char *func, 
 
 int mock_nanosleep(const char *file, const int line, const char *func, const struct timespec *req, struct timespec *rem)
 {
-    int ret;
+    int mock_ret;
 
     if (_mock_time != nullptr)
     {
-        ret = _mock_time->nanosleep(file, line, func, req, rem);
+        mock_ret = _mock_time->nanosleep(file, line, func, req, rem);
     }
     else
     {
-        ret = delegate_real_nanosleep(file, line, func, req, rem);
+        mock_ret = delegate_real_nanosleep(file, line, func, req, rem);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -50,7 +50,7 @@ int mock_nanosleep(const char *file, const int line, const char *func, const str
         printf("  > nanosleep 0x%p, 0x%p", (const void *)req, (void *)rem);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, ret);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -58,7 +58,7 @@ int mock_nanosleep(const char *file, const int line, const char *func, const str
         }
     }
 
-    return ret;
+    return mock_ret;
 }
 
 #endif // _WIN32

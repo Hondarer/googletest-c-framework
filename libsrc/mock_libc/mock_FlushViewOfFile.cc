@@ -16,15 +16,15 @@ BOOL delegate_real_FlushViewOfFile(const char *file, const int line, const char 
 
 BOOL mock_FlushViewOfFile(const char *file, const int line, const char *func, LPCVOID address, SIZE_T bytes)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->FlushViewOfFile(file, line, func, address, bytes);
+        mock_ret = _mock_windows->FlushViewOfFile(file, line, func, address, bytes);
     }
     else
     {
-        rtc = delegate_real_FlushViewOfFile(file, line, func, address, bytes);
+        mock_ret = delegate_real_FlushViewOfFile(file, line, func, address, bytes);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ BOOL mock_FlushViewOfFile(const char *file, const int line, const char *func, LP
         printf("  > FlushViewOfFile 0x%p, %llu", address, (unsigned long long)bytes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ BOOL mock_FlushViewOfFile(const char *file, const int line, const char *func, LP
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

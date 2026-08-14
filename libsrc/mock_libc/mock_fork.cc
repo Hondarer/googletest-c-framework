@@ -17,15 +17,15 @@ pid_t delegate_real_fork(const char *file, const int line, const char *func)
 
 pid_t mock_fork(const char *file, const int line, const char *func)
 {
-    pid_t rtc;
+    pid_t mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->fork(file, line, func);
+        mock_ret = _mock_unistd->fork(file, line, func);
     }
     else
     {
-        rtc = delegate_real_fork(file, line, func);
+        mock_ret = delegate_real_fork(file, line, func);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ pid_t mock_fork(const char *file, const int line, const char *func)
         printf("  > fork");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ pid_t mock_fork(const char *file, const int line, const char *func)
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

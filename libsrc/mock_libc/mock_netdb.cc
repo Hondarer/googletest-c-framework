@@ -33,15 +33,15 @@ int delegate_real_getaddrinfo(const char *file, const int line, const char *func
 
 int mock_getaddrinfo(const char *file, const int line, const char *func, const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_netdb != nullptr)
     {
-        result = _mock_netdb->getaddrinfo(file, line, func, node, service, hints, res);
+        mock_ret = _mock_netdb->getaddrinfo(file, line, func, node, service, hints, res);
     }
     else
     {
-        result = delegate_real_getaddrinfo(file, line, func, node, service, hints, res);
+        mock_ret = delegate_real_getaddrinfo(file, line, func, node, service, hints, res);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -57,7 +57,7 @@ int mock_getaddrinfo(const char *file, const int line, const char *func, const c
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 void delegate_real_freeaddrinfo(const char *file, const int line, const char *func, struct addrinfo *res)
@@ -107,15 +107,15 @@ const char *delegate_real_gai_strerror(const char *file, const int line, const c
 
 const char *mock_gai_strerror(const char *file, const int line, const char *func, int errcode)
 {
-    const char *result;
+    const char *mock_ret;
 
     if (_mock_netdb != nullptr)
     {
-        result = _mock_netdb->gai_strerror(file, line, func, errcode);
+        mock_ret = _mock_netdb->gai_strerror(file, line, func, errcode);
     }
     else
     {
-        result = delegate_real_gai_strerror(file, line, func, errcode);
+        mock_ret = delegate_real_gai_strerror(file, line, func, errcode);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -131,7 +131,7 @@ const char *mock_gai_strerror(const char *file, const int line, const char *func
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

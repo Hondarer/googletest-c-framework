@@ -26,15 +26,15 @@ __int64 delegate_real__ftelli64(const char *file, const int line, const char *fu
 
 __int64 mock__ftelli64(const char *file, const int line, const char *func, FILE *stream)
 {
-    __int64 rtc;
+    __int64 mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->_ftelli64(file, line, func, stream);
+        mock_ret = _mock_stdio->_ftelli64(file, line, func, stream);
     }
     else
     {
-        rtc = delegate_real__ftelli64(file, line, func, stream);
+        mock_ret = delegate_real__ftelli64(file, line, func, stream);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -42,7 +42,7 @@ __int64 mock__ftelli64(const char *file, const int line, const char *func, FILE 
         printf("  > _ftelli64 0x%p", (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lld\n", file, line, (long long)rtc);
+            printf(" from %s:%d -> %lld\n", file, line, (long long)mock_ret);
         }
         else
         {
@@ -50,7 +50,7 @@ __int64 mock__ftelli64(const char *file, const int line, const char *func, FILE 
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* _WIN32 */

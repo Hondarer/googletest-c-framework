@@ -17,15 +17,15 @@ int delegate_real_vfscanf(const char *file, const int line, const char *func, FI
 
 int mock_vfscanf(const char *file, const int line, const char *func, FILE *stream, const char *format, va_list arg_ptr)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->vfscanf(file, line, func, stream, format, arg_ptr);
+        mock_ret = _mock_stdio->vfscanf(file, line, func, stream, format, arg_ptr);
     }
     else
     {
-        rtc = delegate_real_vfscanf(file, line, func, stream, format, arg_ptr);
+        mock_ret = delegate_real_vfscanf(file, line, func, stream, format, arg_ptr);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_vfscanf(const char *file, const int line, const char *func, FILE *strea
         printf("  > vfscanf 0x%p, %s", (void *)stream, format);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,5 +41,5 @@ int mock_vfscanf(const char *file, const int line, const char *func, FILE *strea
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

@@ -32,15 +32,15 @@ char *delegate_real_getenv(const char *file, const int line, const char *func, c
 
 char *mock_getenv(const char *file, const int line, const char *func, const char *name)
 {
-    char *rtc;
+    char *mock_ret;
 
     if (_mock_stdlib != nullptr)
     {
-        rtc = _mock_stdlib->getenv(file, line, func, name);
+        mock_ret = _mock_stdlib->getenv(file, line, func, name);
     }
     else
     {
-        rtc = delegate_real_getenv(file, line, func, name);
+        mock_ret = delegate_real_getenv(file, line, func, name);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -48,7 +48,7 @@ char *mock_getenv(const char *file, const int line, const char *func, const char
         printf("  > getenv %s", name);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %s\n", file, line, rtc != nullptr ? rtc : "(null)");
+            printf(" from %s:%d -> %s\n", file, line, mock_ret != nullptr ? mock_ret : "(null)");
         }
         else
         {
@@ -56,5 +56,5 @@ char *mock_getenv(const char *file, const int line, const char *func, const char
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

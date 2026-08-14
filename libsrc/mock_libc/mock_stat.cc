@@ -15,15 +15,15 @@ int delegate_real_stat(const char *file, const int line, const char *func, const
 
 int mock_stat(const char *file, const int line, const char *func, const char *path, struct stat *buf)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_sys_stat != nullptr)
     {
-        rtc = _mock_sys_stat->stat(file, line, func, path, buf);
+        mock_ret = _mock_sys_stat->stat(file, line, func, path, buf);
     }
     else
     {
-        rtc = delegate_real_stat(file, line, func, path, buf);
+        mock_ret = delegate_real_stat(file, line, func, path, buf);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -31,7 +31,7 @@ int mock_stat(const char *file, const int line, const char *func, const char *pa
         printf("  > stat %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -39,7 +39,7 @@ int mock_stat(const char *file, const int line, const char *func, const char *pa
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #ifdef _WIN32
@@ -55,15 +55,15 @@ int delegate_real_stat64(const char *file, const int line, const char *func, con
 
 int mock_stat64(const char *file, const int line, const char *func, const char *path, struct _stat64 *buf)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_sys_stat != nullptr)
     {
-        rtc = _mock_sys_stat->stat64(file, line, func, path, buf);
+        mock_ret = _mock_sys_stat->stat64(file, line, func, path, buf);
     }
     else
     {
-        rtc = delegate_real_stat64(file, line, func, path, buf);
+        mock_ret = delegate_real_stat64(file, line, func, path, buf);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -71,7 +71,7 @@ int mock_stat64(const char *file, const int line, const char *func, const char *
         printf("  > _stat64 %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -79,6 +79,6 @@ int mock_stat64(const char *file, const int line, const char *func, const char *
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 #endif

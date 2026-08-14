@@ -42,15 +42,15 @@ int delegate_real_ssh_get_server_publickey(const char *file, const int line, con
 
 int mock_ssh_get_server_publickey(const char *file, const int line, const char *func, ssh_session session, ssh_key *key)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_get_server_publickey(file, line, func, session, key);
+        mock_ret = _mock_libssh->ssh_get_server_publickey(file, line, func, session, key);
     }
     else
     {
-        result = delegate_real_ssh_get_server_publickey(file, line, func, session, key);
+        mock_ret = delegate_real_ssh_get_server_publickey(file, line, func, session, key);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -58,7 +58,7 @@ int mock_ssh_get_server_publickey(const char *file, const int line, const char *
         printf("  > ssh_get_server_publickey %p", (void *)session);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -66,7 +66,7 @@ int mock_ssh_get_server_publickey(const char *file, const int line, const char *
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -112,15 +112,15 @@ int delegate_real_ssh_get_publickey_hash(const char *file, const int line, const
 int mock_ssh_get_publickey_hash(const char *file, const int line, const char *func, const ssh_key key,
                                 enum ssh_publickey_hash_type type, unsigned char **hash, size_t *hlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_get_publickey_hash(file, line, func, key, type, hash, hlen);
+        mock_ret = _mock_libssh->ssh_get_publickey_hash(file, line, func, key, type, hash, hlen);
     }
     else
     {
-        result = delegate_real_ssh_get_publickey_hash(file, line, func, key, type, hash, hlen);
+        mock_ret = delegate_real_ssh_get_publickey_hash(file, line, func, key, type, hash, hlen);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -128,7 +128,7 @@ int mock_ssh_get_publickey_hash(const char *file, const int line, const char *fu
         printf("  > ssh_get_publickey_hash %p, type=%d", (const void *)key, (int)type);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -136,7 +136,7 @@ int mock_ssh_get_publickey_hash(const char *file, const int line, const char *fu
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -226,15 +226,15 @@ enum ssh_known_hosts_e delegate_real_ssh_session_is_known_server(const char *fil
 enum ssh_known_hosts_e mock_ssh_session_is_known_server(const char *file, const int line, const char *func,
                                                         ssh_session session)
 {
-    enum ssh_known_hosts_e result;
+    enum ssh_known_hosts_e mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_session_is_known_server(file, line, func, session);
+        mock_ret = _mock_libssh->ssh_session_is_known_server(file, line, func, session);
     }
     else
     {
-        result = delegate_real_ssh_session_is_known_server(file, line, func, session);
+        mock_ret = delegate_real_ssh_session_is_known_server(file, line, func, session);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -242,7 +242,7 @@ enum ssh_known_hosts_e mock_ssh_session_is_known_server(const char *file, const 
         printf("  > ssh_session_is_known_server %p", (void *)session);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, (int)result);
+            printf(" from %s:%d -> %d\n", file, line, (int)mock_ret);
         }
         else
         {
@@ -250,7 +250,7 @@ enum ssh_known_hosts_e mock_ssh_session_is_known_server(const char *file, const 
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -340,15 +340,15 @@ int delegate_real_ssh_session_update_known_hosts(const char *file, const int lin
 
 int mock_ssh_session_update_known_hosts(const char *file, const int line, const char *func, ssh_session session)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_session_update_known_hosts(file, line, func, session);
+        mock_ret = _mock_libssh->ssh_session_update_known_hosts(file, line, func, session);
     }
     else
     {
-        result = delegate_real_ssh_session_update_known_hosts(file, line, func, session);
+        mock_ret = delegate_real_ssh_session_update_known_hosts(file, line, func, session);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -356,7 +356,7 @@ int mock_ssh_session_update_known_hosts(const char *file, const int line, const 
         printf("  > ssh_session_update_known_hosts %p", (void *)session);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -364,7 +364,7 @@ int mock_ssh_session_update_known_hosts(const char *file, const int line, const 
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================

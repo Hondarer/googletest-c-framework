@@ -18,15 +18,15 @@ int delegate_real_setenv(const char *file, const int line, const char *func, con
 
 int mock_setenv(const char *file, const int line, const char *func, const char *name, const char *value, int overwrite)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_stdlib != nullptr)
     {
-        rtc = _mock_stdlib->setenv(file, line, func, name, value, overwrite);
+        mock_ret = _mock_stdlib->setenv(file, line, func, name, value, overwrite);
     }
     else
     {
-        rtc = delegate_real_setenv(file, line, func, name, value, overwrite);
+        mock_ret = delegate_real_setenv(file, line, func, name, value, overwrite);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -34,7 +34,7 @@ int mock_setenv(const char *file, const int line, const char *func, const char *
         printf("  > setenv %s", name != nullptr ? name : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -42,7 +42,7 @@ int mock_setenv(const char *file, const int line, const char *func, const char *
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

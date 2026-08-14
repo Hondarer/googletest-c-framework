@@ -39,15 +39,15 @@ struct tm *delegate_real_gmtime_r(const char *file, const int line, const char *
 
 struct tm *mock_gmtime_r(const char *file, const int line, const char *func, const time_t *timep, struct tm *result)
 {
-    struct tm *rtc;
+    struct tm *mock_ret;
 
     if (_mock_time != nullptr)
     {
-        rtc = _mock_time->gmtime_r(file, line, func, timep, result);
+        mock_ret = _mock_time->gmtime_r(file, line, func, timep, result);
     }
     else
     {
-        rtc = delegate_real_gmtime_r(file, line, func, timep, result);
+        mock_ret = delegate_real_gmtime_r(file, line, func, timep, result);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -55,14 +55,14 @@ struct tm *mock_gmtime_r(const char *file, const int line, const char *func, con
         printf("  > gmtime_r 0x%p, 0x%p", (const void *)timep, (void *)result);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (rtc == NULL)
+            if (mock_ret == NULL)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
             else
             {
-                printf(" from %s:%d -> %04d-%02d-%02d %02d:%02d:%02d\n", file, line, rtc->tm_year + 1900,
-                       rtc->tm_mon + 1, rtc->tm_mday, rtc->tm_hour, rtc->tm_min, rtc->tm_sec);
+                printf(" from %s:%d -> %04d-%02d-%02d %02d:%02d:%02d\n", file, line, mock_ret->tm_year + 1900,
+                       mock_ret->tm_mon + 1, mock_ret->tm_mday, mock_ret->tm_hour, mock_ret->tm_min, mock_ret->tm_sec);
             }
         }
         else
@@ -71,7 +71,7 @@ struct tm *mock_gmtime_r(const char *file, const int line, const char *func, con
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

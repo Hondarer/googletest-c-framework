@@ -32,15 +32,15 @@ size_t delegate_real_fwrite(const char *file, const int line, const char *func, 
 size_t mock_fwrite(const char *file, const int line, const char *func, const void *ptr, size_t size, size_t count,
                    FILE *stream)
 {
-    size_t rtc;
+    size_t mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fwrite(file, line, func, ptr, size, count, stream);
+        mock_ret = _mock_stdio->fwrite(file, line, func, ptr, size, count, stream);
     }
     else
     {
-        rtc = delegate_real_fwrite(file, line, func, ptr, size, count, stream);
+        mock_ret = delegate_real_fwrite(file, line, func, ptr, size, count, stream);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -48,7 +48,7 @@ size_t mock_fwrite(const char *file, const int line, const char *func, const voi
         printf("  > fwrite 0x%p, %zu, %zu, 0x%p", ptr, size, count, (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %zu\n", file, line, rtc);
+            printf(" from %s:%d -> %zu\n", file, line, mock_ret);
         }
         else
         {
@@ -56,5 +56,5 @@ size_t mock_fwrite(const char *file, const int line, const char *func, const voi
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

@@ -31,15 +31,15 @@ int delegate_real_poll(const char *file, const int line, const char *func, struc
 
 int mock_poll(const char *file, const int line, const char *func, struct pollfd *fds, nfds_t nfds, int timeout)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_poll != nullptr)
     {
-        result = _mock_poll->poll(file, line, func, fds, nfds, timeout);
+        mock_ret = _mock_poll->poll(file, line, func, fds, nfds, timeout);
     }
     else
     {
-        result = delegate_real_poll(file, line, func, fds, nfds, timeout);
+        mock_ret = delegate_real_poll(file, line, func, fds, nfds, timeout);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -55,7 +55,7 @@ int mock_poll(const char *file, const int line, const char *func, struct pollfd 
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -17,15 +17,15 @@ ssize_t delegate_real_read(const char *file, const int line, const char *func, i
 
 ssize_t mock_read(const char *file, const int line, const char *func, int fd, void *buf, size_t count)
 {
-    ssize_t rtc;
+    ssize_t mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->read(file, line, func, fd, buf, count);
+        mock_ret = _mock_unistd->read(file, line, func, fd, buf, count);
     }
     else
     {
-        rtc = delegate_real_read(file, line, func, fd, buf, count);
+        mock_ret = delegate_real_read(file, line, func, fd, buf, count);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ ssize_t mock_read(const char *file, const int line, const char *func, int fd, vo
         printf("  > read %d, 0x%p, %zu", fd, buf, count);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lld\n", file, line, (long long)rtc);
+            printf(" from %s:%d -> %lld\n", file, line, (long long)mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ ssize_t mock_read(const char *file, const int line, const char *func, int fd, vo
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #else // _WIN32
@@ -58,15 +58,15 @@ int delegate_real__read(const char *file, const int line, const char *func, int 
 
 int mock__read(const char *file, const int line, const char *func, int fd, void *buf, unsigned int count)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->_read(file, line, func, fd, buf, count);
+        mock_ret = _mock_unistd->_read(file, line, func, fd, buf, count);
     }
     else
     {
-        rtc = delegate_real__read(file, line, func, fd, buf, count);
+        mock_ret = delegate_real__read(file, line, func, fd, buf, count);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -74,7 +74,7 @@ int mock__read(const char *file, const int line, const char *func, int fd, void 
         printf("  > _read %d, 0x%p, %u", fd, buf, count);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -82,7 +82,7 @@ int mock__read(const char *file, const int line, const char *func, int fd, void 
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

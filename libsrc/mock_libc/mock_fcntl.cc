@@ -53,15 +53,15 @@ int delegate_real_fcntl(const char *file, const int line, const char *func, int 
 
 int mock_fcntl(const char *file, const int line, const char *func, int fd, int cmd, intptr_t arg)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_fcntl != nullptr)
     {
-        result = _mock_fcntl->fcntl(file, line, func, fd, cmd, arg);
+        mock_ret = _mock_fcntl->fcntl(file, line, func, fd, cmd, arg);
     }
     else
     {
-        result = delegate_real_fcntl(file, line, func, fd, cmd, arg);
+        mock_ret = delegate_real_fcntl(file, line, func, fd, cmd, arg);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -77,7 +77,7 @@ int mock_fcntl(const char *file, const int line, const char *func, int fd, int c
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

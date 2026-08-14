@@ -17,15 +17,15 @@ HANDLE delegate_real_GetStdHandle(const char *file, const int line, const char *
 
 HANDLE mock_GetStdHandle(const char *file, const int line, const char *func, DWORD std_handle)
 {
-    HANDLE rtc;
+    HANDLE mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->GetStdHandle(file, line, func, std_handle);
+        mock_ret = _mock_windows->GetStdHandle(file, line, func, std_handle);
     }
     else
     {
-        rtc = delegate_real_GetStdHandle(file, line, func, std_handle);
+        mock_ret = delegate_real_GetStdHandle(file, line, func, std_handle);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ HANDLE mock_GetStdHandle(const char *file, const int line, const char *func, DWO
         printf("  > GetStdHandle %lu", std_handle);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> 0x%p\n", file, line, (void *)rtc);
+            printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ HANDLE mock_GetStdHandle(const char *file, const int line, const char *func, DWO
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

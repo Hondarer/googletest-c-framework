@@ -26,15 +26,15 @@ off_t delegate_real_ftello(const char *file, const int line, const char *func, F
 
 off_t mock_ftello(const char *file, const int line, const char *func, FILE *stream)
 {
-    off_t rtc;
+    off_t mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->ftello(file, line, func, stream);
+        mock_ret = _mock_stdio->ftello(file, line, func, stream);
     }
     else
     {
-        rtc = delegate_real_ftello(file, line, func, stream);
+        mock_ret = delegate_real_ftello(file, line, func, stream);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -42,7 +42,7 @@ off_t mock_ftello(const char *file, const int line, const char *func, FILE *stre
         printf("  > ftello 0x%p", (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lld\n", file, line, (long long)rtc);
+            printf(" from %s:%d -> %lld\n", file, line, (long long)mock_ret);
         }
         else
         {
@@ -50,7 +50,7 @@ off_t mock_ftello(const char *file, const int line, const char *func, FILE *stre
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* !_WIN32 */

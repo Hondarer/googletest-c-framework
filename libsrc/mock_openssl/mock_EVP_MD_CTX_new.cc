@@ -15,15 +15,15 @@ EVP_MD_CTX *delegate_real_EVP_MD_CTX_new(const char *file, const int line, const
 
 EVP_MD_CTX *mock_EVP_MD_CTX_new(const char *file, const int line, const char *func)
 {
-    EVP_MD_CTX *result;
+    EVP_MD_CTX *mock_ret;
 
     if (_mock_openssl != nullptr)
     {
-        result = _mock_openssl->EVP_MD_CTX_new(file, line, func);
+        mock_ret = _mock_openssl->EVP_MD_CTX_new(file, line, func);
     }
     else
     {
-        result = delegate_real_EVP_MD_CTX_new(file, line, func);
+        mock_ret = delegate_real_EVP_MD_CTX_new(file, line, func);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -39,5 +39,5 @@ EVP_MD_CTX *mock_EVP_MD_CTX_new(const char *file, const int line, const char *fu
         }
     }
 
-    return result;
+    return mock_ret;
 }

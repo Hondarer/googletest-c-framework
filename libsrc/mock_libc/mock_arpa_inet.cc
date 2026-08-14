@@ -32,15 +32,15 @@ int delegate_real_inet_pton(const char *file, const int line, const char *func, 
 
 int mock_inet_pton(const char *file, const int line, const char *func, int af, const char *src, void *dst)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_arpa_inet != nullptr)
     {
-        result = _mock_arpa_inet->inet_pton(file, line, func, af, src, dst);
+        mock_ret = _mock_arpa_inet->inet_pton(file, line, func, af, src, dst);
     }
     else
     {
-        result = delegate_real_inet_pton(file, line, func, af, src, dst);
+        mock_ret = delegate_real_inet_pton(file, line, func, af, src, dst);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -56,7 +56,7 @@ int mock_inet_pton(const char *file, const int line, const char *func, int af, c
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 const char *delegate_real_inet_ntop(const char *file, const int line, const char *func, int af, const void *src, char *dst, socklen_t size)
@@ -71,15 +71,15 @@ const char *delegate_real_inet_ntop(const char *file, const int line, const char
 
 const char *mock_inet_ntop(const char *file, const int line, const char *func, int af, const void *src, char *dst, socklen_t size)
 {
-    const char *result;
+    const char *mock_ret;
 
     if (_mock_arpa_inet != nullptr)
     {
-        result = _mock_arpa_inet->inet_ntop(file, line, func, af, src, dst, size);
+        mock_ret = _mock_arpa_inet->inet_ntop(file, line, func, af, src, dst, size);
     }
     else
     {
-        result = delegate_real_inet_ntop(file, line, func, af, src, dst, size);
+        mock_ret = delegate_real_inet_ntop(file, line, func, af, src, dst, size);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -95,7 +95,7 @@ const char *mock_inet_ntop(const char *file, const int line, const char *func, i
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

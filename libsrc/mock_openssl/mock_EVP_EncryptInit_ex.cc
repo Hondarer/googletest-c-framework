@@ -15,15 +15,15 @@ int delegate_real_EVP_EncryptInit_ex(const char *file, const int line, const cha
 
 int mock_EVP_EncryptInit_ex(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type, ENGINE *impl, const unsigned char *key, const unsigned char *iv)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_openssl != nullptr)
     {
-        result = _mock_openssl->EVP_EncryptInit_ex(file, line, func, ctx, type, impl, key, iv);
+        mock_ret = _mock_openssl->EVP_EncryptInit_ex(file, line, func, ctx, type, impl, key, iv);
     }
     else
     {
-        result = delegate_real_EVP_EncryptInit_ex(file, line, func, ctx, type, impl, key, iv);
+        mock_ret = delegate_real_EVP_EncryptInit_ex(file, line, func, ctx, type, impl, key, iv);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -39,5 +39,5 @@ int mock_EVP_EncryptInit_ex(const char *file, const int line, const char *func, 
         }
     }
 
-    return result;
+    return mock_ret;
 }

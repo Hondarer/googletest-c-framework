@@ -30,7 +30,7 @@ int mock_fprintf(const char *file, const int line, const char *func, FILE *strea
 {
     va_list args;
     char *str;
-    int rtc;
+    int mock_ret;
 
     // 可変引数リストを初期化
     va_start(args, fmt);
@@ -40,15 +40,15 @@ int mock_fprintf(const char *file, const int line, const char *func, FILE *strea
 
     if (str == NULL)
     {
-        rtc = -1;
+        mock_ret = -1;
     }
     else if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fprintf(file, line, func, stream, str);
+        mock_ret = _mock_stdio->fprintf(file, line, func, stream, str);
     }
     else
     {
-        rtc = delegate_real_fprintf(file, line, func, stream, str);
+        mock_ret = delegate_real_fprintf(file, line, func, stream, str);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -66,7 +66,7 @@ int mock_fprintf(const char *file, const int line, const char *func, FILE *strea
             free(trimmed_str);
             if (getTraceLevel() >= TRACE_DETAIL)
             {
-                printf(" from %s:%d -> %d\n", file, line, rtc);
+                printf(" from %s:%d -> %d\n", file, line, mock_ret);
             }
             else
             {
@@ -77,5 +77,5 @@ int mock_fprintf(const char *file, const int line, const char *func, FILE *strea
 
     free(str);
 
-    return rtc;
+    return mock_ret;
 }

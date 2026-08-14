@@ -25,17 +25,17 @@ BOOL mock_CreateProcessW(const char *file, const int line, const char *func, LPC
                          LPVOID environment, LPCWSTR current_directory, LPSTARTUPINFOW startup_info,
                          LPPROCESS_INFORMATION process_information)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->CreateProcessW(file, line, func, application_name, command_line, process_attributes,
+        mock_ret = _mock_windows->CreateProcessW(file, line, func, application_name, command_line, process_attributes,
                                             thread_attributes, inherit_handles, creation_flags, environment,
                                             current_directory, startup_info, process_information);
     }
     else
     {
-        rtc = delegate_real_CreateProcessW(file, line, func, application_name, command_line, process_attributes,
+        mock_ret = delegate_real_CreateProcessW(file, line, func, application_name, command_line, process_attributes,
                                            thread_attributes, inherit_handles, creation_flags, environment,
                                            current_directory, startup_info, process_information);
     }
@@ -45,7 +45,7 @@ BOOL mock_CreateProcessW(const char *file, const int line, const char *func, LPC
         printf("  > CreateProcessW 0x%p, 0x%p", (const void *)application_name, (void *)command_line);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -53,7 +53,7 @@ BOOL mock_CreateProcessW(const char *file, const int line, const char *func, LPC
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

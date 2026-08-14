@@ -5,7 +5,7 @@ description: framework/testfw の標準ライブラリ mock を追加または�
 
 # testfw mock の作成
 
-1. `framework/testfw/docs/how-to-mock.md` を読んでください。
+1. `framework/testfw/docs/how-to-mock.md` を読んでください。mock 関数本体の一時受けは `mock_ret` です。
 2. `framework/testfw/AGENTS.md` と同じカテゴリの既存 mock を確認してください。
 3. override ヘッダー、mock 宣言、`MOCK_METHOD`、`ON_CALL`、関数実装を更新してください。
 4. 置換マクロには、既存規則に従って file、line、func を追加してください。

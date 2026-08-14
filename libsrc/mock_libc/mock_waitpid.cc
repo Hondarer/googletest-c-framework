@@ -17,15 +17,15 @@ pid_t delegate_real_waitpid(const char *file, const int line, const char *func, 
 
 pid_t mock_waitpid(const char *file, const int line, const char *func, pid_t pid, int *stat_loc, int options)
 {
-    pid_t rtc;
+    pid_t mock_ret;
 
     if (_mock_sys_wait != nullptr)
     {
-        rtc = _mock_sys_wait->waitpid(file, line, func, pid, stat_loc, options);
+        mock_ret = _mock_sys_wait->waitpid(file, line, func, pid, stat_loc, options);
     }
     else
     {
-        rtc = delegate_real_waitpid(file, line, func, pid, stat_loc, options);
+        mock_ret = delegate_real_waitpid(file, line, func, pid, stat_loc, options);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -41,7 +41,7 @@ pid_t mock_waitpid(const char *file, const int line, const char *func, pid_t pid
 
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -49,7 +49,7 @@ pid_t mock_waitpid(const char *file, const int line, const char *func, pid_t pid
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

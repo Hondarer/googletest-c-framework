@@ -17,15 +17,15 @@ int delegate_real_ftruncate(const char *file, const int line, const char *func, 
 
 int mock_ftruncate(const char *file, const int line, const char *func, int fd, off_t length)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        result = _mock_unistd->ftruncate(file, line, func, fd, length);
+        mock_ret = _mock_unistd->ftruncate(file, line, func, fd, length);
     }
     else
     {
-        result = delegate_real_ftruncate(file, line, func, fd, length);
+        mock_ret = delegate_real_ftruncate(file, line, func, fd, length);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -41,7 +41,7 @@ int mock_ftruncate(const char *file, const int line, const char *func, int fd, o
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -35,15 +35,15 @@ const char *delegate_real_ssh_get_error(const char *file, const int line, const 
 
 const char *mock_ssh_get_error(const char *file, const int line, const char *func, void *error)
 {
-    const char *result;
+    const char *mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_get_error(file, line, func, error);
+        mock_ret = _mock_libssh->ssh_get_error(file, line, func, error);
     }
     else
     {
-        result = delegate_real_ssh_get_error(file, line, func, error);
+        mock_ret = delegate_real_ssh_get_error(file, line, func, error);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -51,7 +51,7 @@ const char *mock_ssh_get_error(const char *file, const int line, const char *fun
         printf("  > ssh_get_error %p", error);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %s\n", file, line, result ? result : "(null)");
+            printf(" from %s:%d -> %s\n", file, line, mock_ret ? mock_ret : "(null)");
         }
         else
         {
@@ -59,7 +59,7 @@ const char *mock_ssh_get_error(const char *file, const int line, const char *fun
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -91,15 +91,15 @@ int delegate_real_ssh_get_error_code(const char *file, const int line, const cha
 
 int mock_ssh_get_error_code(const char *file, const int line, const char *func, void *error)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_get_error_code(file, line, func, error);
+        mock_ret = _mock_libssh->ssh_get_error_code(file, line, func, error);
     }
     else
     {
-        result = delegate_real_ssh_get_error_code(file, line, func, error);
+        mock_ret = delegate_real_ssh_get_error_code(file, line, func, error);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -107,7 +107,7 @@ int mock_ssh_get_error_code(const char *file, const int line, const char *func, 
         printf("  > ssh_get_error_code %p", error);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -115,5 +115,5 @@ int mock_ssh_get_error_code(const char *file, const int line, const char *func, 
         }
     }
 
-    return result;
+    return mock_ret;
 }

@@ -34,15 +34,15 @@ sftp_session delegate_real_sftp_new(const char *file, const int line, const char
 
 sftp_session mock_sftp_new(const char *file, const int line, const char *func, ssh_session session)
 {
-    sftp_session result;
+    sftp_session mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_new(file, line, func, session);
+        mock_ret = _mock_libssh->sftp_new(file, line, func, session);
     }
     else
     {
-        result = delegate_real_sftp_new(file, line, func, session);
+        mock_ret = delegate_real_sftp_new(file, line, func, session);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -50,7 +50,7 @@ sftp_session mock_sftp_new(const char *file, const int line, const char *func, s
         printf("  > sftp_new %p", (void *)session);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -58,7 +58,7 @@ sftp_session mock_sftp_new(const char *file, const int line, const char *func, s
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -144,15 +144,15 @@ int delegate_real_sftp_init(const char *file, const int line, const char *func, 
 
 int mock_sftp_init(const char *file, const int line, const char *func, sftp_session sftp)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_init(file, line, func, sftp);
+        mock_ret = _mock_libssh->sftp_init(file, line, func, sftp);
     }
     else
     {
-        result = delegate_real_sftp_init(file, line, func, sftp);
+        mock_ret = delegate_real_sftp_init(file, line, func, sftp);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -160,7 +160,7 @@ int mock_sftp_init(const char *file, const int line, const char *func, sftp_sess
         printf("  > sftp_init %p", (void *)sftp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -168,7 +168,7 @@ int mock_sftp_init(const char *file, const int line, const char *func, sftp_sess
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -200,15 +200,15 @@ int delegate_real_sftp_get_error(const char *file, const int line, const char *f
 
 int mock_sftp_get_error(const char *file, const int line, const char *func, sftp_session sftp)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_get_error(file, line, func, sftp);
+        mock_ret = _mock_libssh->sftp_get_error(file, line, func, sftp);
     }
     else
     {
-        result = delegate_real_sftp_get_error(file, line, func, sftp);
+        mock_ret = delegate_real_sftp_get_error(file, line, func, sftp);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -216,7 +216,7 @@ int mock_sftp_get_error(const char *file, const int line, const char *func, sftp
         printf("  > sftp_get_error %p", (void *)sftp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -224,7 +224,7 @@ int mock_sftp_get_error(const char *file, const int line, const char *func, sftp
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -262,15 +262,15 @@ sftp_file delegate_real_sftp_open(const char *file, const int line, const char *
 sftp_file mock_sftp_open(const char *file, const int line, const char *func, sftp_session sftp, const char *filename,
                          int accesstype, mode_t mode)
 {
-    sftp_file result;
+    sftp_file mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_open(file, line, func, sftp, filename, accesstype, mode);
+        mock_ret = _mock_libssh->sftp_open(file, line, func, sftp, filename, accesstype, mode);
     }
     else
     {
-        result = delegate_real_sftp_open(file, line, func, sftp, filename, accesstype, mode);
+        mock_ret = delegate_real_sftp_open(file, line, func, sftp, filename, accesstype, mode);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -278,7 +278,7 @@ sftp_file mock_sftp_open(const char *file, const int line, const char *func, sft
         printf("  > sftp_open %s, %d, %o", filename, accesstype, mode);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -286,7 +286,7 @@ sftp_file mock_sftp_open(const char *file, const int line, const char *func, sft
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -322,15 +322,15 @@ int delegate_real_sftp_close(const char *file, const int line, const char *func,
 
 int mock_sftp_close(const char *file, const int line, const char *func, sftp_file sftpfile)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_close(file, line, func, sftpfile);
+        mock_ret = _mock_libssh->sftp_close(file, line, func, sftpfile);
     }
     else
     {
-        result = delegate_real_sftp_close(file, line, func, sftpfile);
+        mock_ret = delegate_real_sftp_close(file, line, func, sftpfile);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -338,7 +338,7 @@ int mock_sftp_close(const char *file, const int line, const char *func, sftp_fil
         printf("  > sftp_close %p", (void *)sftpfile);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -346,7 +346,7 @@ int mock_sftp_close(const char *file, const int line, const char *func, sftp_fil
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -382,15 +382,15 @@ ssize_t delegate_real_sftp_read(const char *file, const int line, const char *fu
 
 ssize_t mock_sftp_read(const char *file, const int line, const char *func, sftp_file sftpfile, void *buf, size_t count)
 {
-    ssize_t result;
+    ssize_t mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_read(file, line, func, sftpfile, buf, count);
+        mock_ret = _mock_libssh->sftp_read(file, line, func, sftpfile, buf, count);
     }
     else
     {
-        result = delegate_real_sftp_read(file, line, func, sftpfile, buf, count);
+        mock_ret = delegate_real_sftp_read(file, line, func, sftpfile, buf, count);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -398,7 +398,7 @@ ssize_t mock_sftp_read(const char *file, const int line, const char *func, sftp_
         printf("  > sftp_read %p, %zu", (void *)sftpfile, count);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %zd\n", file, line, result);
+            printf(" from %s:%d -> %zd\n", file, line, mock_ret);
         }
         else
         {
@@ -406,7 +406,7 @@ ssize_t mock_sftp_read(const char *file, const int line, const char *func, sftp_
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -442,15 +442,15 @@ ssize_t delegate_real_sftp_write(const char *file, const int line, const char *f
 ssize_t mock_sftp_write(const char *file, const int line, const char *func, sftp_file sftpfile, const void *buf,
                         size_t count)
 {
-    ssize_t result;
+    ssize_t mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_write(file, line, func, sftpfile, buf, count);
+        mock_ret = _mock_libssh->sftp_write(file, line, func, sftpfile, buf, count);
     }
     else
     {
-        result = delegate_real_sftp_write(file, line, func, sftpfile, buf, count);
+        mock_ret = delegate_real_sftp_write(file, line, func, sftpfile, buf, count);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -458,7 +458,7 @@ ssize_t mock_sftp_write(const char *file, const int line, const char *func, sftp
         printf("  > sftp_write %p, %zu", (void *)sftpfile, count);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %zd\n", file, line, result);
+            printf(" from %s:%d -> %zd\n", file, line, mock_ret);
         }
         else
         {
@@ -466,7 +466,7 @@ ssize_t mock_sftp_write(const char *file, const int line, const char *func, sftp
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -499,15 +499,15 @@ int delegate_real_sftp_seek(const char *file, const int line, const char *func, 
 
 int mock_sftp_seek(const char *file, const int line, const char *func, sftp_file sftpfile, uint32_t new_offset)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_seek(file, line, func, sftpfile, new_offset);
+        mock_ret = _mock_libssh->sftp_seek(file, line, func, sftpfile, new_offset);
     }
     else
     {
-        result = delegate_real_sftp_seek(file, line, func, sftpfile, new_offset);
+        mock_ret = delegate_real_sftp_seek(file, line, func, sftpfile, new_offset);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -515,7 +515,7 @@ int mock_sftp_seek(const char *file, const int line, const char *func, sftp_file
         printf("  > sftp_seek %p, %u", (void *)sftpfile, new_offset);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -523,7 +523,7 @@ int mock_sftp_seek(const char *file, const int line, const char *func, sftp_file
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -558,15 +558,15 @@ int delegate_real_sftp_seek64(const char *file, const int line, const char *func
 
 int mock_sftp_seek64(const char *file, const int line, const char *func, sftp_file sftpfile, uint64_t new_offset)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_seek64(file, line, func, sftpfile, new_offset);
+        mock_ret = _mock_libssh->sftp_seek64(file, line, func, sftpfile, new_offset);
     }
     else
     {
-        result = delegate_real_sftp_seek64(file, line, func, sftpfile, new_offset);
+        mock_ret = delegate_real_sftp_seek64(file, line, func, sftpfile, new_offset);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -574,7 +574,7 @@ int mock_sftp_seek64(const char *file, const int line, const char *func, sftp_fi
         printf("  > sftp_seek64 %p, %lu", (void *)sftpfile, (unsigned long)new_offset);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -582,7 +582,7 @@ int mock_sftp_seek64(const char *file, const int line, const char *func, sftp_fi
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -614,15 +614,15 @@ unsigned long delegate_real_sftp_tell(const char *file, const int line, const ch
 
 unsigned long mock_sftp_tell(const char *file, const int line, const char *func, sftp_file sftpfile)
 {
-    unsigned long result;
+    unsigned long mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_tell(file, line, func, sftpfile);
+        mock_ret = _mock_libssh->sftp_tell(file, line, func, sftpfile);
     }
     else
     {
-        result = delegate_real_sftp_tell(file, line, func, sftpfile);
+        mock_ret = delegate_real_sftp_tell(file, line, func, sftpfile);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -630,7 +630,7 @@ unsigned long mock_sftp_tell(const char *file, const int line, const char *func,
         printf("  > sftp_tell %p", (void *)sftpfile);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lu\n", file, line, result);
+            printf(" from %s:%d -> %lu\n", file, line, mock_ret);
         }
         else
         {
@@ -638,7 +638,7 @@ unsigned long mock_sftp_tell(const char *file, const int line, const char *func,
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -670,15 +670,15 @@ uint64_t delegate_real_sftp_tell64(const char *file, const int line, const char 
 
 uint64_t mock_sftp_tell64(const char *file, const int line, const char *func, sftp_file sftpfile)
 {
-    uint64_t result;
+    uint64_t mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_tell64(file, line, func, sftpfile);
+        mock_ret = _mock_libssh->sftp_tell64(file, line, func, sftpfile);
     }
     else
     {
-        result = delegate_real_sftp_tell64(file, line, func, sftpfile);
+        mock_ret = delegate_real_sftp_tell64(file, line, func, sftpfile);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -686,7 +686,7 @@ uint64_t mock_sftp_tell64(const char *file, const int line, const char *func, sf
         printf("  > sftp_tell64 %p", (void *)sftpfile);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %lu\n", file, line, (unsigned long)result);
+            printf(" from %s:%d -> %lu\n", file, line, (unsigned long)mock_ret);
         }
         else
         {
@@ -694,7 +694,7 @@ uint64_t mock_sftp_tell64(const char *file, const int line, const char *func, sf
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -777,15 +777,15 @@ sftp_attributes delegate_real_sftp_fstat(const char *file, const int line, const
 
 sftp_attributes mock_sftp_fstat(const char *file, const int line, const char *func, sftp_file sftpfile)
 {
-    sftp_attributes result;
+    sftp_attributes mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_fstat(file, line, func, sftpfile);
+        mock_ret = _mock_libssh->sftp_fstat(file, line, func, sftpfile);
     }
     else
     {
-        result = delegate_real_sftp_fstat(file, line, func, sftpfile);
+        mock_ret = delegate_real_sftp_fstat(file, line, func, sftpfile);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -793,7 +793,7 @@ sftp_attributes mock_sftp_fstat(const char *file, const int line, const char *fu
         printf("  > sftp_fstat %p", (void *)sftpfile);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -801,7 +801,7 @@ sftp_attributes mock_sftp_fstat(const char *file, const int line, const char *fu
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -836,15 +836,15 @@ sftp_dir delegate_real_sftp_opendir(const char *file, const int line, const char
 
 sftp_dir mock_sftp_opendir(const char *file, const int line, const char *func, sftp_session sftp, const char *path)
 {
-    sftp_dir result;
+    sftp_dir mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_opendir(file, line, func, sftp, path);
+        mock_ret = _mock_libssh->sftp_opendir(file, line, func, sftp, path);
     }
     else
     {
-        result = delegate_real_sftp_opendir(file, line, func, sftp, path);
+        mock_ret = delegate_real_sftp_opendir(file, line, func, sftp, path);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -852,7 +852,7 @@ sftp_dir mock_sftp_opendir(const char *file, const int line, const char *func, s
         printf("  > sftp_opendir %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -860,7 +860,7 @@ sftp_dir mock_sftp_opendir(const char *file, const int line, const char *func, s
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -895,15 +895,15 @@ sftp_attributes delegate_real_sftp_readdir(const char *file, const int line, con
 
 sftp_attributes mock_sftp_readdir(const char *file, const int line, const char *func, sftp_session sftp, sftp_dir dir)
 {
-    sftp_attributes result;
+    sftp_attributes mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_readdir(file, line, func, sftp, dir);
+        mock_ret = _mock_libssh->sftp_readdir(file, line, func, sftp, dir);
     }
     else
     {
-        result = delegate_real_sftp_readdir(file, line, func, sftp, dir);
+        mock_ret = delegate_real_sftp_readdir(file, line, func, sftp, dir);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -911,7 +911,7 @@ sftp_attributes mock_sftp_readdir(const char *file, const int line, const char *
         printf("  > sftp_readdir %p", (void *)dir);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -919,7 +919,7 @@ sftp_attributes mock_sftp_readdir(const char *file, const int line, const char *
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -955,15 +955,15 @@ int delegate_real_sftp_closedir(const char *file, const int line, const char *fu
 
 int mock_sftp_closedir(const char *file, const int line, const char *func, sftp_dir dir)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_closedir(file, line, func, dir);
+        mock_ret = _mock_libssh->sftp_closedir(file, line, func, dir);
     }
     else
     {
-        result = delegate_real_sftp_closedir(file, line, func, dir);
+        mock_ret = delegate_real_sftp_closedir(file, line, func, dir);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -971,7 +971,7 @@ int mock_sftp_closedir(const char *file, const int line, const char *func, sftp_
         printf("  > sftp_closedir %p", (void *)dir);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -979,7 +979,7 @@ int mock_sftp_closedir(const char *file, const int line, const char *func, sftp_
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -1016,15 +1016,15 @@ int delegate_real_sftp_mkdir(const char *file, const int line, const char *func,
 int mock_sftp_mkdir(const char *file, const int line, const char *func, sftp_session sftp, const char *directory,
                     mode_t mode)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_mkdir(file, line, func, sftp, directory, mode);
+        mock_ret = _mock_libssh->sftp_mkdir(file, line, func, sftp, directory, mode);
     }
     else
     {
-        result = delegate_real_sftp_mkdir(file, line, func, sftp, directory, mode);
+        mock_ret = delegate_real_sftp_mkdir(file, line, func, sftp, directory, mode);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -1032,7 +1032,7 @@ int mock_sftp_mkdir(const char *file, const int line, const char *func, sftp_ses
         printf("  > sftp_mkdir %s, %o", directory, mode);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -1040,7 +1040,7 @@ int mock_sftp_mkdir(const char *file, const int line, const char *func, sftp_ses
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -1075,15 +1075,15 @@ int delegate_real_sftp_rmdir(const char *file, const int line, const char *func,
 
 int mock_sftp_rmdir(const char *file, const int line, const char *func, sftp_session sftp, const char *directory)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_rmdir(file, line, func, sftp, directory);
+        mock_ret = _mock_libssh->sftp_rmdir(file, line, func, sftp, directory);
     }
     else
     {
-        result = delegate_real_sftp_rmdir(file, line, func, sftp, directory);
+        mock_ret = delegate_real_sftp_rmdir(file, line, func, sftp, directory);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -1091,7 +1091,7 @@ int mock_sftp_rmdir(const char *file, const int line, const char *func, sftp_ses
         printf("  > sftp_rmdir %s", directory);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -1099,7 +1099,7 @@ int mock_sftp_rmdir(const char *file, const int line, const char *func, sftp_ses
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -1134,15 +1134,15 @@ int delegate_real_sftp_unlink(const char *file, const int line, const char *func
 
 int mock_sftp_unlink(const char *file, const int line, const char *func, sftp_session sftp, const char *filename)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_unlink(file, line, func, sftp, filename);
+        mock_ret = _mock_libssh->sftp_unlink(file, line, func, sftp, filename);
     }
     else
     {
-        result = delegate_real_sftp_unlink(file, line, func, sftp, filename);
+        mock_ret = delegate_real_sftp_unlink(file, line, func, sftp, filename);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -1150,7 +1150,7 @@ int mock_sftp_unlink(const char *file, const int line, const char *func, sftp_se
         printf("  > sftp_unlink %s", filename);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -1158,7 +1158,7 @@ int mock_sftp_unlink(const char *file, const int line, const char *func, sftp_se
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -1195,15 +1195,15 @@ int delegate_real_sftp_rename(const char *file, const int line, const char *func
 int mock_sftp_rename(const char *file, const int line, const char *func, sftp_session sftp, const char *original,
                      const char *newname)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_rename(file, line, func, sftp, original, newname);
+        mock_ret = _mock_libssh->sftp_rename(file, line, func, sftp, original, newname);
     }
     else
     {
-        result = delegate_real_sftp_rename(file, line, func, sftp, original, newname);
+        mock_ret = delegate_real_sftp_rename(file, line, func, sftp, original, newname);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -1211,7 +1211,7 @@ int mock_sftp_rename(const char *file, const int line, const char *func, sftp_se
         printf("  > sftp_rename %s -> %s", original, newname);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -1219,7 +1219,7 @@ int mock_sftp_rename(const char *file, const int line, const char *func, sftp_se
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -1255,15 +1255,15 @@ sftp_attributes delegate_real_sftp_stat(const char *file, const int line, const 
 
 sftp_attributes mock_sftp_stat(const char *file, const int line, const char *func, sftp_session sftp, const char *path)
 {
-    sftp_attributes result;
+    sftp_attributes mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_stat(file, line, func, sftp, path);
+        mock_ret = _mock_libssh->sftp_stat(file, line, func, sftp, path);
     }
     else
     {
-        result = delegate_real_sftp_stat(file, line, func, sftp, path);
+        mock_ret = delegate_real_sftp_stat(file, line, func, sftp, path);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -1271,7 +1271,7 @@ sftp_attributes mock_sftp_stat(const char *file, const int line, const char *fun
         printf("  > sftp_stat %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -1279,7 +1279,7 @@ sftp_attributes mock_sftp_stat(const char *file, const int line, const char *fun
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -1315,15 +1315,15 @@ sftp_attributes delegate_real_sftp_lstat(const char *file, const int line, const
 
 sftp_attributes mock_sftp_lstat(const char *file, const int line, const char *func, sftp_session sftp, const char *path)
 {
-    sftp_attributes result;
+    sftp_attributes mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->sftp_lstat(file, line, func, sftp, path);
+        mock_ret = _mock_libssh->sftp_lstat(file, line, func, sftp, path);
     }
     else
     {
-        result = delegate_real_sftp_lstat(file, line, func, sftp, path);
+        mock_ret = delegate_real_sftp_lstat(file, line, func, sftp, path);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -1331,7 +1331,7 @@ sftp_attributes mock_sftp_lstat(const char *file, const int line, const char *fu
         printf("  > sftp_lstat %s", path);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %p\n", file, line, (void *)result);
+            printf(" from %s:%d -> %p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -1339,7 +1339,7 @@ sftp_attributes mock_sftp_lstat(const char *file, const int line, const char *fu
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================

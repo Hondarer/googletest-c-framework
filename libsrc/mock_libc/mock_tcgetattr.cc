@@ -17,15 +17,15 @@ int delegate_real_tcgetattr(const char *file, const int line, const char *func, 
 
 int mock_tcgetattr(const char *file, const int line, const char *func, int fd, struct termios *termios_p)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_termios != nullptr)
     {
-        result = _mock_termios->tcgetattr(file, line, func, fd, termios_p);
+        mock_ret = _mock_termios->tcgetattr(file, line, func, fd, termios_p);
     }
     else
     {
-        result = delegate_real_tcgetattr(file, line, func, fd, termios_p);
+        mock_ret = delegate_real_tcgetattr(file, line, func, fd, termios_p);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_tcgetattr(const char *file, const int line, const char *func, int fd, s
         printf("  > tcgetattr %d", fd);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ int mock_tcgetattr(const char *file, const int line, const char *func, int fd, s
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -16,23 +16,23 @@ DWORD delegate_real_GetLastError(const char *file, const int line, const char *f
 
 DWORD mock_GetLastError(const char *file, const int line, const char *func)
 {
-    DWORD rtc;
+    DWORD mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->GetLastError(file, line, func);
+        mock_ret = _mock_windows->GetLastError(file, line, func);
     }
     else
     {
-        rtc = delegate_real_GetLastError(file, line, func);
+        mock_ret = delegate_real_GetLastError(file, line, func);
     }
 
     if (getTraceLevel() >= TRACE_DETAIL)
     {
-        printf("  > GetLastError from %s:%d -> %lu\n", file, line, rtc);
+        printf("  > GetLastError from %s:%d -> %lu\n", file, line, mock_ret);
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

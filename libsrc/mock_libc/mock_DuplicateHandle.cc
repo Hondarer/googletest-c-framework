@@ -21,16 +21,16 @@ BOOL mock_DuplicateHandle(const char *file, const int line, const char *func, HA
                           HANDLE source_handle, HANDLE target_process, LPHANDLE target_handle, DWORD desired_access,
                           BOOL inherit_handle, DWORD options)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->DuplicateHandle(file, line, func, source_process, source_handle, target_process,
+        mock_ret = _mock_windows->DuplicateHandle(file, line, func, source_process, source_handle, target_process,
                                              target_handle, desired_access, inherit_handle, options);
     }
     else
     {
-        rtc = delegate_real_DuplicateHandle(file, line, func, source_process, source_handle, target_process,
+        mock_ret = delegate_real_DuplicateHandle(file, line, func, source_process, source_handle, target_process,
                                             target_handle, desired_access, inherit_handle, options);
     }
 
@@ -41,7 +41,7 @@ BOOL mock_DuplicateHandle(const char *file, const int line, const char *func, HA
                options);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -49,7 +49,7 @@ BOOL mock_DuplicateHandle(const char *file, const int line, const char *func, HA
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

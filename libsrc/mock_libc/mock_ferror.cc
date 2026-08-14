@@ -24,15 +24,15 @@ int delegate_real_ferror(const char *file, const int line, const char *func, FIL
 
 int mock_ferror(const char *file, const int line, const char *func, FILE *stream)
 {
-    int ret;
+    int mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        ret = _mock_stdio->ferror(file, line, func, stream);
+        mock_ret = _mock_stdio->ferror(file, line, func, stream);
     }
     else
     {
-        ret = delegate_real_ferror(file, line, func, stream);
+        mock_ret = delegate_real_ferror(file, line, func, stream);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -40,7 +40,7 @@ int mock_ferror(const char *file, const int line, const char *func, FILE *stream
         printf("  > ferror 0x%p", (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, ret);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -48,5 +48,5 @@ int mock_ferror(const char *file, const int line, const char *func, FILE *stream
         }
     }
 
-    return ret;
+    return mock_ret;
 }

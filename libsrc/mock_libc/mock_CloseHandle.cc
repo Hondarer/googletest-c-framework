@@ -16,15 +16,15 @@ BOOL delegate_real_CloseHandle(const char *file, const int line, const char *fun
 
 BOOL mock_CloseHandle(const char *file, const int line, const char *func, HANDLE handle)
 {
-    BOOL rtc;
+    BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        rtc = _mock_windows->CloseHandle(file, line, func, handle);
+        mock_ret = _mock_windows->CloseHandle(file, line, func, handle);
     }
     else
     {
-        rtc = delegate_real_CloseHandle(file, line, func, handle);
+        mock_ret = delegate_real_CloseHandle(file, line, func, handle);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ BOOL mock_CloseHandle(const char *file, const int line, const char *func, HANDLE
         printf("  > CloseHandle 0x%p", (void *)handle);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ BOOL mock_CloseHandle(const char *file, const int line, const char *func, HANDLE
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

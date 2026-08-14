@@ -29,15 +29,15 @@ FILE *delegate_real_fdopen(const char *file, const int line, const char *func, i
 
 FILE *mock_fdopen(const char *file, const int line, const char *func, int fd, const char *modes)
 {
-    FILE *rtc;
+    FILE *mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fdopen(file, line, func, fd, modes);
+        mock_ret = _mock_stdio->fdopen(file, line, func, fd, modes);
     }
     else
     {
-        rtc = delegate_real_fdopen(file, line, func, fd, modes);
+        mock_ret = delegate_real_fdopen(file, line, func, fd, modes);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -45,7 +45,7 @@ FILE *mock_fdopen(const char *file, const int line, const char *func, int fd, co
         printf("  > fdopen %d, %s", fd, modes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> 0x%p\n", file, line, (void *)rtc);
+            printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);
         }
         else
         {
@@ -53,7 +53,7 @@ FILE *mock_fdopen(const char *file, const int line, const char *func, int fd, co
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif /* !_WIN32 */

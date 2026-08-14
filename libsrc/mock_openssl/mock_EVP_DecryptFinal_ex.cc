@@ -15,15 +15,15 @@ int delegate_real_EVP_DecryptFinal_ex(const char *file, const int line, const ch
 
 int mock_EVP_DecryptFinal_ex(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, unsigned char *out, int *outl)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_openssl != nullptr)
     {
-        result = _mock_openssl->EVP_DecryptFinal_ex(file, line, func, ctx, out, outl);
+        mock_ret = _mock_openssl->EVP_DecryptFinal_ex(file, line, func, ctx, out, outl);
     }
     else
     {
-        result = delegate_real_EVP_DecryptFinal_ex(file, line, func, ctx, out, outl);
+        mock_ret = delegate_real_EVP_DecryptFinal_ex(file, line, func, ctx, out, outl);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -39,5 +39,5 @@ int mock_EVP_DecryptFinal_ex(const char *file, const int line, const char *func,
         }
     }
 
-    return result;
+    return mock_ret;
 }

@@ -45,15 +45,15 @@ errno_t delegate_real__wfopen_s(const char *file, const int line, const char *fu
 errno_t mock__wfopen_s(const char *file, const int line, const char *func, FILE **pFile, const wchar_t *filename,
                        const wchar_t *modes)
 {
-    errno_t rtc;
+    errno_t mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->_wfopen_s(file, line, func, pFile, filename, modes);
+        mock_ret = _mock_stdio->_wfopen_s(file, line, func, pFile, filename, modes);
     }
     else
     {
-        rtc = delegate_real__wfopen_s(file, line, func, pFile, filename, modes);
+        mock_ret = delegate_real__wfopen_s(file, line, func, pFile, filename, modes);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -61,7 +61,7 @@ errno_t mock__wfopen_s(const char *file, const int line, const char *func, FILE 
         printf("  > _wfopen_s %ls, %ls", filename, modes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -69,7 +69,7 @@ errno_t mock__wfopen_s(const char *file, const int line, const char *func, FILE 
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

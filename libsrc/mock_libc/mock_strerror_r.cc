@@ -58,15 +58,15 @@ int delegate_real_strerror_r(const char *file, const int line, const char *func,
 
 int mock_strerror_r(const char *file, const int line, const char *func, int errnum, char *buf, size_t buflen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_string != nullptr)
     {
-        result = _mock_string->strerror_r(file, line, func, errnum, buf, buflen);
+        mock_ret = _mock_string->strerror_r(file, line, func, errnum, buf, buflen);
     }
     else
     {
-        result = delegate_real_strerror_r(file, line, func, errnum, buf, buflen);
+        mock_ret = delegate_real_strerror_r(file, line, func, errnum, buf, buflen);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -74,7 +74,7 @@ int mock_strerror_r(const char *file, const int line, const char *func, int errn
         printf("  > strerror_r %d", errnum);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -82,7 +82,7 @@ int mock_strerror_r(const char *file, const int line, const char *func, int errn
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

@@ -28,15 +28,15 @@ char *delegate_real_fgets(const char *file, const int line, const char *func, ch
 
 char *mock_fgets(const char *file, const int line, const char *func, char *s, int n, FILE *stream)
 {
-    char *rtc;
+    char *mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        rtc = _mock_stdio->fgets(file, line, func, s, n, stream);
+        mock_ret = _mock_stdio->fgets(file, line, func, s, n, stream);
     }
     else
     {
-        rtc = delegate_real_fgets(file, line, func, s, n, stream);
+        mock_ret = delegate_real_fgets(file, line, func, s, n, stream);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -44,7 +44,7 @@ char *mock_fgets(const char *file, const int line, const char *func, char *s, in
         printf("  > fgets 0x%p, %d, 0x%p", s, n, (void *)stream);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %s\n", file, line, rtc);
+            printf(" from %s:%d -> %s\n", file, line, mock_ret);
         }
         else
         {
@@ -52,5 +52,5 @@ char *mock_fgets(const char *file, const int line, const char *func, char *s, in
         }
     }
 
-    return rtc;
+    return mock_ret;
 }

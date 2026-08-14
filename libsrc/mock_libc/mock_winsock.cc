@@ -72,20 +72,20 @@ int delegate_real_WSAStartup(const char *file, const int line, const char *func,
 
 int mock_WSAStartup(const char *file, const int line, const char *func, WORD version_required, LPWSADATA wsa_data)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->WSAStartup(file, line, func, version_required, wsa_data);
+        mock_ret = _mock_winsock->WSAStartup(file, line, func, version_required, wsa_data);
     }
     else
     {
-        result = delegate_real_WSAStartup(file, line, func, version_required, wsa_data);
+        mock_ret = delegate_real_WSAStartup(file, line, func, version_required, wsa_data);
     }
 
     TRACE_WINSOCK_CALL(WSAStartup);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_WSACleanup(const char *file, const int line, const char *func)
@@ -100,20 +100,20 @@ int delegate_real_WSACleanup(const char *file, const int line, const char *func)
 
 int mock_WSACleanup(const char *file, const int line, const char *func)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->WSACleanup(file, line, func);
+        mock_ret = _mock_winsock->WSACleanup(file, line, func);
     }
     else
     {
-        result = delegate_real_WSACleanup(file, line, func);
+        mock_ret = delegate_real_WSACleanup(file, line, func);
     }
 
     TRACE_WINSOCK_CALL(WSACleanup);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_WSAGetLastError(const char *file, const int line, const char *func)
@@ -128,15 +128,15 @@ int delegate_real_WSAGetLastError(const char *file, const int line, const char *
 
 int mock_WSAGetLastError(const char *file, const int line, const char *func)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->WSAGetLastError(file, line, func);
+        mock_ret = _mock_winsock->WSAGetLastError(file, line, func);
     }
     else
     {
-        result = delegate_real_WSAGetLastError(file, line, func);
+        mock_ret = delegate_real_WSAGetLastError(file, line, func);
     }
 
     /* WSAGetLastError はエラー経路で頻繁に呼ばれるため、トレースは詳細レベルに限定する。 */
@@ -145,7 +145,7 @@ int mock_WSAGetLastError(const char *file, const int line, const char *func)
         printf("  > WSAGetLastError from %s:%d\n", file, line);
     }
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_WSAPoll(const char *file, const int line, const char *func, LPWSAPOLLFD fd_array, ULONG fds, INT timeout)
@@ -160,20 +160,20 @@ int delegate_real_WSAPoll(const char *file, const int line, const char *func, LP
 
 int mock_WSAPoll(const char *file, const int line, const char *func, LPWSAPOLLFD fd_array, ULONG fds, INT timeout)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->WSAPoll(file, line, func, fd_array, fds, timeout);
+        mock_ret = _mock_winsock->WSAPoll(file, line, func, fd_array, fds, timeout);
     }
     else
     {
-        result = delegate_real_WSAPoll(file, line, func, fd_array, fds, timeout);
+        mock_ret = delegate_real_WSAPoll(file, line, func, fd_array, fds, timeout);
     }
 
     TRACE_WINSOCK_CALL(WSAPoll);
 
-    return result;
+    return mock_ret;
 }
 
 SOCKET delegate_real_socket(const char *file, const int line, const char *func, int af, int type, int protocol)
@@ -188,20 +188,20 @@ SOCKET delegate_real_socket(const char *file, const int line, const char *func, 
 
 SOCKET mock_socket(const char *file, const int line, const char *func, int af, int type, int protocol)
 {
-    SOCKET result;
+    SOCKET mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->socket(file, line, func, af, type, protocol);
+        mock_ret = _mock_winsock->socket(file, line, func, af, type, protocol);
     }
     else
     {
-        result = delegate_real_socket(file, line, func, af, type, protocol);
+        mock_ret = delegate_real_socket(file, line, func, af, type, protocol);
     }
 
     TRACE_WINSOCK_CALL(socket);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_bind(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name, int namelen)
@@ -216,20 +216,20 @@ int delegate_real_bind(const char *file, const int line, const char *func, SOCKE
 
 int mock_bind(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name, int namelen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->bind(file, line, func, s, name, namelen);
+        mock_ret = _mock_winsock->bind(file, line, func, s, name, namelen);
     }
     else
     {
-        result = delegate_real_bind(file, line, func, s, name, namelen);
+        mock_ret = delegate_real_bind(file, line, func, s, name, namelen);
     }
 
     TRACE_WINSOCK_CALL(bind);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_listen(const char *file, const int line, const char *func, SOCKET s, int backlog)
@@ -244,20 +244,20 @@ int delegate_real_listen(const char *file, const int line, const char *func, SOC
 
 int mock_listen(const char *file, const int line, const char *func, SOCKET s, int backlog)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->listen(file, line, func, s, backlog);
+        mock_ret = _mock_winsock->listen(file, line, func, s, backlog);
     }
     else
     {
-        result = delegate_real_listen(file, line, func, s, backlog);
+        mock_ret = delegate_real_listen(file, line, func, s, backlog);
     }
 
     TRACE_WINSOCK_CALL(listen);
 
-    return result;
+    return mock_ret;
 }
 
 SOCKET delegate_real_accept(const char *file, const int line, const char *func, SOCKET s, struct sockaddr *addr, int *addrlen)
@@ -272,20 +272,20 @@ SOCKET delegate_real_accept(const char *file, const int line, const char *func, 
 
 SOCKET mock_accept(const char *file, const int line, const char *func, SOCKET s, struct sockaddr *addr, int *addrlen)
 {
-    SOCKET result;
+    SOCKET mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->accept(file, line, func, s, addr, addrlen);
+        mock_ret = _mock_winsock->accept(file, line, func, s, addr, addrlen);
     }
     else
     {
-        result = delegate_real_accept(file, line, func, s, addr, addrlen);
+        mock_ret = delegate_real_accept(file, line, func, s, addr, addrlen);
     }
 
     TRACE_WINSOCK_CALL(accept);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_connect(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name, int namelen)
@@ -300,20 +300,20 @@ int delegate_real_connect(const char *file, const int line, const char *func, SO
 
 int mock_connect(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name, int namelen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->connect(file, line, func, s, name, namelen);
+        mock_ret = _mock_winsock->connect(file, line, func, s, name, namelen);
     }
     else
     {
-        result = delegate_real_connect(file, line, func, s, name, namelen);
+        mock_ret = delegate_real_connect(file, line, func, s, name, namelen);
     }
 
     TRACE_WINSOCK_CALL(connect);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_shutdown(const char *file, const int line, const char *func, SOCKET s, int how)
@@ -328,20 +328,20 @@ int delegate_real_shutdown(const char *file, const int line, const char *func, S
 
 int mock_shutdown(const char *file, const int line, const char *func, SOCKET s, int how)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->shutdown(file, line, func, s, how);
+        mock_ret = _mock_winsock->shutdown(file, line, func, s, how);
     }
     else
     {
-        result = delegate_real_shutdown(file, line, func, s, how);
+        mock_ret = delegate_real_shutdown(file, line, func, s, how);
     }
 
     TRACE_WINSOCK_CALL(shutdown);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_closesocket(const char *file, const int line, const char *func, SOCKET s)
@@ -356,20 +356,20 @@ int delegate_real_closesocket(const char *file, const int line, const char *func
 
 int mock_closesocket(const char *file, const int line, const char *func, SOCKET s)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->closesocket(file, line, func, s);
+        mock_ret = _mock_winsock->closesocket(file, line, func, s);
     }
     else
     {
-        result = delegate_real_closesocket(file, line, func, s);
+        mock_ret = delegate_real_closesocket(file, line, func, s);
     }
 
     TRACE_WINSOCK_CALL(closesocket);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_ioctlsocket(const char *file, const int line, const char *func, SOCKET s, long cmd, u_long *argp)
@@ -384,20 +384,20 @@ int delegate_real_ioctlsocket(const char *file, const int line, const char *func
 
 int mock_ioctlsocket(const char *file, const int line, const char *func, SOCKET s, long cmd, u_long *argp)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->ioctlsocket(file, line, func, s, cmd, argp);
+        mock_ret = _mock_winsock->ioctlsocket(file, line, func, s, cmd, argp);
     }
     else
     {
-        result = delegate_real_ioctlsocket(file, line, func, s, cmd, argp);
+        mock_ret = delegate_real_ioctlsocket(file, line, func, s, cmd, argp);
     }
 
     TRACE_WINSOCK_CALL(ioctlsocket);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_setsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, const char *optval, int optlen)
@@ -412,20 +412,20 @@ int delegate_real_setsockopt(const char *file, const int line, const char *func,
 
 int mock_setsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, const char *optval, int optlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->setsockopt(file, line, func, s, level, optname, optval, optlen);
+        mock_ret = _mock_winsock->setsockopt(file, line, func, s, level, optname, optval, optlen);
     }
     else
     {
-        result = delegate_real_setsockopt(file, line, func, s, level, optname, optval, optlen);
+        mock_ret = delegate_real_setsockopt(file, line, func, s, level, optname, optval, optlen);
     }
 
     TRACE_WINSOCK_CALL(setsockopt);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_getsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, char *optval, int *optlen)
@@ -440,20 +440,20 @@ int delegate_real_getsockopt(const char *file, const int line, const char *func,
 
 int mock_getsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, char *optval, int *optlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->getsockopt(file, line, func, s, level, optname, optval, optlen);
+        mock_ret = _mock_winsock->getsockopt(file, line, func, s, level, optname, optval, optlen);
     }
     else
     {
-        result = delegate_real_getsockopt(file, line, func, s, level, optname, optval, optlen);
+        mock_ret = delegate_real_getsockopt(file, line, func, s, level, optname, optval, optlen);
     }
 
     TRACE_WINSOCK_CALL(getsockopt);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_send(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags)
@@ -468,20 +468,20 @@ int delegate_real_send(const char *file, const int line, const char *func, SOCKE
 
 int mock_send(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->send(file, line, func, s, buf, len, flags);
+        mock_ret = _mock_winsock->send(file, line, func, s, buf, len, flags);
     }
     else
     {
-        result = delegate_real_send(file, line, func, s, buf, len, flags);
+        mock_ret = delegate_real_send(file, line, func, s, buf, len, flags);
     }
 
     TRACE_WINSOCK_CALL(send);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_recv(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags)
@@ -496,20 +496,20 @@ int delegate_real_recv(const char *file, const int line, const char *func, SOCKE
 
 int mock_recv(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->recv(file, line, func, s, buf, len, flags);
+        mock_ret = _mock_winsock->recv(file, line, func, s, buf, len, flags);
     }
     else
     {
-        result = delegate_real_recv(file, line, func, s, buf, len, flags);
+        mock_ret = delegate_real_recv(file, line, func, s, buf, len, flags);
     }
 
     TRACE_WINSOCK_CALL(recv);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_sendto(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen)
@@ -524,20 +524,20 @@ int delegate_real_sendto(const char *file, const int line, const char *func, SOC
 
 int mock_sendto(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->sendto(file, line, func, s, buf, len, flags, to, tolen);
+        mock_ret = _mock_winsock->sendto(file, line, func, s, buf, len, flags, to, tolen);
     }
     else
     {
-        result = delegate_real_sendto(file, line, func, s, buf, len, flags, to, tolen);
+        mock_ret = delegate_real_sendto(file, line, func, s, buf, len, flags, to, tolen);
     }
 
     TRACE_WINSOCK_CALL(sendto);
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_recvfrom(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen)
@@ -552,20 +552,20 @@ int delegate_real_recvfrom(const char *file, const int line, const char *func, S
 
 int mock_recvfrom(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->recvfrom(file, line, func, s, buf, len, flags, from, fromlen);
+        mock_ret = _mock_winsock->recvfrom(file, line, func, s, buf, len, flags, from, fromlen);
     }
     else
     {
-        result = delegate_real_recvfrom(file, line, func, s, buf, len, flags, from, fromlen);
+        mock_ret = delegate_real_recvfrom(file, line, func, s, buf, len, flags, from, fromlen);
     }
 
     TRACE_WINSOCK_CALL(recvfrom);
 
-    return result;
+    return mock_ret;
 }
 
 INT delegate_real_inet_pton(const char *file, const int line, const char *func, INT family, PCSTR addr_string, PVOID addr_buf)
@@ -580,20 +580,20 @@ INT delegate_real_inet_pton(const char *file, const int line, const char *func, 
 
 INT mock_inet_pton(const char *file, const int line, const char *func, INT family, PCSTR addr_string, PVOID addr_buf)
 {
-    INT result;
+    INT mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->inet_pton(file, line, func, family, addr_string, addr_buf);
+        mock_ret = _mock_winsock->inet_pton(file, line, func, family, addr_string, addr_buf);
     }
     else
     {
-        result = delegate_real_inet_pton(file, line, func, family, addr_string, addr_buf);
+        mock_ret = delegate_real_inet_pton(file, line, func, family, addr_string, addr_buf);
     }
 
     TRACE_WINSOCK_CALL(inet_pton);
 
-    return result;
+    return mock_ret;
 }
 
 PCSTR delegate_real_inet_ntop(const char *file, const int line, const char *func, INT family, const void *addr, PSTR string_buf, size_t string_buf_size)
@@ -608,20 +608,20 @@ PCSTR delegate_real_inet_ntop(const char *file, const int line, const char *func
 
 PCSTR mock_inet_ntop(const char *file, const int line, const char *func, INT family, const void *addr, PSTR string_buf, size_t string_buf_size)
 {
-    PCSTR result;
+    PCSTR mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->inet_ntop(file, line, func, family, addr, string_buf, string_buf_size);
+        mock_ret = _mock_winsock->inet_ntop(file, line, func, family, addr, string_buf, string_buf_size);
     }
     else
     {
-        result = delegate_real_inet_ntop(file, line, func, family, addr, string_buf, string_buf_size);
+        mock_ret = delegate_real_inet_ntop(file, line, func, family, addr, string_buf, string_buf_size);
     }
 
     TRACE_WINSOCK_CALL(inet_ntop);
 
-    return result;
+    return mock_ret;
 }
 
 INT delegate_real_getaddrinfo(const char *file, const int line, const char *func, PCSTR node_name, PCSTR service_name, const ADDRINFOA *hints, PADDRINFOA *result_out)
@@ -636,20 +636,20 @@ INT delegate_real_getaddrinfo(const char *file, const int line, const char *func
 
 INT mock_getaddrinfo(const char *file, const int line, const char *func, PCSTR node_name, PCSTR service_name, const ADDRINFOA *hints, PADDRINFOA *result_out)
 {
-    INT result;
+    INT mock_ret;
 
     if (_mock_winsock != nullptr)
     {
-        result = _mock_winsock->getaddrinfo(file, line, func, node_name, service_name, hints, result_out);
+        mock_ret = _mock_winsock->getaddrinfo(file, line, func, node_name, service_name, hints, result_out);
     }
     else
     {
-        result = delegate_real_getaddrinfo(file, line, func, node_name, service_name, hints, result_out);
+        mock_ret = delegate_real_getaddrinfo(file, line, func, node_name, service_name, hints, result_out);
     }
 
     TRACE_WINSOCK_CALL(getaddrinfo);
 
-    return result;
+    return mock_ret;
 }
 
 void delegate_real_freeaddrinfo(const char *file, const int line, const char *func, PADDRINFOA addr_info)

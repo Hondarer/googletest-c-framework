@@ -16,15 +16,15 @@ int delegate_real_open(const char *file, const int line, const char *func, const
 
 int mock_open(const char *file, const int line, const char *func, const char *path, int flags, int mode)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_fcntl != nullptr)
     {
-        result = _mock_fcntl->open(file, line, func, path, flags, mode);
+        mock_ret = _mock_fcntl->open(file, line, func, path, flags, mode);
     }
     else
     {
-        result = delegate_real_open(file, line, func, path, flags, mode);
+        mock_ret = delegate_real_open(file, line, func, path, flags, mode);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -32,7 +32,7 @@ int mock_open(const char *file, const int line, const char *func, const char *pa
         printf("  > open \"%s\", %d, %o", path, flags, mode);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -40,7 +40,7 @@ int mock_open(const char *file, const int line, const char *func, const char *pa
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 #endif // _WIN32

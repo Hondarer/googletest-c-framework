@@ -154,15 +154,15 @@ int delegate_real_ssh_channel_open_session(const char *file, const int line, con
 
 int mock_ssh_channel_open_session(const char *file, const int line, const char *func, ssh_channel channel)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_open_session(file, line, func, channel);
+        mock_ret = _mock_libssh->ssh_channel_open_session(file, line, func, channel);
     }
     else
     {
-        result = delegate_real_ssh_channel_open_session(file, line, func, channel);
+        mock_ret = delegate_real_ssh_channel_open_session(file, line, func, channel);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -170,7 +170,7 @@ int mock_ssh_channel_open_session(const char *file, const int line, const char *
         printf("  > ssh_channel_open_session %p", (void *)channel);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -178,7 +178,7 @@ int mock_ssh_channel_open_session(const char *file, const int line, const char *
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -210,15 +210,15 @@ int delegate_real_ssh_channel_close(const char *file, const int line, const char
 
 int mock_ssh_channel_close(const char *file, const int line, const char *func, ssh_channel channel)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_close(file, line, func, channel);
+        mock_ret = _mock_libssh->ssh_channel_close(file, line, func, channel);
     }
     else
     {
-        result = delegate_real_ssh_channel_close(file, line, func, channel);
+        mock_ret = delegate_real_ssh_channel_close(file, line, func, channel);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -226,7 +226,7 @@ int mock_ssh_channel_close(const char *file, const int line, const char *func, s
         printf("  > ssh_channel_close %p", (void *)channel);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -234,7 +234,7 @@ int mock_ssh_channel_close(const char *file, const int line, const char *func, s
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -270,15 +270,15 @@ int delegate_real_ssh_channel_request_exec(const char *file, const int line, con
 int mock_ssh_channel_request_exec(const char *file, const int line, const char *func, ssh_channel channel,
                                   const char *cmd)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_request_exec(file, line, func, channel, cmd);
+        mock_ret = _mock_libssh->ssh_channel_request_exec(file, line, func, channel, cmd);
     }
     else
     {
-        result = delegate_real_ssh_channel_request_exec(file, line, func, channel, cmd);
+        mock_ret = delegate_real_ssh_channel_request_exec(file, line, func, channel, cmd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -286,7 +286,7 @@ int mock_ssh_channel_request_exec(const char *file, const int line, const char *
         printf("  > ssh_channel_request_exec %p, cmd=%s", (void *)channel, cmd ? cmd : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -294,7 +294,7 @@ int mock_ssh_channel_request_exec(const char *file, const int line, const char *
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -333,15 +333,15 @@ int delegate_real_ssh_channel_read(const char *file, const int line, const char 
 int mock_ssh_channel_read(const char *file, const int line, const char *func, ssh_channel channel, void *dest,
                           uint32_t count, int is_stderr)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_read(file, line, func, channel, dest, count, is_stderr);
+        mock_ret = _mock_libssh->ssh_channel_read(file, line, func, channel, dest, count, is_stderr);
     }
     else
     {
-        result = delegate_real_ssh_channel_read(file, line, func, channel, dest, count, is_stderr);
+        mock_ret = delegate_real_ssh_channel_read(file, line, func, channel, dest, count, is_stderr);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -349,7 +349,7 @@ int mock_ssh_channel_read(const char *file, const int line, const char *func, ss
         printf("  > ssh_channel_read %p, count=%u, is_stderr=%d", (void *)channel, count, is_stderr);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -357,7 +357,7 @@ int mock_ssh_channel_read(const char *file, const int line, const char *func, ss
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -394,15 +394,15 @@ int delegate_real_ssh_channel_write(const char *file, const int line, const char
 int mock_ssh_channel_write(const char *file, const int line, const char *func, ssh_channel channel, const void *data,
                            uint32_t len)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_write(file, line, func, channel, data, len);
+        mock_ret = _mock_libssh->ssh_channel_write(file, line, func, channel, data, len);
     }
     else
     {
-        result = delegate_real_ssh_channel_write(file, line, func, channel, data, len);
+        mock_ret = delegate_real_ssh_channel_write(file, line, func, channel, data, len);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -410,7 +410,7 @@ int mock_ssh_channel_write(const char *file, const int line, const char *func, s
         printf("  > ssh_channel_write %p, len=%u", (void *)channel, len);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -418,7 +418,7 @@ int mock_ssh_channel_write(const char *file, const int line, const char *func, s
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -450,15 +450,15 @@ int delegate_real_ssh_channel_send_eof(const char *file, const int line, const c
 
 int mock_ssh_channel_send_eof(const char *file, const int line, const char *func, ssh_channel channel)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_send_eof(file, line, func, channel);
+        mock_ret = _mock_libssh->ssh_channel_send_eof(file, line, func, channel);
     }
     else
     {
-        result = delegate_real_ssh_channel_send_eof(file, line, func, channel);
+        mock_ret = delegate_real_ssh_channel_send_eof(file, line, func, channel);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -466,7 +466,7 @@ int mock_ssh_channel_send_eof(const char *file, const int line, const char *func
         printf("  > ssh_channel_send_eof %p", (void *)channel);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -474,7 +474,7 @@ int mock_ssh_channel_send_eof(const char *file, const int line, const char *func
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 /* ========================================
@@ -507,15 +507,15 @@ int delegate_real_ssh_channel_is_eof(const char *file, const int line, const cha
 
 int mock_ssh_channel_is_eof(const char *file, const int line, const char *func, ssh_channel channel)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_libssh != nullptr)
     {
-        result = _mock_libssh->ssh_channel_is_eof(file, line, func, channel);
+        mock_ret = _mock_libssh->ssh_channel_is_eof(file, line, func, channel);
     }
     else
     {
-        result = delegate_real_ssh_channel_is_eof(file, line, func, channel);
+        mock_ret = delegate_real_ssh_channel_is_eof(file, line, func, channel);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -523,7 +523,7 @@ int mock_ssh_channel_is_eof(const char *file, const int line, const char *func, 
         printf("  > ssh_channel_is_eof %p", (void *)channel);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, result);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -531,5 +531,5 @@ int mock_ssh_channel_is_eof(const char *file, const int line, const char *func, 
         }
     }
 
-    return result;
+    return mock_ret;
 }

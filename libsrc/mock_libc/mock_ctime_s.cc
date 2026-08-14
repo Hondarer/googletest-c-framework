@@ -38,15 +38,15 @@ errno_t delegate_real_ctime_s(const char *file, const int line, const char *func
 
 errno_t mock_ctime_s(const char *file, const int line, const char *func, char *buf, size_t size, const time_t *timep)
 {
-    errno_t rtc;
+    errno_t mock_ret;
 
     if (_mock_time != nullptr)
     {
-        rtc = _mock_time->ctime_s(file, line, func, buf, size, timep);
+        mock_ret = _mock_time->ctime_s(file, line, func, buf, size, timep);
     }
     else
     {
-        rtc = delegate_real_ctime_s(file, line, func, buf, size, timep);
+        mock_ret = delegate_real_ctime_s(file, line, func, buf, size, timep);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -54,9 +54,9 @@ errno_t mock_ctime_s(const char *file, const int line, const char *func, char *b
         printf("  > ctime_s 0x%p, %zu, 0x%p", (void *)buf, size, (const void *)timep);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (rtc != 0 || buf == NULL)
+            if (mock_ret != 0 || buf == NULL)
             {
-                printf(" from %s:%d -> %d\n", file, line, (int)rtc);
+                printf(" from %s:%d -> %d\n", file, line, (int)mock_ret);
             }
             else
             {
@@ -69,7 +69,7 @@ errno_t mock_ctime_s(const char *file, const int line, const char *func, char *b
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32

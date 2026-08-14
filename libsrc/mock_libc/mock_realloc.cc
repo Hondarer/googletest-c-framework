@@ -15,15 +15,15 @@ void *delegate_real_realloc(const char *file, const int line, const char *func, 
 
 void *mock_realloc(const char *file, const int line, const char *func, void *__ptr, size_t __size)
 {
-    void *result = NULL;
+    void *mock_ret = NULL;
 
     if (_mock_stdlib != nullptr)
     {
-        result = _mock_stdlib->realloc(file, line, func, __ptr, __size);
+        mock_ret = _mock_stdlib->realloc(file, line, func, __ptr, __size);
     }
     else
     {
-        result = delegate_real_realloc(file, line, func, __ptr, __size);
+        mock_ret = delegate_real_realloc(file, line, func, __ptr, __size);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -31,13 +31,13 @@ void *mock_realloc(const char *file, const int line, const char *func, void *__p
         printf("  > realloc 0x%p, %zd", __ptr, __size);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (result == NULL)
+            if (mock_ret == NULL)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
             else
             {
-                printf(" from %s:%d -> 0x%p\n", file, line, result);
+                printf(" from %s:%d -> 0x%p\n", file, line, mock_ret);
             }
         }
         else
@@ -46,5 +46,5 @@ void *mock_realloc(const char *file, const int line, const char *func, void *__p
         }
     }
 
-    return result;
+    return mock_ret;
 }

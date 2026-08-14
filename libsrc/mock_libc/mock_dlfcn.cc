@@ -34,15 +34,15 @@ void *delegate_real_dlopen(const char *file, const int line, const char *func, c
 
 void *mock_dlopen(const char *file, const int line, const char *func, const char *filename, int flags)
 {
-    void *result;
+    void *mock_ret;
 
     if (_mock_dlfcn != nullptr)
     {
-        result = _mock_dlfcn->dlopen(file, line, func, filename, flags);
+        mock_ret = _mock_dlfcn->dlopen(file, line, func, filename, flags);
     }
     else
     {
-        result = delegate_real_dlopen(file, line, func, filename, flags);
+        mock_ret = delegate_real_dlopen(file, line, func, filename, flags);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -58,7 +58,7 @@ void *mock_dlopen(const char *file, const int line, const char *func, const char
         }
     }
 
-    return result;
+    return mock_ret;
 }
 void *delegate_real_dlsym(const char *file, const int line, const char *func, void *handle, const char *symbol)
 {
@@ -72,15 +72,15 @@ void *delegate_real_dlsym(const char *file, const int line, const char *func, vo
 
 void *mock_dlsym(const char *file, const int line, const char *func, void *handle, const char *symbol)
 {
-    void *result;
+    void *mock_ret;
 
     if (_mock_dlfcn != nullptr)
     {
-        result = _mock_dlfcn->dlsym(file, line, func, handle, symbol);
+        mock_ret = _mock_dlfcn->dlsym(file, line, func, handle, symbol);
     }
     else
     {
-        result = delegate_real_dlsym(file, line, func, handle, symbol);
+        mock_ret = delegate_real_dlsym(file, line, func, handle, symbol);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -96,7 +96,7 @@ void *mock_dlsym(const char *file, const int line, const char *func, void *handl
         }
     }
 
-    return result;
+    return mock_ret;
 }
 int delegate_real_dlclose(const char *file, const int line, const char *func, void *handle)
 {
@@ -110,15 +110,15 @@ int delegate_real_dlclose(const char *file, const int line, const char *func, vo
 
 int mock_dlclose(const char *file, const int line, const char *func, void *handle)
 {
-    int result;
+    int mock_ret;
 
     if (_mock_dlfcn != nullptr)
     {
-        result = _mock_dlfcn->dlclose(file, line, func, handle);
+        mock_ret = _mock_dlfcn->dlclose(file, line, func, handle);
     }
     else
     {
-        result = delegate_real_dlclose(file, line, func, handle);
+        mock_ret = delegate_real_dlclose(file, line, func, handle);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -134,7 +134,7 @@ int mock_dlclose(const char *file, const int line, const char *func, void *handl
         }
     }
 
-    return result;
+    return mock_ret;
 }
 
 int delegate_real_dladdr(const char *file, const int line, const char *func, const void *address, void *info)
@@ -148,15 +148,15 @@ int delegate_real_dladdr(const char *file, const int line, const char *func, con
 
 int mock_dladdr(const char *file, const int line, const char *func, const void *address, void *info)
 {
-    int ret;
+    int mock_ret;
 
     if (_mock_dlfcn != nullptr)
     {
-        ret = _mock_dlfcn->dladdr(file, line, func, address, info);
+        mock_ret = _mock_dlfcn->dladdr(file, line, func, address, info);
     }
     else
     {
-        ret = delegate_real_dladdr(file, line, func, address, info);
+        mock_ret = delegate_real_dladdr(file, line, func, address, info);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -164,7 +164,7 @@ int mock_dladdr(const char *file, const int line, const char *func, const void *
         printf("  > dladdr 0x%p, 0x%p", address, (void *)info);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, ret);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -172,7 +172,7 @@ int mock_dladdr(const char *file, const int line, const char *func, const void *
         }
     }
 
-    return ret;
+    return mock_ret;
 }
 
 #endif // _WIN32

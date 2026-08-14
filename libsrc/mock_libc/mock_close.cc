@@ -17,15 +17,15 @@ int delegate_real_close(const char *file, const int line, const char *func, int 
 
 int mock_close(const char *file, const int line, const char *func, int fd)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->close(file, line, func, fd);
+        mock_ret = _mock_unistd->close(file, line, func, fd);
     }
     else
     {
-        rtc = delegate_real_close(file, line, func, fd);
+        mock_ret = delegate_real_close(file, line, func, fd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -33,7 +33,7 @@ int mock_close(const char *file, const int line, const char *func, int fd)
         printf("  > close %d", fd);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -41,7 +41,7 @@ int mock_close(const char *file, const int line, const char *func, int fd)
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #else // _WIN32
@@ -58,15 +58,15 @@ int delegate_real__close(const char *file, const int line, const char *func, int
 
 int mock__close(const char *file, const int line, const char *func, int fd)
 {
-    int rtc;
+    int mock_ret;
 
     if (_mock_unistd != nullptr)
     {
-        rtc = _mock_unistd->_close(file, line, func, fd);
+        mock_ret = _mock_unistd->_close(file, line, func, fd);
     }
     else
     {
-        rtc = delegate_real__close(file, line, func, fd);
+        mock_ret = delegate_real__close(file, line, func, fd);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -74,7 +74,7 @@ int mock__close(const char *file, const int line, const char *func, int fd)
         printf("  > _close %d", fd);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %d\n", file, line, rtc);
+            printf(" from %s:%d -> %d\n", file, line, mock_ret);
         }
         else
         {
@@ -82,7 +82,7 @@ int mock__close(const char *file, const int line, const char *func, int fd)
         }
     }
 
-    return rtc;
+    return mock_ret;
 }
 
 #endif // _WIN32
