@@ -3,14 +3,16 @@
     #ifndef _MOCK_WINDOWS_H
         #define _MOCK_WINDOWS_H
 
-        // In C++17 mode, std::byte conflicts with the Windows SDK's typedef unsigned char byte;
-        // in rpcndr.h. Setting _HAS_STD_BYTE to 0 suppresses the conflicting using-declaration
-        // in the Windows SDK headers.
-        #ifndef _HAS_STD_BYTE
-            #define _HAS_STD_BYTE 0
-        #endif
-
+        /* winsock2.h を windows.h より先に取り込み、winsock.h との衝突を防ぐ。 */
+        #ifndef WIN32_LEAN_AND_MEAN
+            #define WIN32_LEAN_AND_MEAN
+        #endif /* WIN32_LEAN_AND_MEAN */
+        #include <winsock2.h>
+        #include <ws2tcpip.h>
         #include <windows.h>
+        #ifdef byte
+            #undef byte /* C++17 std::byte と Windows SDK byte typedef の競合を解消 */
+        #endif          /* byte */
 
         #ifdef __cplusplus
 extern "C"
