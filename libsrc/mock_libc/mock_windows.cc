@@ -12,6 +12,8 @@ Mock_windows::Mock_windows()
 
     ON_CALL(*this, GetStdHandle(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetStdHandle));
     ON_CALL(*this, GetConsoleMode(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetConsoleMode));
+    ON_CALL(*this, GetConsoleScreenBufferInfo(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_GetConsoleScreenBufferInfo));
     ON_CALL(*this, SetConsoleMode(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleMode));
     ON_CALL(*this, WaitForSingleObject(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_WaitForSingleObject));
     ON_CALL(*this, ReadFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadFile));
@@ -23,6 +25,19 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, FlushFileBuffers(_, _, _, _)).WillByDefault(Invoke(delegate_real_FlushFileBuffers));
     ON_CALL(*this, CloseHandle(_, _, _, _)).WillByDefault(Invoke(delegate_real_CloseHandle));
     ON_CALL(*this, GetLastError(_, _, _)).WillByDefault(Invoke(delegate_real_GetLastError));
+    ON_CALL(*this, GetModuleFileNameW(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetModuleFileNameW));
+    ON_CALL(*this, GetExitCodeProcess(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetExitCodeProcess));
+    ON_CALL(*this, TerminateProcess(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_TerminateProcess));
+    ON_CALL(*this, InitializeProcThreadAttributeList(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_InitializeProcThreadAttributeList));
+    ON_CALL(*this, UpdateProcThreadAttribute(_, _, _, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_UpdateProcThreadAttribute));
+    ON_CALL(*this, DeleteProcThreadAttributeList(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_DeleteProcThreadAttributeList));
+    ON_CALL(*this, CreateProcessW(_, _, _, _, _, _, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_CreateProcessW));
+    ON_CALL(*this, GetCurrentProcess(_, _, _)).WillByDefault(Invoke(delegate_real_GetCurrentProcess));
+    ON_CALL(*this, DuplicateHandle(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_DuplicateHandle));
 
     _mock_windows = this;
 }
