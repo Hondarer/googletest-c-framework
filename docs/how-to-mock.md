@@ -29,8 +29,11 @@ mock 関数を追加するときの共通ルールを示します。
 - 既定処理: `delegate_real_<func>` / `delegate_fake_<func>` など
 - グローバル ポインター: `_mock_<lib>`
 - Mock クラス: `Mock_<lib>`
+- テスト内の Mock オブジェクト変数: 型名をすべて小文字にした識別子 (`Mock_com_util` → `mock_com_util`、`Mock_stdio` → `mock_stdio`)
 
-命名は既存ライブラリと揃えます。新規命名を持ち込まず、同一ライブラリ内の既存パターンに合わせてください。
+命名は既存ライブラリと揃えます。新規命名を持ち込まず、同一ライブラリ内の既存パターンに合わせてください。  
+変数名 `mock_` や `mock` は、どの Mock クラスかを表さないため使いません。  
+判定手順と検証コマンドは [コーディング規範](../../../app/general/docs/coding-guideline.md) の「テストのモック オブジェクト変数」を正とします。
 
 ## Mock クラスの追加
 
@@ -51,9 +54,9 @@ MOCK_METHOD(int, sample_func, (int, const char *));
 ```cpp
 TEST_F(MyTest, example)
 {
-    Mock_sample mock;
+    Mock_sample mock_sample;
 
-    EXPECT_CALL(mock, sample_func(_, _)).Times(1);
+    EXPECT_CALL(mock_sample, sample_func(_, _)).Times(1);
 
     /* テスト対象コード */
 }
