@@ -40,7 +40,7 @@ int mock_calcHandler(int kind, int a, int b, int *result)
         // TRACE_DETAIL 以上なら戻り値も出力
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" -> %d, %d\n", *result, rtc);
+            printf(" -> %d, %d\n", *result, mock_ret);
         }
         else
         {

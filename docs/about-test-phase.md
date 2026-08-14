@@ -361,7 +361,7 @@ TEST_F(sampleCloseTest, handle_null)
     ...
     .Times(1); // [Pre-Assert確認_異常系] - ERROR ログに "handle is NULL" が含まれること。
     ...
-    EXPECT_EQ(SAMPLE_ERR, rtc); // [確認_異常系] - sample_close の戻り値が SAMPLE_ERR であること。
+    EXPECT_EQ(SAMPLE_ERR, actual_ret); // [確認_異常系] - sample_close の戻り値が SAMPLE_ERR であること。
 }
 ----
 [ RUN      ] sampleCloseTest.handle_null
@@ -394,10 +394,10 @@ ASSERT_NE(nullptr, buffer); // [状態確認] - malloc が非 NULL のポイン�
 // Pre-Assert
 
 // Act
-int rtc = sample_func(buffer); // [手順] - sample_func にバッファを渡して呼び出す。
+int actual_ret = sample_func(buffer); // [手順] - sample_func にバッファを渡して呼び出す。
 
 // Assert
-EXPECT_EQ(SAMPLE_OK, rtc); // [確認_正常系] - sample_func の戻り値が SAMPLE_OK であること。
+EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func の戻り値が SAMPLE_OK であること。
 ```
 
 ```text
