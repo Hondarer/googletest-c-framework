@@ -4,8 +4,16 @@
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
+
+# 行末コメントの契約。分数は省略可 (判定トークンの無い行だけ)。
+# 例: /* TESTFW_EXCL_EH_ARCS: 1/2 */ または // TESTFW_EXCL_EH_ARCS
+MARKER_RE = re.compile(r"TESTFW_EXCL_EH_ARCS(?:\s*:\s*(\d+)\s*/\s*(\d+))?")
+COMMENT_RE = re.compile(r"/\*.*?\*/|//.*")
+# `::` のコロンは三項演算子とみなさない。
+DECISION_RE = re.compile(r"(?<!:)\?(?!:)|\b(?:if|switch)\b|&&|\|\|")
 
 
 def build_source_map(workspace_dir, test_sources):
@@ -57,6 +65,115 @@ def normalize_coverage(data, source_map):
     return normalized
 
 
+def strip_comments(line):
+    """行からコメントを除き、判定トークンの有無を見るための本文を返す。"""
+    return COMMENT_RE.sub("", line)
+
+
+def parse_eh_arc_markers(source_text):
+    """ソースから TESTFW_EXCL_EH_ARCS を読む。値は (未到達, 総数) または None。"""
+    markers = {}
+    for index, raw_line in enumerate(source_text.splitlines(), start=1):
+        match = MARKER_RE.search(raw_line)
+        if match is None:
+            continue
+        if match.group(1) is None:
+            markers[index] = None
+        else:
+            markers[index] = (int(match.group(1)), int(match.group(2)))
+    return markers
+
+
+def line_has_decision(raw_line):
+    """コメントを除いた行にソース上の判定があるか。"""
+    return DECISION_RE.search(strip_comments(raw_line)) is not None
+
+
+def _branch_counts(line_data):
+    branches = line_data.get("branches") or []
+    uncovered = sum(1 for branch in branches if branch.get("count", 0) == 0)
+    return uncovered, len(branches), branches
+
+
+def apply_eh_arc_exclusions(data, workspace_dir, source_map):
+    """マーカー行の未印 EH 弧を母数から外す。契約不一致は ValueError。"""
+    workspace_dir = Path(workspace_dir)
+    errors = []
+    path_by_name = {Path(path).name: path for path in source_map.values()}
+
+    for file_data in data.get("files", []):
+        source_name = Path(file_data.get("file", "")).name
+        relative = path_by_name.get(source_name)
+        if relative is None:
+            continue
+        source_path = workspace_dir / relative
+        if not source_path.is_file():
+            errors.append(f"{relative}: source file is missing")
+            continue
+        source_text = source_path.read_text(encoding="utf-8")
+        markers = parse_eh_arc_markers(source_text)
+        if not markers:
+            continue
+        source_lines = source_text.splitlines()
+        lines_by_number = {
+            line_data.get("line_number"): line_data for line_data in file_data.get("lines") or []
+        }
+
+        for marker_line, contract in markers.items():
+            raw_line = ""
+            if 1 <= marker_line <= len(source_lines):
+                raw_line = source_lines[marker_line - 1]
+            location = f"{relative}:{marker_line}"
+            # clang-format が継続行へコメントを移しても、枝は文先頭行に残る。
+            # 判定行へ横滑りすると、未通過の本番条件を EH 弧と誤認して消す。
+            candidate_numbers = [marker_line, marker_line - 1, marker_line + 1, marker_line + 2]
+            target = None
+            for candidate in candidate_numbers:
+                line_data = lines_by_number.get(candidate)
+                if line_data is None:
+                    continue
+                candidate_text = ""
+                if 1 <= candidate <= len(source_lines):
+                    candidate_text = source_lines[candidate - 1]
+                if candidate != marker_line and line_has_decision(candidate_text):
+                    continue
+                uncovered, total, _branches = _branch_counts(line_data)
+                if uncovered > 0:
+                    target = (line_data, uncovered, total)
+                    break
+            if target is None:
+                continue
+            line_data, uncovered, total = target
+            _unused, _unused_total, branches = _branch_counts(line_data)
+
+            if contract is None:
+                if line_has_decision(raw_line):
+                    errors.append(
+                        f"{location}: TESTFW_EXCL_EH_ARCS on a decision line requires "
+                        f"uncovered/total (found {uncovered}/{total})"
+                    )
+                    continue
+                line_data["branches"] = [
+                    branch for branch in branches if branch.get("count", 0) > 0
+                ]
+                continue
+
+            expected_uncovered, expected_total = contract
+            if (uncovered, total) != (expected_uncovered, expected_total):
+                errors.append(
+                    f"{location}: TESTFW_EXCL_EH_ARCS expected {expected_uncovered}/"
+                    f"{expected_total}, found {uncovered}/{total}"
+                )
+                continue
+            line_data["branches"] = [
+                branch for branch in branches if branch.get("count", 0) > 0
+            ]
+
+    if errors:
+        raise ValueError("\n".join(errors))
+    return data
+
+
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input_json", type=Path)
@@ -78,6 +195,7 @@ def main():
     try:
         source_map = build_source_map(workspace_dir, args.test_sources)
         normalized = normalize_coverage(data, source_map)
+        apply_eh_arc_exclusions(normalized, workspace_dir, source_map)
     except ValueError as error:
         print(f"Error: {error}", file=sys.stderr)
         return 1

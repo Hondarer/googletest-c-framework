@@ -125,6 +125,255 @@ class GcovrJsonNormalizeTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "duplicate basenames"):
                 MODULE.build_source_map(workspace, sources)
 
+    def test_eh_arc_marker_drops_zero_count_on_call_line(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "name.push_back(ch); /* TESTFW_EXCL_EH_ARCS */\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 3, "fallthrough": True, "throw": False},
+                                    {"count": 0, "fallthrough": False, "throw": False},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+        self.assertEqual(1, len(data["files"][0]["lines"][0]["branches"]))
+        self.assertEqual(3, data["files"][0]["lines"][0]["branches"][0]["count"])
+
+    def test_eh_arc_marker_on_continuation_applies_to_statement_start(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "found = search(\n"
+                "    units, /* TESTFW_EXCL_EH_ARCS */\n"
+                "    flag);\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 2, "fallthrough": True, "throw": False},
+                                    {"count": 0, "fallthrough": False, "throw": False},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+        self.assertEqual(1, len(data["files"][0]["lines"][0]["branches"]))
+
+    def test_eh_arc_marker_does_not_slide_onto_decision_line(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "const bool decoded = utf8_decode(text); /* TESTFW_EXCL_EH_ARCS */\n"
+                "if (!decoded)\n"
+                "{\n"
+                "    return false;\n"
+                "}\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 1, "fallthrough": True, "throw": False},
+                                ],
+                            },
+                            {
+                                "line_number": 2,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 1, "fallthrough": True, "throw": False},
+                                    {"count": 0, "fallthrough": False, "throw": False},
+                                ],
+                            },
+                        ],
+                    }
+                ],
+            }
+
+            MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+        if_branches = data["files"][0]["lines"][1]["branches"]
+        self.assertEqual(2, len(if_branches))
+        self.assertEqual(0, if_branches[1]["count"])
+
+    def test_eh_arc_contract_drops_matching_uncovered_branches(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "if (!decode()) /* TESTFW_EXCL_EH_ARCS: 1/4 */\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 10, "fallthrough": True, "throw": False},
+                                    {"count": 2, "fallthrough": True, "throw": False},
+                                    {"count": 8, "fallthrough": False, "throw": False},
+                                    {"count": 0, "fallthrough": False, "throw": False},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+        branches = data["files"][0]["lines"][0]["branches"]
+        self.assertEqual(3, len(branches))
+        self.assertTrue(all(branch["count"] > 0 for branch in branches))
+
+    def test_eh_arc_contract_mismatch_raises(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "if (!decode()) /* TESTFW_EXCL_EH_ARCS: 1/4 */\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 10, "fallthrough": True, "throw": False},
+                                    {"count": 0, "fallthrough": False, "throw": False},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            with self.assertRaisesRegex(ValueError, "expected 1/4, found 1/2"):
+                MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+    def test_eh_arc_decision_line_requires_ratio(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "if (!decode()) /* TESTFW_EXCL_EH_ARCS */\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": [
+                                    {"count": 1, "fallthrough": True, "throw": False},
+                                    {"count": 0, "fallthrough": False, "throw": False},
+                                ],
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            with self.assertRaisesRegex(ValueError, "decision line requires"):
+                MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+    def test_eh_arc_already_covered_is_noop(self):
+        with tempfile.TemporaryDirectory() as temp_dir_text:
+            workspace = Path(temp_dir_text)
+            source = workspace / "app/sample/prod/libsrc/sample.cc"
+            source.parent.mkdir(parents=True)
+            source.write_text(
+                "name.push_back(ch); /* TESTFW_EXCL_EH_ARCS: 1/2 */\n",
+                encoding="utf-8",
+            )
+            source_map = MODULE.build_source_map(workspace, [str(source)])
+            branches = [
+                {"count": 4, "fallthrough": True, "throw": False},
+            ]
+            data = {
+                "gcovr/format_version": "0.11",
+                "files": [
+                    {
+                        "file": "app/sample/prod/libsrc/sample.cc",
+                        "lines": [
+                            {
+                                "line_number": 1,
+                                "count": 1,
+                                "branches": list(branches),
+                            }
+                        ],
+                    }
+                ],
+            }
+
+            MODULE.apply_eh_arc_exclusions(data, workspace, source_map)
+
+        self.assertEqual(1, len(data["files"][0]["lines"][0]["branches"]))
+
     @unittest.skipUnless(
         sys.platform == "linux",
         "gcovr の分岐統合テストは Linux のカバレッジ環境で実行します。",

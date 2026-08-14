@@ -235,10 +235,14 @@ function run_test() {
                 # 大域の IFS の状態に依存せず、TEST_SRCS を空白区切りで分割する
                 local -a test_src_list
                 IFS=$' \t\n' read -r -a test_src_list <<< "$TEST_SRCS"
-                python "$SCRIPT_DIR/gcovr_json_normalize.py" \
-                    coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" "${test_src_list[@]}"
-                gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/coverage.json \
-                    --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
+                if ! python "$SCRIPT_DIR/gcovr_json_normalize.py" \
+                    coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" "${test_src_list[@]}"; then
+                    echo -e "\e[31m[  FAILED  ]\e[0m gcovr_json_normalize.py rejected coverage data." | tee -a results/all_tests/summary.log
+                    echo 1 > "$temp_exit_code"
+                else
+                    gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/coverage.json \
+                        --cobertura-pretty --output coverage/coverage.xml 1> /dev/null 2>&1
+                fi
             fi
         fi
     else
