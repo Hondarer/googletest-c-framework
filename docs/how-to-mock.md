@@ -46,7 +46,10 @@ mock 関数を追加するときの共通ルールを示します。
 
 どちらも生産コードの `ret` とは混ぜません。
 
-mock 関数本体は、意味論よりもテンプレート性を優先し、次の形に揃えます。
+mock 関数本体は、意味論よりもテンプレート性を優先し、経路に応じて次の 2 形のどちらかに揃えます。
+
+if / else の双方で委譲先を代入する場合は、初期化子を付けません。  
+ダミーの初期化子を付けると、代入漏れの経路をコンパイラ警告で見つけにくくなります。
 
 ```cpp
 T mock_ret;
@@ -63,6 +66,20 @@ else
 return mock_ret;
 ```
 
+既定値を置き、mock が無いときはその値を返す場合は、宣言時の初期化子で既定値を与えます。  
+宣言の直後に同じ定数を代入する行は書きません。
+
+```cpp
+T mock_ret = 0;
+
+if (_mock_sample != nullptr)
+{
+    mock_ret = _mock_sample->sample_func(...);
+}
+
+return mock_ret;
+```
+
 テスト本体は、エビデンス用に呼び出しと同じ行で宣言して構いません。
 
 ```cpp
@@ -70,8 +87,16 @@ int actual_ret = sample_func(...); // [手順]
 EXPECT_EQ(SAMPLE_OK, actual_ret);  // [確認]
 ```
 
+同一テスト関数で複数の戻り値を残すときは、`actual_ret_<区別>` とします。  
+`rtc_` 接頭辞は使いません。
+
+```cpp
+int actual_ret_open = sample_open(...); // [手順]
+int actual_ret_read = sample_read(...); // [手順]
+```
+
 テスト本体に `mock_ret` は使いません。そこは mock の中継ではなく、実際の戻り値です。  
-`rtc`、`ret`、同じ役の `result` も使いません。
+`rtc`、`rtc_*`、`ret`、同じ役の `result` も使いません。
 
 対象外は次のとおりです。
 
