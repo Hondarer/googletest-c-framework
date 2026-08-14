@@ -43,15 +43,15 @@ FILE *delegate_real_fopen(const char *file, const int line, const char *func, co
 
 FILE *mock_fopen(const char *file, const int line, const char *func, const char *filename, const char *modes)
 {
-    FILE *fp;
+    FILE *mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        fp = _mock_stdio->fopen(file, line, func, filename, modes);
+        mock_ret = _mock_stdio->fopen(file, line, func, filename, modes);
     }
     else
     {
-        fp = delegate_real_fopen(file, line, func, filename, modes);
+        mock_ret = delegate_real_fopen(file, line, func, filename, modes);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -59,13 +59,13 @@ FILE *mock_fopen(const char *file, const int line, const char *func, const char 
         printf("  > fopen %s, %s", filename, modes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (fp == NULL)
+            if (mock_ret == NULL)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
             else
             {
-                printf(" from %s:%d -> 0x%p\n", file, line, (void *)fp);
+                printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);
             }
         }
         else
@@ -74,5 +74,5 @@ FILE *mock_fopen(const char *file, const int line, const char *func, const char 
         }
     }
 
-    return fp;
+    return mock_ret;
 }

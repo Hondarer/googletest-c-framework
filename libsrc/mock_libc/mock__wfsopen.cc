@@ -33,15 +33,15 @@ FILE *delegate_real__wfsopen(const char *file, const int line, const char *func,
 FILE *mock__wfsopen(const char *file, const int line, const char *func, const wchar_t *filename, const wchar_t *modes,
                     int shflag)
 {
-    FILE *fp;
+    FILE *mock_ret;
 
     if (_mock_stdio != nullptr)
     {
-        fp = _mock_stdio->_wfsopen(file, line, func, filename, modes, shflag);
+        mock_ret = _mock_stdio->_wfsopen(file, line, func, filename, modes, shflag);
     }
     else
     {
-        fp = delegate_real__wfsopen(file, line, func, filename, modes, shflag);
+        mock_ret = delegate_real__wfsopen(file, line, func, filename, modes, shflag);
     }
 
     if (getTraceLevel() > TRACE_NONE)
@@ -49,13 +49,13 @@ FILE *mock__wfsopen(const char *file, const int line, const char *func, const wc
         printf("  > _wfsopen %ls, %ls, %d", filename, modes, shflag);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (fp == NULL)
+            if (mock_ret == NULL)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
             else
             {
-                printf(" from %s:%d -> 0x%p\n", file, line, (void *)fp);
+                printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);
             }
         }
         else
@@ -64,7 +64,7 @@ FILE *mock__wfsopen(const char *file, const int line, const char *func, const wc
         }
     }
 
-    return fp;
+    return mock_ret;
 }
 
 #endif // _WIN32
