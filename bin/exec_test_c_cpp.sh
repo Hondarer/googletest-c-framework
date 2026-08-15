@@ -549,6 +549,11 @@ function main() {
     # IFS を大域へ設定したままにすると、run_test の内側で $TEST_SRCS が単語分割されず、
     # 複数ソースを指定したテストのカバレッジ集計が空になる。
     # テスト名の行分割は read の一時的な IFS で行い、大域の IFS は既定のままにする。
+    if [[ "${GTEST_FILTER+x}" ]]; then
+        echo -e "Note: GTEST_FILTER = $GTEST_FILTER\n" >> results/all_tests/summary.log
+    fi
+    #echo "Test results:" >> results/all_tests/summary.log
+
     # テスト バイナリが標準入力を消費しないように、専用の記述子から読み取る。
     while IFS= read -r test_name_w_comment <&3; do
         if [ -z "$test_name_w_comment" ]; then
@@ -564,11 +569,7 @@ function main() {
     done 3<<< "$tests"
 
     # 全体結果を出力
-    if [[ "${GTEST_FILTER+x}" ]]; then
-        echo -e "Note: GTEST_FILTER = $GTEST_FILTER\n" >> results/all_tests/summary.log
-    fi
-    echo "Test results:" >> results/all_tests/summary.log
-    printf '\n%s' "$test_summary"
+    printf '\n----\n%s' "$test_summary"
 
     filtered=""
     if [[ "${GTEST_FILTER+x}" ]]; then
