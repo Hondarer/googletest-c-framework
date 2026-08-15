@@ -132,6 +132,9 @@ function compute_test_signature() {
     for src in makepart.mk makelocal.mk; do
         [ -f "$src" ] && sig_srcs+=("$src")
     done
+    for src in $MAKEFW_TEST_LIBS; do
+        [ -n "$src" ] && [ -f "$src" ] && sig_srcs+=("$src")
+    done
 
     if [ ${#sig_srcs[@]} -eq 0 ]; then
         return 1
@@ -439,6 +442,9 @@ function main() {
         done
         for ssrc in makepart.mk makelocal.mk; do
             [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
+        done
+        for ssrc in $MAKEFW_TEST_LIBS; do
+            [ -n "$ssrc" ] && [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
         done
         if [ ${#signature_srcs_for_cache[@]} -gt 0 ]; then
             populate_md5_cache_windows "${signature_srcs_for_cache[@]}"
