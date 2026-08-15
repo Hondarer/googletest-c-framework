@@ -50,7 +50,7 @@ function run_all_tests_batch() {
     fi
 
     local test_count=$(echo "$tests" | wc -l)
-    #echo "Found $test_count test(s)." | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    echo "Found $test_count test(s)."
     #echo "Test results:" | tee -a "$RESULTS_DIR/all_tests/summary.log"
     safe_tput cr
 
