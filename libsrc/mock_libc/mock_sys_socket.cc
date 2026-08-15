@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <sys/mock_socket.h>
 
@@ -22,12 +23,12 @@ Mock_sys_socket::Mock_sys_socket()
     ON_CALL(*this, sendto(_, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_sendto));
     ON_CALL(*this, recvfrom(_, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_recvfrom));
 
-    _mock_sys_socket = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_socket);
 }
 
 Mock_sys_socket::~Mock_sys_socket()
 {
-    _mock_sys_socket = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sys_socket);
 }
 
 /* 全関数で同一のトレース出力を行うため、呼び出し記録をマクロへ切り出す。 */

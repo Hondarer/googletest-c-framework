@@ -225,11 +225,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name()).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name() \
     { \
@@ -252,11 +252,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1) \
     { \
@@ -279,11 +279,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2) \
     { \
@@ -306,11 +306,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3) \
     { \
@@ -333,11 +333,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4) \
     { \
@@ -360,11 +360,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5) \
     { \
@@ -387,11 +387,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6) \
     { \
@@ -414,11 +414,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7) \
     { \
@@ -442,11 +442,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8) \
     { \
@@ -470,11 +470,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8, A9 _9) \
     { \
@@ -498,11 +498,11 @@
     Mock_##name::Mock_##name() \
     { \
         ON_CALL(*this, name(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(default_lambda)); \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8, A9 _9, A10 _10) \
     { \
@@ -525,11 +525,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name() \
     { \
@@ -552,11 +552,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1) \
     { \
@@ -579,11 +579,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2) \
     { \
@@ -606,11 +606,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3) \
     { \
@@ -633,11 +633,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4) \
     { \
@@ -660,11 +660,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5) \
     { \
@@ -687,11 +687,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6) \
     { \
@@ -714,11 +714,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7) \
     { \
@@ -741,11 +741,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8) \
     { \
@@ -768,11 +768,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8, A9 _9) \
     { \
@@ -795,11 +795,11 @@
     Mock_##name *_mock_##name = nullptr; \
     Mock_##name::Mock_##name() \
     { \
-        _mock_##name = this; \
+        TESTFW_REGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     Mock_##name::~Mock_##name() \
     { \
-        _mock_##name = nullptr; \
+        TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_##name); \
     } \
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8, A9 _9, A10 _10) \
     { \

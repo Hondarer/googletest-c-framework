@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <mock_unistd.h>
 
 using namespace testing;
@@ -33,7 +34,7 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, rmdir(_, _, _, _)).WillByDefault(Invoke(delegate_real_rmdir));
     ON_CALL(*this, isatty(_, _, _, _)).WillByDefault(Invoke(delegate_real_isatty));
 
-    _mock_unistd = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_unistd);
 }
 
 #else // _WIN32
@@ -47,12 +48,12 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, _read(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real__read));
     ON_CALL(*this, _write(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real__write));
 
-    _mock_unistd = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_unistd);
 }
 
 #endif // _WIN32
 
 Mock_unistd::~Mock_unistd()
 {
-    _mock_unistd = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_unistd);
 }

@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #ifndef _WIN32
 
     #include <sys/mock_wait.h>
@@ -10,12 +11,12 @@ Mock_sys_wait::Mock_sys_wait()
 {
     ON_CALL(*this, waitpid(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_waitpid));
 
-    _mock_sys_wait = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_wait);
 }
 
 Mock_sys_wait::~Mock_sys_wait()
 {
-    _mock_sys_wait = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sys_wait);
 }
 
 #endif // _WIN32

@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <sys/mock_stat.h>
 
 using namespace testing;
@@ -16,10 +17,10 @@ Mock_sys_stat::Mock_sys_stat()
     ON_CALL(*this, stat64(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_stat64));
 #endif
 
-    _mock_sys_stat = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_stat);
 }
 
 Mock_sys_stat::~Mock_sys_stat()
 {
-    _mock_sys_stat = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sys_stat);
 }

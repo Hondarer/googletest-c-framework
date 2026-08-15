@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_fcntl.h>
 
@@ -11,12 +12,12 @@ Mock_fcntl::Mock_fcntl()
 {
     ON_CALL(*this, open(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_open));
     ON_CALL(*this, fcntl(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_fcntl));
-    _mock_fcntl = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_fcntl);
 }
 
 Mock_fcntl::~Mock_fcntl()
 {
-    _mock_fcntl = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_fcntl);
 }
 
 /* 追加引数がポインターであるコマンドを判定する。

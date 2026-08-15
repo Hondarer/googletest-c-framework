@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_termios.h>
 
@@ -12,12 +13,12 @@ Mock_termios::Mock_termios()
     ON_CALL(*this, tcgetattr(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_tcgetattr));
     ON_CALL(*this, tcsetattr(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_tcsetattr));
 
-    _mock_termios = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_termios);
 }
 
 Mock_termios::~Mock_termios()
 {
-    _mock_termios = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_termios);
 }
 
 #endif // _WIN32

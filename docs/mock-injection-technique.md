@@ -223,24 +223,14 @@ FILE *delegate_fake_fopen(const char *file, const int line, const char *func,
 
 ### グローバル モック インスタンスによる制御
 
-グローバル変数 `_mock_stdio` などを使用して、モックの有効/無効を制御します。
+グローバル変数 `_mock_stdio` などを使用して、モックの有効/無効を判定します。  
+登録ポインターは Mock クラスのコンストラクターとデストラクターが管理するため、テストから直接代入しません。
 
 **制御フロー:**
 
 ```cpp
-// テスト フィクスチャの SetUp() で生成
-Mock_stdio *_mock_stdio = nullptr;
-
-void SetUp() override
-{
-    _mock_stdio = new Mock_stdio();  // モック有効化
-}
-
-void TearDown() override
-{
-    delete _mock_stdio;
-    _mock_stdio = nullptr;  // モック無効化
-}
+// テスト フィクスチャのメンバーとして生成
+NiceMock<Mock_stdio> mock_stdio;
 
 // テスト実行中
 // → _mock_stdio != nullptr のため、Google Mock が呼ばれる
@@ -347,7 +337,7 @@ Mock_stdio *_mock_stdio = nullptr;
 
 Mock_stdio::Mock_stdio()
 {
-    _mock_stdio = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_stdio);
 
     // デフォルトの動作を設定
     ON_CALL(*this, fopen(_, _, _, _, _))
@@ -356,7 +346,7 @@ Mock_stdio::Mock_stdio()
 
 Mock_stdio::~Mock_stdio()
 {
-    _mock_stdio = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_stdio);
 }
 ```
 
@@ -499,8 +489,9 @@ void (*fp)(const char *) = printf;
 
 ### モック インスタンスのライフサイクル
 
-- `_mock_stdio` などのグローバル変数は、テスト フィクスチャの SetUp/TearDown で適切に管理してください。
-- テスト間でモック インスタンスが残らないように注意
+- 同じ Mock クラスのオブジェクトは同時に 1 個だけ生成してください。
+- `_mock_stdio` などの登録ポインターは直接操作せず、Mock クラスの登録マクロに管理させてください。
+- 詳細は [testfw の mock](how-to-mock.md) の「注入ライフサイクル」を参照してください。
 
 ### 可変長引数関数
 

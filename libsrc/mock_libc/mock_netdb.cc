@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_netdb.h>
 
@@ -13,12 +14,12 @@ Mock_netdb::Mock_netdb()
     ON_CALL(*this, freeaddrinfo(_, _, _, _)).WillByDefault(Invoke(delegate_real_freeaddrinfo));
     ON_CALL(*this, gai_strerror(_, _, _, _)).WillByDefault(Invoke(delegate_real_gai_strerror));
 
-    _mock_netdb = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_netdb);
 }
 
 Mock_netdb::~Mock_netdb()
 {
-    _mock_netdb = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_netdb);
 }
 
 int delegate_real_getaddrinfo(const char *file, const int line, const char *func, const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)

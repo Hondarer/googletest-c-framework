@@ -17,6 +17,7 @@
 #include <sharedLibrary.h>
 #include <export_check.h>
 #include <gtest_wrapmain.h>
+#include <mock_instance.h>
 
 using namespace std;
 using namespace testing;

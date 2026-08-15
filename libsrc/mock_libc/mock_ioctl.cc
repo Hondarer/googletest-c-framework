@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_ioctl.h>
 
@@ -10,12 +11,12 @@ Mock_ioctl *_mock_ioctl = nullptr;
 Mock_ioctl::Mock_ioctl()
 {
     ON_CALL(*this, ioctl(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ioctl));
-    _mock_ioctl = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_ioctl);
 }
 
 Mock_ioctl::~Mock_ioctl()
 {
-    _mock_ioctl = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_ioctl);
 }
 
 int delegate_real_ioctl(const char *file, const int line, const char *func, int fd, unsigned long request, void *arg)

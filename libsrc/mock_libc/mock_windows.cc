@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #ifdef _WIN32
 
     #include <mock_windows.h>
@@ -39,7 +40,7 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, GetCurrentProcess(_, _, _)).WillByDefault(Invoke(delegate_real_GetCurrentProcess));
     ON_CALL(*this, DuplicateHandle(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_DuplicateHandle));
 
-    _mock_windows = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);
 }
 
 void Mock_windows::switch_to_real_time()
@@ -58,7 +59,7 @@ void Mock_windows::switch_to_mock_time()
 
 Mock_windows::~Mock_windows()
 {
-    _mock_windows = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_windows);
 }
 
 #endif // _WIN32

@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_dlfcn.h>
 
@@ -14,12 +15,12 @@ Mock_dlfcn::Mock_dlfcn()
     ON_CALL(*this, dlclose(_, _, _, _)).WillByDefault(Invoke(delegate_real_dlclose));
     ON_CALL(*this, dladdr(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_dladdr));
 
-    _mock_dlfcn = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_dlfcn);
 }
 
 Mock_dlfcn::~Mock_dlfcn()
 {
-    _mock_dlfcn = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_dlfcn);
 }
 
 void *delegate_real_dlopen(const char *file, const int line, const char *func, const char *filename, int flags)

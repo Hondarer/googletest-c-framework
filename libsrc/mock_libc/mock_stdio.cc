@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <mock_stdio.h>
 
 using namespace testing;
@@ -16,7 +17,7 @@ Mock_stdio::Mock_stdio()
 
     ON_CALL(*this, vfscanf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_vfscanf));
 
-    _mock_stdio = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_stdio);
 }
 
 void Mock_stdio::switch_to_mock_fileio()
@@ -124,5 +125,5 @@ void Mock_stdio::switch_to_real_fileio()
 
 Mock_stdio::~Mock_stdio()
 {
-    _mock_stdio = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_stdio);
 }

@@ -92,11 +92,13 @@ endif
 
 .PHONY: clean
 clean : $(SUBDIRS)
+	@$(MAKE) -C test clean
 	@rm -f "$(BUILD_STAMP)"
 
 .PHONY: test
 test : $(SUBDIRS)
-	python -m unittest discover -s tests -p 'test_*.py'
+	@$(MAKE) -C test test
+	python -m unittest discover -s test -p 'test_*.py'
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :

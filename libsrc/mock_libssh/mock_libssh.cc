@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <mock_libssh.h>
 
 using namespace testing;
@@ -8,7 +9,7 @@ Mock_libssh::Mock_libssh()
 {
     switch_to_mock_libssh();
 
-    _mock_libssh = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_libssh);
 }
 
 void Mock_libssh::switch_to_mock_libssh()
@@ -247,5 +248,5 @@ void Mock_libssh::switch_to_real_libssh()
 
 Mock_libssh::~Mock_libssh()
 {
-    _mock_libssh = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_libssh);
 }

@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_signal.h>
 
@@ -13,12 +14,12 @@ Mock_signal::Mock_signal()
     ON_CALL(*this, sigemptyset(_, _, _, _)).WillByDefault(Invoke(delegate_real_sigemptyset));
     ON_CALL(*this, signal(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_signal));
     ON_CALL(*this, raise(_, _, _, _)).WillByDefault(Invoke(delegate_real_raise));
-    _mock_signal = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_signal);
 }
 
 Mock_signal::~Mock_signal()
 {
-    _mock_signal = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_signal);
 }
 
 int delegate_real_sigaction(const char *file, const int line, const char *func, int signum, const struct sigaction *act,

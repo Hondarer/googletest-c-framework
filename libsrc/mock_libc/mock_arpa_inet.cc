@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <arpa/mock_inet.h>
 
@@ -12,12 +13,12 @@ Mock_arpa_inet::Mock_arpa_inet()
     ON_CALL(*this, inet_pton(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_inet_pton));
     ON_CALL(*this, inet_ntop(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_inet_ntop));
 
-    _mock_arpa_inet = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_arpa_inet);
 }
 
 Mock_arpa_inet::~Mock_arpa_inet()
 {
-    _mock_arpa_inet = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_arpa_inet);
 }
 
 int delegate_real_inet_pton(const char *file, const int line, const char *func, int af, const char *src, void *dst)

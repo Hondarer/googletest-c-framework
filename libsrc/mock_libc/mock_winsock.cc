@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <mock_winsock.h>
 #include <test_com.h>
 
@@ -34,12 +35,12 @@ Mock_winsock::Mock_winsock()
     ON_CALL(*this, getaddrinfo(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_getaddrinfo));
     ON_CALL(*this, freeaddrinfo(_, _, _, _)).WillByDefault(Invoke(delegate_real_freeaddrinfo));
 
-    _mock_winsock = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_winsock);
 }
 
 Mock_winsock::~Mock_winsock()
 {
-    _mock_winsock = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_winsock);
 }
 
 /* 全関数で同一のトレース出力を行うため、呼び出し記録をマクロへ切り出す。 */

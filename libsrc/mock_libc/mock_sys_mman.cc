@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <sys/mock_mman.h>
 
@@ -17,12 +18,12 @@ Mock_sys_mman::Mock_sys_mman()
     ON_CALL(*this, mlockall(_, _, _, _)).WillByDefault(Invoke(delegate_real_mlockall));
     ON_CALL(*this, munlockall(_, _, _)).WillByDefault(Invoke(delegate_real_munlockall));
 
-    _mock_sys_mman = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_mman);
 }
 
 Mock_sys_mman::~Mock_sys_mman()
 {
-    _mock_sys_mman = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sys_mman);
 }
 
 void *delegate_real_mmap(const char *file, const int line, const char *func, void *addr, size_t length, int prot,

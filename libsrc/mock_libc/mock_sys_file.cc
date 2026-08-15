@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <sys/mock_file.h>
 
@@ -11,12 +12,12 @@ Mock_sys_file::Mock_sys_file()
 {
     ON_CALL(*this, flock(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_flock));
 
-    _mock_sys_file = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_file);
 }
 
 Mock_sys_file::~Mock_sys_file()
 {
-    _mock_sys_file = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sys_file);
 }
 
 #endif // _WIN32

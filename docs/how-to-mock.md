@@ -119,6 +119,26 @@ MOCK_METHOD(int, sample_func, (int, const char *));
 テスト Fixture やテスト本体で `Mock_<lib>` を生成すると、そのコンストラクターで `_mock_<lib>` が現在のオブジェクトを指します。  
 スコープを抜けるとデストラクターで `nullptr` に戻ります。
 
+同じ `Mock_<lib>` クラスのオブジェクトを同時に複数生成してはいけません。  
+mock 関数は `_mock_<lib>` が指す一つのオブジェクトへ委譲するため、複数生成すると期待値を設定したオブジェクトと実際の委譲先が一致しなくなります。  
+コンストラクターとデストラクターでは、登録ポインターを直接代入せず、testfw の登録マクロを使用します。
+
+```cpp
+Mock_sample::Mock_sample()
+{
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_sample);
+}
+
+Mock_sample::~Mock_sample()
+{
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sample);
+}
+```
+
+`TESTFW_REGISTER_MOCK_INSTANCE` はクラスごとの生成数を検査し、同じクラスの 2 個目が存在する場合は Google Test の非致命的失敗を記録します。  
+多重生成を検出した場合も、先に生成されたオブジェクトの登録を維持します。  
+テストから `_mock_<lib>` を直接設定または解除してはいけません。
+
 ```cpp
 TEST_F(MyTest, example)
 {
@@ -130,13 +150,13 @@ TEST_F(MyTest, example)
 }
 ```
 
-この構造により、テスト コードは mock の注入と解放を明示的に管理できます。
+この構造により、mock の注入と解放はオブジェクトの生存期間に従います。
 
 ## 実装時の共通確認項目
 
 - 置換対象の関数と `MOCK_METHOD` のシグネチャが一致していること
 - `ON_CALL` の既定動作が追加されていること
-- `_mock_<lib>` の設定と解除がコンストラクター / デストラクターで行われていること
+- `_mock_<lib>` の設定と解除に `TESTFW_REGISTER_MOCK_INSTANCE` と `TESTFW_UNREGISTER_MOCK_INSTANCE` を使用していること
 - トレース出力の形式が同一ライブラリ内の既存実装と揃っていること
 - 新しい mock が既存のテスト ビルド経路で参照される配置に置かれていること
 

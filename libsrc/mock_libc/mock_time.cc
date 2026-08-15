@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <mock_time.h>
 
 using namespace testing;
@@ -7,7 +8,7 @@ Mock_time *_mock_time = nullptr;
 Mock_time::Mock_time()
 {
     switch_to_real_time();
-    _mock_time = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_time);
 }
 
 #ifndef _WIN32
@@ -62,5 +63,5 @@ void Mock_time::switch_to_mock_time()
 
 Mock_time::~Mock_time()
 {
-    _mock_time = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_time);
 }

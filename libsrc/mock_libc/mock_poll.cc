@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_poll.h>
 
@@ -11,12 +12,12 @@ Mock_poll::Mock_poll()
 {
     ON_CALL(*this, poll(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_poll));
 
-    _mock_poll = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_poll);
 }
 
 Mock_poll::~Mock_poll()
 {
-    _mock_poll = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_poll);
 }
 
 int delegate_real_poll(const char *file, const int line, const char *func, struct pollfd *fds, nfds_t nfds, int timeout)

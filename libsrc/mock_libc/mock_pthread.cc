@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <test_com.h>
 #include <mock_pthread.h>
 
@@ -34,12 +35,12 @@ Mock_pthread::Mock_pthread()
     ON_CALL(*this, pthread_attr_destroy(_, _, _, _)).WillByDefault(Invoke(delegate_real_pthread_attr_destroy));
     ON_CALL(*this, pthread_self(_, _, _)).WillByDefault(Invoke(delegate_real_pthread_self));
 
-    _mock_pthread = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_pthread);
 }
 
 Mock_pthread::~Mock_pthread()
 {
-    _mock_pthread = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_pthread);
 }
 
 #endif // _WIN32

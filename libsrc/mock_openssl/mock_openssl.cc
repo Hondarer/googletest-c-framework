@@ -1,3 +1,4 @@
+#include <mock_instance.h>
 #include <mock_openssl.h>
 
 using namespace testing;
@@ -20,10 +21,10 @@ Mock_openssl::Mock_openssl()
     ON_CALL(*this, EVP_DigestFinal_ex(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_EVP_DigestFinal_ex));
     ON_CALL(*this, RAND_bytes(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_RAND_bytes));
 
-    _mock_openssl = this;
+    TESTFW_REGISTER_MOCK_INSTANCE(_mock_openssl);
 }
 
 Mock_openssl::~Mock_openssl()
 {
-    _mock_openssl = nullptr;
+    TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_openssl);
 }
