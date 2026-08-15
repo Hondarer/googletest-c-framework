@@ -1,10 +1,13 @@
+# GoogleTest と OS / libc の mock ヘッダーは外部定義の構造体をそのまま
+# include するため、-Wpadded の false positive が発生する。
+# 従い、framework/gtest では -Wpadded は指定しない。
 GCC_WARN_BASE = \
 	-Wall -Wextra \
 	-Wformat=2 \
 	-Wshadow -Wundef \
 	-Wpointer-arith -Wcast-qual -Wcast-align \
 	-Wswitch-enum -Wswitch-default \
-	-Wpacked -Wpadded \
+	-Wpacked \
 	-Wunknown-pragmas \
 	-Wconversion \
 	-Wsign-conversion
