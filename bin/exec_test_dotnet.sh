@@ -50,8 +50,8 @@ function run_all_tests_batch() {
     fi
 
     local test_count=$(echo "$tests" | wc -l)
-    echo "Found $test_count test(s)." | tee -a "$RESULTS_DIR/all_tests/summary.log"
-    echo "" | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    #echo "Found $test_count test(s)." | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    #echo "Test results:" | tee -a "$RESULTS_DIR/all_tests/summary.log"
     safe_tput cr
 
     # dotnet test を 1 回だけ一括実行
@@ -176,6 +176,7 @@ function run_all_tests_batch() {
     rm -rf "$trx_dir"
 
     # テスト結果サマリーを表示
+    echo "----"
     printf "%s" "$test_summary"
     # 集計結果を出力
     echo "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"
