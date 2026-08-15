@@ -13,6 +13,7 @@
 
 # 以下は管理対象外
 obj
+gen
 *.gcda
 *.gcno
 *.gcov
