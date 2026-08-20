@@ -38,6 +38,7 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, CreateProcessW(_, _, _, _, _, _, _, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_CreateProcessW));
     ON_CALL(*this, GetCurrentProcess(_, _, _)).WillByDefault(Invoke(delegate_real_GetCurrentProcess));
+    ON_CALL(*this, GetCurrentProcessId(_, _, _)).WillByDefault(Invoke(delegate_real_GetCurrentProcessId));
     ON_CALL(*this, DuplicateHandle(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_DuplicateHandle));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);

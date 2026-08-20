@@ -48,6 +48,7 @@ extern "C"
                                     LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCWSTR, LPSTARTUPINFOW,
                                     LPPROCESS_INFORMATION);
     extern HANDLE mock_GetCurrentProcess(const char *, const int, const char *);
+    extern DWORD mock_GetCurrentProcessId(const char *, const int, const char *);
     extern BOOL mock_DuplicateHandle(const char *, const int, const char *, HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD,
                                      BOOL, DWORD);
 
@@ -102,6 +103,7 @@ extern "C"
                                     thread_attributes, inherit_handles, creation_flags, environment, \
                                     current_directory, startup_info, process_information)
             #define GetCurrentProcess() mock_GetCurrentProcess(__FILE__, __LINE__, __func__)
+            #define GetCurrentProcessId() mock_GetCurrentProcessId(__FILE__, __LINE__, __func__)
             #define DuplicateHandle(source_process, source_handle, target_process, target_handle, desired_access, \
                                     inherit_handle, options) \
                 mock_DuplicateHandle(__FILE__, __LINE__, __func__, source_process, source_handle, target_process, \
@@ -143,6 +145,7 @@ extern BOOL delegate_real_CreateProcessW(const char *, const int, const char *, 
                                          LPSECURITY_ATTRIBUTES, BOOL, DWORD, LPVOID, LPCWSTR, LPSTARTUPINFOW,
                                          LPPROCESS_INFORMATION);
 extern HANDLE delegate_real_GetCurrentProcess(const char *, const int, const char *);
+extern DWORD delegate_real_GetCurrentProcessId(const char *, const int, const char *);
 extern BOOL delegate_real_DuplicateHandle(const char *, const int, const char *, HANDLE, HANDLE, HANDLE, LPHANDLE,
                                           DWORD, BOOL, DWORD);
 
@@ -180,6 +183,7 @@ class Mock_windows
                 (const char *, const int, const char *, LPCWSTR, LPWSTR, LPSECURITY_ATTRIBUTES, LPSECURITY_ATTRIBUTES,
                  BOOL, DWORD, LPVOID, LPCWSTR, LPSTARTUPINFOW, LPPROCESS_INFORMATION));
     MOCK_METHOD(HANDLE, GetCurrentProcess, (const char *, const int, const char *));
+    MOCK_METHOD(DWORD, GetCurrentProcessId, (const char *, const int, const char *));
     MOCK_METHOD(BOOL, DuplicateHandle,
                 (const char *, const int, const char *, HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD, BOOL, DWORD));
 
