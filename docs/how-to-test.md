@@ -181,8 +181,9 @@ export -n GTEST_FILTER # フィルター不要になったら、GTEST_FILTER 環
 
 ### 再テストのスキップ
 
-テスト対象フォルダー (leaf ディレクトリ) 単位で、`TEST_SRCS`・`ADD_SRCS`・ローカルの `makepart.mk`/`makelocal.mk` の MD5 が  
-前回のクリーンな成功時 (`Failed` が 0 件) から変化していない場合、`make test` は実際のテスト実行を省略します。  
+テスト対象フォルダー (leaf ディレクトリ) 単位で、`TEST_SRCS`・`ADD_SRCS`・カレント ディレクトリ直下の  
+`*.c`/`*.cc`/`*.cpp` (gtest のテスト本体、`*.inject.*` を含む)・ローカルの `makepart.mk`/`makelocal.mk` の  
+MD5 が前回のクリーンな成功時 (`Failed` が 0 件) から変化していない場合、`make test` は実際のテスト実行を省略します。  
 スキップした場合は `results/` 以下を前回のまま残し、以下を表示します。
 
 ```text

@@ -135,6 +135,12 @@ function compute_test_signature() {
     for src in $MAKEFW_TEST_LIBS; do
         [ -n "$src" ] && [ -f "$src" ] && sig_srcs+=("$src")
     done
+    # このディレクトリ直下で自動収集・コンパイルされる *.c/*.cc/*.cpp も対象に含める。
+    # TEST_SRCS/ADD_SRCS には現れないテスト コード自体 (gtest の *Test.cc 等) の変更を
+    # 検出するため。*.inject.* も対象ソースへ結合されて実際の挙動に影響するため含める。
+    for src in *.c *.cc *.cpp; do
+        [ -f "$src" ] && sig_srcs+=("$src")
+    done
 
     if [ ${#sig_srcs[@]} -eq 0 ]; then
         return 1
@@ -445,6 +451,9 @@ function main() {
         done
         for ssrc in $MAKEFW_TEST_LIBS; do
             [ -n "$ssrc" ] && [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
+        done
+        for ssrc in *.c *.cc *.cpp; do
+            [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
         done
         if [ ${#signature_srcs_for_cache[@]} -gt 0 ]; then
             populate_md5_cache_windows "${signature_srcs_for_cache[@]}"
