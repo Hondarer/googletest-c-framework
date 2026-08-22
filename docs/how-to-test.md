@@ -105,7 +105,22 @@ prod/libsrc/sample/sample_name.c
 
 `TEST`、`TEST_F`、`TEST_P` のマクロ自体がテストであることを示しているため、テスト関数名の `test_` は冗長です。
 
-### ホワイト ボックス テストで実ライブラリをリンクしない
+### GoogleTest / GoogleMock は testfw.h 経由で取り込む
+
+テスト ファイルでは `<gtest/gtest.h>` や `<gmock/gmock.h>` を直接 include せず、`<testfw.h>` を include してください。
+
+```cpp
+/* 望ましくない */
+#include <gtest/gtest.h>
+
+/* 望ましい */
+#include <testfw.h>
+```
+
+> [!NOTE]
+> `<testfw.h>` は GoogleTest / GoogleMock のヘッダーを `#pragma GCC diagnostic push` / `ignored "-Wpadded"` / `pop` で囲んで include しています。
+> GoogleTest / GoogleMock は外部定義の構造体をそのまま公開しているため、直接 include すると本リポジトリが有効化している `-Wpadded` の false positive が発生します。
+> `<testfw.h>` は `using namespace testing;` や `gtest_wrapmain` などテスト実行に必要な設定もあわせて提供します。
 
 依存の差し替えは `LIBS += mock_<lib> mock_libc` で行います。  
 テスト対象と同じライブラリの実体 (`LIBS += <lib>`) を指定しません。
