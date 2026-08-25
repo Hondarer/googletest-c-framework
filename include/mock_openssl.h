@@ -62,10 +62,7 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_OPENSSL_H
 
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wpadded"
     #include <gmock/gmock.h>
-    #pragma GCC diagnostic pop
 
 extern EVP_CIPHER_CTX *delegate_real_EVP_CIPHER_CTX_new(const char *, const int, const char *);
 extern int delegate_real_EVP_EncryptInit_ex(const char *, const int, const char *, EVP_CIPHER_CTX *,

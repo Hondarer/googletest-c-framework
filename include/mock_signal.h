@@ -28,10 +28,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_SIGNAL_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_sigaction(const char *, const int, const char *, int, const struct sigaction *,
                                    struct sigaction *);

@@ -31,10 +31,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_DLFCN_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern void *delegate_real_dlopen(const char *, const int, const char *, const char *, int);
 extern void *delegate_real_dlsym(const char *, const int, const char *, void *, const char *);

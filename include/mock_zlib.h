@@ -32,10 +32,7 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_ZLIB_H
 
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wpadded"
     #include <gmock/gmock.h>
-    #pragma GCC diagnostic pop
 
 extern int delegate_real_deflateInit2_(const char *, const int, const char *, z_streamp, int, int, int, int, int,
                                        const char *, int);

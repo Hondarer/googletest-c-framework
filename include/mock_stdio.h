@@ -97,14 +97,7 @@ extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H
 
-    #ifndef _WIN32
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
-    #endif // _WIN32
     #include <gmock/gmock.h>
-    #ifndef _WIN32
-        #pragma GCC diagnostic pop
-    #endif // _WIN32
 
 extern int delegate_real_fclose(const char *, const int, const char *, FILE *);
 extern int delegate_fake_fclose(const char *, const int, const char *, FILE *);

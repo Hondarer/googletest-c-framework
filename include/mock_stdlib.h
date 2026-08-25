@@ -51,14 +51,7 @@ extern "C"
 
 #else // _IN_OVERRIDE_HEADER_STDLIB_H
 
-    #ifndef _WIN32
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
-    #endif // _WIN32
     #include <gmock/gmock.h>
-    #ifndef _WIN32
-        #pragma GCC diagnostic pop
-    #endif // _WIN32
 
 extern void *delegate_real_malloc(const char *, const int, const char *, size_t);
 extern void *delegate_real_realloc(const char *, const int, const char *, void *, size_t);

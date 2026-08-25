@@ -59,10 +59,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_SYS_SOCKET_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_socket(const char *, const int, const char *, int, int, int);
 extern int delegate_real_bind(const char *, const int, const char *, int, const struct sockaddr *, socklen_t);

@@ -74,10 +74,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_PTHREAD_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_pthread_mutex_init(const char *, const int, const char *, pthread_mutex_t *,
                                             const pthread_mutexattr_t *);

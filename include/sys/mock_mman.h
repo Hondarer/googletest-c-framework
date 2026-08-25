@@ -38,10 +38,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_SYS_MMAN_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern void *delegate_real_mmap(const char *, const int, const char *, void *, size_t, int, int, int, off_t);
 extern int delegate_real_munmap(const char *, const int, const char *, void *, size_t);

@@ -30,10 +30,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_NETDB_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_getaddrinfo(const char *, const int, const char *, const char *, const char *, const struct addrinfo *, struct addrinfo **);
 extern void delegate_real_freeaddrinfo(const char *, const int, const char *, struct addrinfo *);

@@ -24,10 +24,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_SYS_SELECT_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_select(const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *,
                                 struct timeval *);

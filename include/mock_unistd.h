@@ -93,14 +93,7 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
 
 #else // _IN_OVERRIDE_HEADER_UNISTD_H || _IN_OVERRIDE_HEADER_IO_H
 
-    #ifndef _WIN32
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
-    #endif // _WIN32
     #include <gmock/gmock.h>
-    #ifndef _WIN32
-        #pragma GCC diagnostic pop
-    #endif // _WIN32
 
     #ifndef _WIN32
 extern int delegate_real_access(const char *, const int, const char *, const char *, int);

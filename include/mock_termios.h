@@ -25,10 +25,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_TERMIOS_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_tcgetattr(const char *, const int, const char *, int, struct termios *);
 extern int delegate_real_tcsetattr(const char *, const int, const char *, int, int, const struct termios *);

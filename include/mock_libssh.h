@@ -375,14 +375,7 @@ extern "C"
 #else // _IN_OVERRIDE_HEADER_LIBSSH_H
 
     /* C++ テスト コード用: Google Mock クラス定義 */
-    #ifndef _WIN32
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
-    #endif // _WIN32
     #include <gmock/gmock.h>
-    #ifndef _WIN32
-        #pragma GCC diagnostic pop
-    #endif // _WIN32
 
 /* delegate 関数宣言 - セッション管理 */
 extern ssh_session delegate_real_ssh_new(const char *, const int, const char *);

@@ -25,10 +25,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_POLL_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_poll(const char *, const int, const char *, struct pollfd *, nfds_t, int);
 

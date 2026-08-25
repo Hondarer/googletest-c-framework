@@ -118,8 +118,8 @@ prod/libsrc/sample/sample_name.c
 ```
 
 > [!NOTE]
-> `<testfw.h>` は GoogleTest / GoogleMock のヘッダーを `#pragma GCC diagnostic push` / `ignored "-Wpadded"` / `pop` で囲んで include しています。
-> GoogleTest / GoogleMock は外部定義の構造体をそのまま公開しているため、直接 include すると本リポジトリが有効化している `-Wpadded` の false positive が発生します。
+> GoogleTest / GoogleMock のヘッダーは、makefw が外来ヘッダーとして Linux の `-isystem` または MSVC の `/external:I` で指定します。  
+> `<testfw.h>` を利用すると、外来ヘッダーの警告分離に加えて、テスト フレームワークの共通設定を一括して取り込めます。
 > `<testfw.h>` は `using namespace testing;` や `gtest_wrapmain` などテスト実行に必要な設定もあわせて提供します。
 
 依存の差し替えは `LIBS += mock_<lib> mock_libc` で行います。  

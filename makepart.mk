@@ -1,13 +1,10 @@
-# GoogleTest と OS / libc の mock ヘッダーは外部定義の構造体をそのまま
-# include するため、-Wpadded の false positive が発生する。
-# 従い、framework/testfw では -Wpadded は指定しない。
 GCC_WARN_BASE = \
 	-Wall -Wextra \
 	-Wformat=2 \
 	-Wshadow -Wundef \
 	-Wpointer-arith -Wcast-qual -Wcast-align \
 	-Wswitch-enum -Wswitch-default \
-	-Wpacked \
+	-Wpacked -Wpadded \
 	-Wunknown-pragmas \
 	-Wconversion \
 	-Wsign-conversion
@@ -35,8 +32,9 @@ ifeq ($(wildcard $(TESTFW_HOME)),)
     $(error $(TESTFW_HOME_ERROR))
 endif
 
+SYSTEM_INCDIR += $(TESTFW_HOME)/gtest/include
+
 INCDIR += \
-    $(TESTFW_HOME)/gtest/include \
     $(TESTFW_HOME)/include \
     $(TESTFW_HOME)/include_internal
 

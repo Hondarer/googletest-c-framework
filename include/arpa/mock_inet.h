@@ -28,10 +28,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_ARPA_INET_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_inet_pton(const char *, const int, const char *, int, const char *, void *);
 extern const char *delegate_real_inet_ntop(const char *, const int, const char *, int, const void *, char *, socklen_t);

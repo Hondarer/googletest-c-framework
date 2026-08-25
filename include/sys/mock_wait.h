@@ -23,10 +23,7 @@ extern "C"
 
         #else // _IN_OVERRIDE_HEADER_WAIT_H
 
-            #pragma GCC diagnostic push
-            #pragma GCC diagnostic ignored "-Wpadded"
             #include <gmock/gmock.h>
-            #pragma GCC diagnostic pop
 
 extern pid_t delegate_real_waitpid(const char *, const int, const char *, pid_t, int *, int);
 

@@ -6,14 +6,7 @@
 #include <stdarg.h>
 #include <format_attr.h>
 
-#ifndef _WIN32
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wpadded"
-#endif // _WIN32
 #include <gmock/gmock.h>
-#ifndef _WIN32
-    #pragma GCC diagnostic pop
-#endif // _WIN32
 
 using namespace std;
 

@@ -20,10 +20,7 @@ extern "C"
         #define ioctl(fd, request, arg) mock_ioctl(__FILE__, __LINE__, __func__, fd, request, arg)
     #else // _IN_OVERRIDE_HEADER_SYS_IOCTL_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_ioctl(const char *, const int, const char *, int, unsigned long, void *);
 

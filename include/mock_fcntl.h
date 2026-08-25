@@ -38,10 +38,7 @@ extern "C"
 
     #else // _IN_OVERRIDE_HEADER_FCNTL_H
 
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
         #include <gmock/gmock.h>
-        #pragma GCC diagnostic pop
 
 extern int delegate_real_open(const char *, const int, const char *, const char *, int, int);
 extern int delegate_real_fcntl(const char *, const int, const char *, int, int, intptr_t);

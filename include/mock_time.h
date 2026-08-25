@@ -43,14 +43,7 @@ extern errno_t mock_ctime_s(const char *, const int, const char *, char *, size_
 
 #else // _IN_OVERRIDE_HEADER_TIME_H
 
-    #ifndef _WIN32
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wpadded"
-    #endif // _WIN32
     #include <gmock/gmock.h>
-    #ifndef _WIN32
-        #pragma GCC diagnostic pop
-    #endif // _WIN32
 
     #ifndef _WIN32
 extern int delegate_real_clock_gettime(const char *, const int, const char *, clockid_t, struct timespec *);
