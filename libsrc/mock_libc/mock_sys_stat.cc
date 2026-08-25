@@ -11,6 +11,8 @@ Mock_sys_stat::Mock_sys_stat()
 #ifndef _WIN32
     ON_CALL(*this, fstat(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_fstat));
     ON_CALL(*this, mkdir(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_mkdir));
+    ON_CALL(*this, futimens(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_futimens));
+    ON_CALL(*this, utimensat(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_utimensat));
 #endif // _WIN32
 
 #ifdef _WIN32
