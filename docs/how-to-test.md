@@ -219,3 +219,8 @@ MAKEFW_TEST_FORCE=1 make test
 app 単位のスキップは、途中で 1 つでもテストが失敗すると `make_test.stamp` が更新されないため全 leaf の再実行に戻りますが、  
 leaf 単位の `test.stamp` はテスト対象フォルダーごとに個別に維持されるため、失敗箇所を修正した後の再実行では、  
 変更されていない leaf だけが引き続きスキップされます。
+
+品質の担保が取れた app をルートからのビルド確認に含めるときは、`assured.stamp` を使います。  
+`app/<name>/assured.stamp` がある app は、app 直下の `make` / `make test` で `test/src` のコンパイルとテスト実行を行わず、製品とモックだけをコンパイルします。  
+`test/src` 配下での直接 `make test` は妨げません。  
+詳細は [ビルド構成](../../makefw/docs/build-configurations.md#assuredstamp-による保証済み-app-の扱い) を参照してください。
