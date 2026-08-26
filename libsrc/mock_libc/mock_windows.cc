@@ -24,6 +24,8 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, UnmapViewOfFile(_, _, _, _)).WillByDefault(Invoke(delegate_real_UnmapViewOfFile));
     ON_CALL(*this, FlushViewOfFile(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_FlushViewOfFile));
     ON_CALL(*this, FlushFileBuffers(_, _, _, _)).WillByDefault(Invoke(delegate_real_FlushFileBuffers));
+    ON_CALL(*this, GetFileTime(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetFileTime));
+    ON_CALL(*this, SetFileTime(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetFileTime));
     ON_CALL(*this, CloseHandle(_, _, _, _)).WillByDefault(Invoke(delegate_real_CloseHandle));
     ON_CALL(*this, GetLastError(_, _, _)).WillByDefault(Invoke(delegate_real_GetLastError));
     ON_CALL(*this, GetModuleFileNameW(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetModuleFileNameW));

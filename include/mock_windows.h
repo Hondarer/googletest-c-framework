@@ -34,6 +34,9 @@ extern "C"
     extern BOOL mock_UnmapViewOfFile(const char *, const int, const char *, LPCVOID);
     extern BOOL mock_FlushViewOfFile(const char *, const int, const char *, LPCVOID, SIZE_T);
     extern BOOL mock_FlushFileBuffers(const char *, const int, const char *, HANDLE);
+    extern BOOL mock_GetFileTime(const char *, const int, const char *, HANDLE, LPFILETIME, LPFILETIME, LPFILETIME);
+    extern BOOL mock_SetFileTime(const char *, const int, const char *, HANDLE, const FILETIME *, const FILETIME *,
+                                 const FILETIME *);
     extern BOOL mock_CloseHandle(const char *, const int, const char *, HANDLE);
     extern DWORD mock_GetLastError(const char *, const int, const char *);
     extern DWORD mock_GetModuleFileNameW(const char *, const int, const char *, HMODULE, LPWSTR, DWORD);
@@ -80,8 +83,12 @@ extern "C"
             #define UnmapViewOfFile(address)        mock_UnmapViewOfFile(__FILE__, __LINE__, __func__, address)
             #define FlushViewOfFile(address, bytes) mock_FlushViewOfFile(__FILE__, __LINE__, __func__, address, bytes)
             #define FlushFileBuffers(file)          mock_FlushFileBuffers(__FILE__, __LINE__, __func__, file)
-            #define CloseHandle(handle)             mock_CloseHandle(__FILE__, __LINE__, __func__, handle)
-            #define GetLastError()                  mock_GetLastError(__FILE__, __LINE__, __func__)
+            #define GetFileTime(file_handle, creation, last_access, last_write) \
+                mock_GetFileTime(__FILE__, __LINE__, __func__, file_handle, creation, last_access, last_write)
+            #define SetFileTime(file_handle, creation, last_access, last_write) \
+                mock_SetFileTime(__FILE__, __LINE__, __func__, file_handle, creation, last_access, last_write)
+            #define CloseHandle(handle) mock_CloseHandle(__FILE__, __LINE__, __func__, handle)
+            #define GetLastError()      mock_GetLastError(__FILE__, __LINE__, __func__)
             #define GetModuleFileNameW(module, filename, size) \
                 mock_GetModuleFileNameW(__FILE__, __LINE__, __func__, module, filename, size)
             #define GetExitCodeProcess(process, exit_code) \
@@ -102,7 +109,7 @@ extern "C"
                 mock_CreateProcessW(__FILE__, __LINE__, __func__, application_name, command_line, process_attributes, \
                                     thread_attributes, inherit_handles, creation_flags, environment, \
                                     current_directory, startup_info, process_information)
-            #define GetCurrentProcess() mock_GetCurrentProcess(__FILE__, __LINE__, __func__)
+            #define GetCurrentProcess()   mock_GetCurrentProcess(__FILE__, __LINE__, __func__)
             #define GetCurrentProcessId() mock_GetCurrentProcessId(__FILE__, __LINE__, __func__)
             #define DuplicateHandle(source_process, source_handle, target_process, target_handle, desired_access, \
                                     inherit_handle, options) \
@@ -130,6 +137,10 @@ extern LPVOID delegate_real_MapViewOfFile(const char *, const int, const char *,
 extern BOOL delegate_real_UnmapViewOfFile(const char *, const int, const char *, LPCVOID);
 extern BOOL delegate_real_FlushViewOfFile(const char *, const int, const char *, LPCVOID, SIZE_T);
 extern BOOL delegate_real_FlushFileBuffers(const char *, const int, const char *, HANDLE);
+extern BOOL delegate_real_GetFileTime(const char *, const int, const char *, HANDLE, LPFILETIME, LPFILETIME,
+                                      LPFILETIME);
+extern BOOL delegate_real_SetFileTime(const char *, const int, const char *, HANDLE, const FILETIME *, const FILETIME *,
+                                      const FILETIME *);
 extern BOOL delegate_real_CloseHandle(const char *, const int, const char *, HANDLE);
 extern DWORD delegate_real_GetLastError(const char *, const int, const char *);
 extern DWORD delegate_real_GetModuleFileNameW(const char *, const int, const char *, HMODULE, LPWSTR, DWORD);
@@ -167,6 +178,9 @@ class Mock_windows
     MOCK_METHOD(BOOL, UnmapViewOfFile, (const char *, const int, const char *, LPCVOID));
     MOCK_METHOD(BOOL, FlushViewOfFile, (const char *, const int, const char *, LPCVOID, SIZE_T));
     MOCK_METHOD(BOOL, FlushFileBuffers, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(BOOL, GetFileTime, (const char *, const int, const char *, HANDLE, LPFILETIME, LPFILETIME, LPFILETIME));
+    MOCK_METHOD(BOOL, SetFileTime,
+                (const char *, const int, const char *, HANDLE, const FILETIME *, const FILETIME *, const FILETIME *));
     MOCK_METHOD(BOOL, CloseHandle, (const char *, const int, const char *, HANDLE));
     MOCK_METHOD(DWORD, GetLastError, (const char *, const int, const char *));
     MOCK_METHOD(DWORD, GetModuleFileNameW, (const char *, const int, const char *, HMODULE, LPWSTR, DWORD));
