@@ -1,11 +1,4 @@
-#ifndef _WIN32
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wpadded"
-#endif // _WIN32
 #include <gtest/gtest.h>
-#ifndef _WIN32
-    #pragma GCC diagnostic pop
-#endif // _WIN32
 #include <testfw/console/console_internal.h>
 
 using namespace testing;
