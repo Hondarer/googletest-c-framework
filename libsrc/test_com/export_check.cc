@@ -161,7 +161,7 @@ namespace
 
 // Linux の nm -D --defined-only が返すリンカー合成シンボル。
 // dumpbin /exports には現れないため、両 OS の比較条件を揃える目的で actual から除外する。
-// 公開 API のアンダースコア始まり (_com_util_* 等) は除外しない。
+// 公開 API のアンダースコア始まり (_cplat_* 等) は除外しない。
 bool isLinkerSyntheticSymbol(const string &name)
 {
     return name == "__bss_start" || name == "_edata" || name == "_end";
