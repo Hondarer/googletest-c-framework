@@ -40,6 +40,7 @@ extern "C"
     extern BOOL mock_CloseHandle(const char *, const int, const char *, HANDLE);
     extern DWORD mock_GetLastError(const char *, const int, const char *);
     extern DWORD mock_GetModuleFileNameW(const char *, const int, const char *, HMODULE, LPWSTR, DWORD);
+    extern BOOL mock_GetComputerNameExW(const char *, const int, const char *, COMPUTER_NAME_FORMAT, LPWSTR, LPDWORD);
     extern BOOL mock_GetExitCodeProcess(const char *, const int, const char *, HANDLE, LPDWORD);
     extern BOOL mock_TerminateProcess(const char *, const int, const char *, HANDLE, UINT);
     extern BOOL mock_InitializeProcThreadAttributeList(const char *, const int, const char *,
@@ -91,6 +92,8 @@ extern "C"
             #define GetLastError()      mock_GetLastError(__FILE__, __LINE__, __func__)
             #define GetModuleFileNameW(module, filename, size) \
                 mock_GetModuleFileNameW(__FILE__, __LINE__, __func__, module, filename, size)
+            #define GetComputerNameExW(name_type, buffer, size) \
+                mock_GetComputerNameExW(__FILE__, __LINE__, __func__, name_type, buffer, size)
             #define GetExitCodeProcess(process, exit_code) \
                 mock_GetExitCodeProcess(__FILE__, __LINE__, __func__, process, exit_code)
             #define TerminateProcess(process, exit_code) \
@@ -144,6 +147,8 @@ extern BOOL delegate_real_SetFileTime(const char *, const int, const char *, HAN
 extern BOOL delegate_real_CloseHandle(const char *, const int, const char *, HANDLE);
 extern DWORD delegate_real_GetLastError(const char *, const int, const char *);
 extern DWORD delegate_real_GetModuleFileNameW(const char *, const int, const char *, HMODULE, LPWSTR, DWORD);
+extern BOOL delegate_real_GetComputerNameExW(const char *, const int, const char *, COMPUTER_NAME_FORMAT, LPWSTR,
+                                             LPDWORD);
 extern BOOL delegate_real_GetExitCodeProcess(const char *, const int, const char *, HANDLE, LPDWORD);
 extern BOOL delegate_real_TerminateProcess(const char *, const int, const char *, HANDLE, UINT);
 extern BOOL delegate_real_InitializeProcThreadAttributeList(const char *, const int, const char *,
@@ -184,6 +189,8 @@ class Mock_windows
     MOCK_METHOD(BOOL, CloseHandle, (const char *, const int, const char *, HANDLE));
     MOCK_METHOD(DWORD, GetLastError, (const char *, const int, const char *));
     MOCK_METHOD(DWORD, GetModuleFileNameW, (const char *, const int, const char *, HMODULE, LPWSTR, DWORD));
+    MOCK_METHOD(BOOL, GetComputerNameExW,
+                (const char *, const int, const char *, COMPUTER_NAME_FORMAT, LPWSTR, LPDWORD));
     MOCK_METHOD(BOOL, GetExitCodeProcess, (const char *, const int, const char *, HANDLE, LPDWORD));
     MOCK_METHOD(BOOL, TerminateProcess, (const char *, const int, const char *, HANDLE, UINT));
     MOCK_METHOD(BOOL, InitializeProcThreadAttributeList,

@@ -33,6 +33,7 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, sched_yield(_, _, _)).WillByDefault(Invoke(delegate_real_sched_yield));
     ON_CALL(*this, rmdir(_, _, _, _)).WillByDefault(Invoke(delegate_real_rmdir));
     ON_CALL(*this, isatty(_, _, _, _)).WillByDefault(Invoke(delegate_real_isatty));
+    ON_CALL(*this, gethostname(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_gethostname));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_unistd);
 }

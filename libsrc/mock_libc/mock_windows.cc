@@ -29,6 +29,8 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, CloseHandle(_, _, _, _)).WillByDefault(Invoke(delegate_real_CloseHandle));
     ON_CALL(*this, GetLastError(_, _, _)).WillByDefault(Invoke(delegate_real_GetLastError));
     ON_CALL(*this, GetModuleFileNameW(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetModuleFileNameW));
+    ON_CALL(*this, GetComputerNameExW(_, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_GetComputerNameExW));
     ON_CALL(*this, GetExitCodeProcess(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetExitCodeProcess));
     ON_CALL(*this, TerminateProcess(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_TerminateProcess));
     ON_CALL(*this, InitializeProcThreadAttributeList(_, _, _, _, _, _, _))

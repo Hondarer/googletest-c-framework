@@ -38,6 +38,7 @@ extern "C"
     extern int mock_sched_yield(const char *, const int, const char *);
     extern int mock_rmdir(const char *, const int, const char *, const char *);
     extern int mock_isatty(const char *, const int, const char *, int);
+    extern int mock_gethostname(const char *, const int, const char *, char *, size_t);
 #else  // _WIN32
 extern __int64 mock__lseeki64(const char *, const int, const char *, int, __int64, int);
 extern int mock__close(const char *, const int, const char *, int);
@@ -79,6 +80,7 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
         #define sched_yield()             mock_sched_yield(__FILE__, __LINE__, __func__)
         #define rmdir(path)               mock_rmdir(__FILE__, __LINE__, __func__, path)
         #define isatty(fd)                mock_isatty(__FILE__, __LINE__, __func__, fd)
+        #define gethostname(name, len)    mock_gethostname(__FILE__, __LINE__, __func__, name, len)
 
     #else // _WIN32
 
@@ -120,6 +122,7 @@ extern int delegate_real_usleep(const char *, const int, const char *, useconds_
 extern int delegate_real_sched_yield(const char *, const int, const char *);
 extern int delegate_real_rmdir(const char *, const int, const char *, const char *);
 extern int delegate_real_isatty(const char *, const int, const char *, int);
+extern int delegate_real_gethostname(const char *, const int, const char *, char *, size_t);
 
 class Mock_unistd
 {
@@ -148,6 +151,7 @@ class Mock_unistd
     MOCK_METHOD(int, sched_yield, (const char *, const int, const char *));
     MOCK_METHOD(int, rmdir, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, isatty, (const char *, const int, const char *, int));
+    MOCK_METHOD(int, gethostname, (const char *, const int, const char *, char *, size_t));
 
     Mock_unistd();
     ~Mock_unistd();
