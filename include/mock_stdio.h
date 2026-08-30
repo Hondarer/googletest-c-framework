@@ -161,7 +161,6 @@ extern __int64 delegate_fake__ftelli64(const char *, const int, const char *, FI
 class Mock_stdio
 {
   public:
-    MOCK_METHOD(int, access, (const char *, const int, const char *, const char *, int));
     MOCK_METHOD(int, fclose, (const char *, const int, const char *, FILE *));
     MOCK_METHOD(int, feof, (const char *, const int, const char *, FILE *));
     MOCK_METHOD(int, ferror, (const char *, const int, const char *, FILE *));
@@ -172,21 +171,17 @@ class Mock_stdio
     MOCK_METHOD(errno_t, _wfopen_s, (const char *, const int, const char *, FILE **, const wchar_t *, const wchar_t *));
     MOCK_METHOD(FILE *, _wfsopen, (const char *, const int, const char *, const wchar_t *, const wchar_t *, int));
     #endif
+    MOCK_METHOD(int, printf, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, fprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, vfprintf, (const char *, const int, const char *, FILE *, const char *));
     MOCK_METHOD(int, snprintf, (const char *, const int, const char *, char *, size_t, const char *));
     MOCK_METHOD(int, vsnprintf, (const char *, const int, const char *, char *, size_t, const char *));
-    MOCK_METHOD(char *, fgets, (const char *, const int, const char *, char *, int, FILE *));
-    MOCK_METHOD(size_t, fread, (const char *, const int, const char *, void *, size_t, size_t, FILE *));
-    MOCK_METHOD(size_t, fwrite, (const char *, const int, const char *, const void *, size_t, size_t, FILE *));
-
-    void switch_to_real_fileio();
-    void switch_to_mock_fileio();
-
-    MOCK_METHOD(int, printf, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, scanf, (const char *, const int, const char *, const char *, va_list));
     MOCK_METHOD(int, vscanf, (const char *, const int, const char *, const char *, va_list));
     MOCK_METHOD(int, vfscanf, (const char *, const int, const char *, FILE *, const char *, va_list));
+    MOCK_METHOD(char *, fgets, (const char *, const int, const char *, char *, int, FILE *));
+    MOCK_METHOD(size_t, fread, (const char *, const int, const char *, void *, size_t, size_t, FILE *));
+    MOCK_METHOD(size_t, fwrite, (const char *, const int, const char *, const void *, size_t, size_t, FILE *));
     MOCK_METHOD(FILE *, freopen, (const char *, const int, const char *, const char *, const char *, FILE *));
     MOCK_METHOD(int, remove, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, rename, (const char *, const int, const char *, const char *, const char *));
@@ -198,6 +193,9 @@ class Mock_stdio
     MOCK_METHOD(int, _fseeki64, (const char *, const int, const char *, FILE *, __int64, int));
     MOCK_METHOD(__int64, _ftelli64, (const char *, const int, const char *, FILE *));
     #endif
+
+    void switch_to_real_fileio();
+    void switch_to_mock_fileio();
 
     Mock_stdio();
     ~Mock_stdio();
