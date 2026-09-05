@@ -4,8 +4,7 @@
 
 `framework/testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`  
 でコンソール出力を制御する仕組みを提供している。  
-現在この仕組みはモック関数 (`mock_calcHandler` 等) にのみ使われており、  
-プロセス制御関数群 (`startProcessAsync`, `waitForOutput` 等) には適用されていません。
+現在この仕組みはモック関数 (`mock_calcHandler` 等) にのみ使われており、プロセス制御関数群 (`startProcessAsync`, `waitForOutput` 等) には適用されていません。
 
 インテグレーション テスト (porter の `porterSendRecvTest` 等) では複数プロセスを起動・対話させるため、  
 テスト失敗時にどの操作がどのタイミングで行われたかを追跡しにくい。  

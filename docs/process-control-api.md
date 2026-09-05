@@ -3,8 +3,7 @@
 ## 概要
 
 `framework/testfw/include/processController.h` が提供するプロセス制御 API です。  
-テスト対象バイナリをサブプロセスとして起動し、  
-stdin / stdout / stderr をパイプ経由で制御できます。
+テスト対象バイナリをサブプロセスとして起動し、stdin / stdout / stderr をパイプ経由で制御できます。
 
 2 つのモードがあります。
 
@@ -13,8 +12,7 @@ stdin / stdout / stderr をパイプ経由で制御できます。
 | 同期 | `startProcess()` | 短命プロセス (起動 → 終了まで待機) |
 | 非同期 | `startProcessAsync()` + 各操作関数 | 常駐プロセス・対話プロセスの制御 |
 
-`startProcess()` は `startProcessAsync()` のラッパーとして実装されており、  
-実質的な処理はすべて非同期 API 側に集約されています。
+`startProcess()` は `startProcessAsync()` のラッパーとして実装されており、実質的な処理はすべて非同期 API 側に集約されています。
 
 ## 型・構造体
 
@@ -139,8 +137,7 @@ stdout に指定パターン (部分一致) が出現するまで待機します
 パターン出現位置までの stdout を返します。  
 タイムアウトした場合、またはプロセスが予期せず終了した場合は `std::runtime_error` を送出します。
 
-stdout の読み取りはバックグラウンド スレッドが常時行っているため、  
-`writeLineStdin()` と同時に呼び出してもデッドロックは発生しません。
+stdout の読み取りはバックグラウンド スレッドが常時行っているため、`writeLineStdin()` と同時に呼び出してもデッドロックは発生しません。
 
 Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForOutput()` 完了後にはその時点までの全ログが利用可能です。
 
