@@ -44,6 +44,9 @@ static const std::map<std::string, std::string> kExpectedExportSignatures = {
 TEST_F(myLibExportTest, symbol_names_match)
 {
     std::set<std::string> expected(std::begin(kExpectedExportNames), std::end(kExpectedExportNames));
+#if defined(PLATFORM_WINDOWS)
+    expected.insert(testing::identManifestSymbolName("libmylib" TESTFW_SHARED_LIBRARY_EXTENSION));
+#endif /* PLATFORM_WINDOWS */
     std::set<std::string> actual = testing::getActualExportNames(dll_path);
     testing::expectExportNamesMatch(expected, actual, kExpectedExportSignatures);
 }
@@ -56,7 +59,11 @@ TEST_F(myLibExportTest, public_header_variables_declare_export_macro)
 }
 ```
 
-`#if defined(PLATFORM_WINDOWS)`/`#elif defined(PLATFORM_LINUX)` の分岐は `getActualExportNames`/`expectExportNamesMatch` の内部に閉じ込められているため、app 側のテスト本体には書きません。
+実シンボルを取得する処理と Linux のリンカー合成シンボルを除外する処理は、共通関数の内部で切り替わります。
+
+Windows の共有ライブラリに自動追加される IDENT manifest や、ライブラリ固有の OS 別 API は、app 側でプラットフォームごとの期待値へ明示的に追加します。
+テスト本体で `PLATFORM_WINDOWS` または `PLATFORM_LINUX` を判定する場合は、テストの `makepart.mk` で make の同名変数に対応する `DEFINES` を追加します。
+期待値へ含めず実際値から除外すると、同じ接頭辞を持たない内部シンボルの漏出を検出できないため、接頭辞による絞り込みは行いません。
 
 ## 公開ヘッダーと DLL/SO は 1:1 とは限らない
 

@@ -1,0 +1,10 @@
+# test_com の公開ヘルパーを検査する黒箱テストのため、TEST_SRCS は指定しない。
+LINK_TEST = 1
+
+ifdef PLATFORM_LINUX
+    DEFINES += PLATFORM_LINUX
+    LIBSDIR += $(TESTFW_HOME)/lib/$(TARGET_ARCH)
+else ifdef PLATFORM_WINDOWS
+    DEFINES += PLATFORM_WINDOWS
+    LIBSDIR += $(TESTFW_HOME)/lib/$(TARGET_ARCH)/$(MSVC_CRT_SUBDIR)
+endif

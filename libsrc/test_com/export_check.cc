@@ -159,13 +159,14 @@ set<string> getActualExportNames(const string &dll_or_so_path)
 namespace
 {
 
+#ifndef _WIN32
 // Linux の nm -D --defined-only が返すリンカー合成シンボル。
-// dumpbin /exports には現れないため、両 OS の比較条件を揃える目的で actual から除外する。
 // 公開 API のアンダースコア始まり (_cplat_* 等) は除外しない。
 bool isLinkerSyntheticSymbol(const string &name)
 {
     return name == "__bss_start" || name == "_edata" || name == "_end";
 }
+#endif /* _WIN32 */
 
 } // namespace
 
@@ -175,11 +176,13 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
     set<string> actual_for_match;
     for (const auto &name : actual)
     {
+#ifndef _WIN32
         if (isLinkerSyntheticSymbol(name))
         {
             printf("  >   actual (ignored linker synthetic): %s\n", name.c_str());
             continue;
         }
+#endif /* _WIN32 */
         actual_for_match.insert(name);
     }
 
