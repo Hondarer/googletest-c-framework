@@ -14,7 +14,7 @@
 > 自動収集の対象は、テスト ディレクトリ直下の `*.c` / `*.cc` / `*.cpp` です (`makefw/makefiles/_collect_srcs.mk`)。
 > カバレッジの集計対象は `TEST_SRCS` に指定したファイルだけであるため、自動収集されたテスト用の補助ソースがカバレッジへ混入することはありません。
 
-詳細は [makepart.mk / makechild.mk / makelocal.mk の役割と使い分け](../../makefw/docs/makeparts.md#test_srcs-と-add_srcs-の留意事項) を参照してください。
+詳細は [makepart.mk / makechild.mk / makelocal.mk の役割と使い分け](../../makefw/docs/makeparts.md#test_srcs--add_srcs-の留意事項) を参照してください。
 
 ## カバレッジの基準
 
