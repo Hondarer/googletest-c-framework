@@ -31,7 +31,7 @@ make test
 
 - スクリプト名は `bin/` が正本です。旧 `cmnd/` を前提とする説明へ変更しないでください。
 - `lib/` には Linux と Windows の配布済み成果物があります。命名規則や配置を変更する場合は、スクリプト、README、CI をまとめて確認してください。
-- `gtest/` は別リポジトリとして扱います。GoogleTest 配布物を変更する場合は、その直下の `AGENTS.md` と `README.md` に従ってください。
+- `gtest/` は独立した Git リポジトリで、コミット単位を分けます。GoogleTest 配布物を変更する場合は、本書に `gtest/AGENTS.md` を重ねて適用してください。
 - `TEST_SRCS` / `ADD_SRCS` に指定したソース ファイルは、`make test` 時にビルド ディレクトリへシンボリック リンクまたはコピーとして取り込まれます。ビルド ディレクトリ内のファイルを直接変更しても次回 `make test` で上書きされるため、`prod/` の実体ファイルを変更してください。  
   see: `framework/makefw/docs/makeparts.md` の「TEST_SRCS / ADD_SRCS の留意事項」
 - テスト コードのフェーズ分割コメント (`// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` と `[状態]` 等のブラケット タグ) は `docs/about-test-phase.md` の規則に従ってください。1 テスト内で Arrange/Act/Assert のサイクルを複数回含むマルチ フェーズ テストの番号付与規則は同ドキュメントの「シングル フェーズ テストとマルチ フェーズ テスト」を参照してください。
