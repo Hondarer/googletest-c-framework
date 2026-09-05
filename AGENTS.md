@@ -4,7 +4,9 @@
 
 既存の C コードや .NET プロジェクトをテストするための共通部品をまとめたテスト フレームワークです。実行補助スクリプト、モック用ヘッダー、モック実装、配布ライブラリを含みます。
 
-## 必須参照
+## 参照先
+
+作業に関係する文書の該当節を参照してください。
 
 - [README.md](README.md)
 - [文書一覧](docs/README.md)
@@ -32,6 +34,6 @@ make test
 - スクリプト名は `bin/` が正本です。旧 `cmnd/` を前提とする説明へ変更しないでください。
 - `lib/` には Linux と Windows の配布済み成果物があります。命名規則や配置を変更する場合は、スクリプト、README、CI をまとめて確認してください。
 - `gtest/` は独立した Git リポジトリで、コミット単位を分けます。GoogleTest 配布物を変更する場合は、本書に `gtest/AGENTS.md` を重ねて適用してください。
-- `TEST_SRCS` / `ADD_SRCS` に指定したソース ファイルは、`make test` 時にビルド ディレクトリへシンボリック リンクまたはコピーとして取り込まれます。ビルド ディレクトリ内のファイルを直接変更しても次回 `make test` で上書きされるため、`prod/` の実体ファイルを変更してください。  
-  see: `framework/makefw/docs/makeparts.md` の「TEST_SRCS / ADD_SRCS の留意事項」
+- `TEST_SRCS` / `ADD_SRCS` で取り込まれたソースは、ビルド ディレクトリのリンクやコピーではなく、指定元の実体ファイルを変更してください。  
+  詳細は [makeparts](../makefw/docs/makeparts.md) の「TEST_SRCS / ADD_SRCS の留意事項」を参照してください。
 - テスト コードのフェーズ分割コメント (`// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` と `[状態]` 等のブラケット タグ) は `docs/about-test-phase.md` の規則に従ってください。1 テスト内で Arrange/Act/Assert のサイクルを複数回含むマルチ フェーズ テストの番号付与規則は同ドキュメントの「シングル フェーズ テストとマルチ フェーズ テスト」を参照してください。
