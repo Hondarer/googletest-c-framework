@@ -3,27 +3,27 @@
 ## 背景
 
 `framework/testfw/libsrc/test_com/traceLevel.cc` は、テスト中に `setTraceLevel("関数名", TRACE_INFO/TRACE_DETAIL)`  
-でコンソール出力を制御する仕組みを提供している。  
-現在この仕組みはモック関数 (`mock_calcHandler` 等) にのみ使われており、プロセス制御関数群 (`startProcessAsync`, `waitForOutput` 等) には適用されていません。
+でコンソール出力を制御する仕組みを提供しています。  
+現在この仕組みはモック関数 (`mock_calcHandler` など) にのみ使用されており、プロセス制御関数群 (`startProcessAsync`, `waitForOutput` など) には適用されていません。
 
-インテグレーション テスト (porter の `porterSendRecvTest` 等) では複数プロセスを起動・対話させるため、  
-テスト失敗時にどの操作がどのタイミングで行われたかを追跡しにくい。  
+インテグレーション テスト (porter の `porterSendRecvTest` など) では複数プロセスを起動・対話させるため、  
+テスト失敗時にどの操作がどのタイミングで行われたかを追跡しにくいです。  
 traceLevel をプロセス制御関数にも対応させることで、テスト失敗時の原因調査を容易にします。
 
 ### traceLevel 機構の概要
 
 | 関数 | 役割 |
 |---|---|
-| `resetTraceLevel()` | 辞書をクリアしてデフォルト値を `TRACE_NONE` にリセット |
+| `resetTraceLevel()` | 辞書をクリアして既定値を `TRACE_NONE` にリセット |
 | `setTraceLevel(const char* func, int level)` | 指定関数名のトレース レベルを設定 |
-| `setDefaultTraceLevel(int level)` | 全関数共通のデフォルト レベルを設定 |
+| `setDefaultTraceLevel(int level)` | 全関数共通の既定レベルを設定 |
 | `getTraceLevel()` | 現在の関数名 (`__func__`) をキーにしてレベルを取得するマクロ |
 
 レベル定数:
 
 | 定数 | 値 | 意味 |
 |---|---|---|
-| `TRACE_NONE` | 0 | 出力なし (デフォルト) |
+| `TRACE_NONE` | 0 | 出力なし (既定) |
 | `TRACE_INFO` | 1 | 関数呼び出しと主要引数を出力 |
 | `TRACE_DETAIL` | 2 | 戻り値・結果を追加出力 |
 
@@ -84,7 +84,7 @@ processController は全体で 1 つの機能であり、キーは `processContr
 | stderr キャプチャ時 (`\n` 検出時)           | `"  > stderr   : \"<line>\""` | なし |
 | debug 出力 キャプチャ時 (`\n` 検出時) | なし | `"  > debug_log: \"<line>\""` |
 
-※ `writeStdin` は `writeLineStdin` からも呼ばれるため、最終出力処理を別関数 `writeStdinImpl` に逃がしてトレースさせる。
+※ `writeStdin` は `writeLineStdin` からも呼び出されるため、最終出力処理を別関数 `writeStdinImpl` に分離してトレースさせます。
 
 ### 除外する関数
 
@@ -109,8 +109,8 @@ void SetUp() override
 
 ## 実装後の検証方法
 
-1. `make -C framework/testfw` でビルド エラーがないことを確認
-2. `app/example-a/test/src/exampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加します。
-3. `app/example-b/test/src/integration/exampleIntegrationTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加します。
-4. テスト出力に `> startProcessAsync ...` 等のトレースが表示されることを確認
-5. `resetTraceLevel()` のみの状態 (デフォルト) でトレース出力が出ないことを確認
+1. `make -C framework/testfw` でビルド エラーがないことを確認する
+2. `app/example-a/test/src/exampleTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加する
+3. `app/example-b/test/src/integration/exampleIntegrationTest` の `SetUp()` に上記 `setTraceLevel("processController", TRACE_DETAIL)` を追加する
+4. テスト出力に `> startProcessAsync ...` などのトレースが表示されることを確認する
+5. `resetTraceLevel()` のみの状態 (既定) でトレースが出力されないことを確認する

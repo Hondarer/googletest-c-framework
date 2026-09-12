@@ -24,7 +24,7 @@ When a shared library `libcalc.so` references functions from a static library `l
 
 **2. 最終アプリケーションで両方をリンク**
 
-- `libcalc.so` は未解決シンボルを含みます。
+- `libcalc.so` は未解決シンボルを含む
 - 最終アプリケーションが両方のライブラリをリンク
 - 配布時に複数のライブラリが必要となり管理が煩雑
 
@@ -258,7 +258,7 @@ System library paths for x86_64 Linux (`/usr/lib/x86_64-linux-gnu`, etc.) are ha
 
 ### LIB_TYPE=static には影響なし
 
-この機能は `LIB_TYPE=shared` の場合のみ有効です。`LIB_TYPE=static` (デフォルト) の動作は変更されていません。
+この機能は `LIB_TYPE=shared` の場合のみ有効です。`LIB_TYPE=static` (既定) の動作は変更されていません。
 
 This feature is only active when `LIB_TYPE=shared`. The behavior of `LIB_TYPE=static` (default) is unchanged.
 

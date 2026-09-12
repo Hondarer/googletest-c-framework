@@ -1,8 +1,8 @@
 # 構造体の宣言について
 
-以下のコードは、g++ ではコンパイル可能だが、gcc ではコンパイルできません。
+以下のコードは、g++ ではコンパイルできますが、gcc ではコンパイルできません。
 
-これは、構造体名とエイリアスでは、エイリアス側が正であるため。
+これは、構造体名とエイリアスではエイリアス側が正となるためです。
 
 ```c++
 typedef struct structa
@@ -16,22 +16,22 @@ void samplefunc()
 }
 ```
 
-拡張子が .c で上記コードが存在する場合は以下の対応が必要。
+拡張子が `.c` で上記のコードが存在する場合は、以下の対応が必要です。
 
-1. コンパイラを g++ にします。
-2. IntelliSense を c++ にします。
+1. コンパイラを g++ に変更する
+2. IntelliSense の言語モードを C++ に設定する
 
-## コンパイラを g++ にする
+## コンパイラを g++ に変更する
 
-makefile にて makesrc.mk を include する前に以下を記載します。
+makefile で `makesrc.mk` を include する前に以下を記述します。
 
 ```text
 CC=g++
 ```
 
-## IntelliSense を c++ にする
+## IntelliSense を C++ に設定する
 
-ワークスペースの settings.json に以下記載します。
+ワークスペースの `settings.json` に以下を記述します。
 
 ```json
 "files.associations": {
@@ -39,13 +39,13 @@ CC=g++
 }
 ```
 
-**特定フォルダーに適用したい場合**
+### 特定フォルダーに適用する場合
 
-** はサブディレクトリも含めて .c ファイルを検索するワイルドカード。
+`**` はサブディレクトリも含めて `.c` ファイルを再帰的に検索するワイルドカードです。
 
-files.associations の設定は絶対パスのパターン マッチであり、${workspaceFolder} が利用できません。そのため、先頭に **/ を付与する必要がある。(see [issue](https://github.com/microsoft/vscode/issues/12805))
+`files.associations` の設定は絶対パスのパターン マッチであり、`${workspaceFolder}` が利用できません。そのため、先頭に `**/` を付与する必要があります (see: [Issue #12805](https://github.com/microsoft/vscode/issues/12805))。
 
-以下により、samplesubdir 配下の *.c を c++ として解釈できます。
+以下の設定により、`samplesubdir` 配下の `*.c` を C++ として解釈させることができます。
 
 ```json
 "files.associations": {

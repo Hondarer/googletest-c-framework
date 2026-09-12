@@ -52,12 +52,12 @@ Windows の計測に使う OpenCppCoverage は行カバレッジのみを提供�
 3. それでも到達できない条件は、到達できない理由をテスト コードにコメントとして残す
 4. C++ で STL や `new` の呼び出しにコンパイラが付ける例外伝播弧 (gcov が throw と印さないもの) は、計測対象行へ `TESTFW_EXCL_EH_ARCS` を付ける
 
-`TESTFW_EXCL_EH_ARCS` は、ソース上の判定が無い呼び出し行に付けます。  
+`TESTFW_EXCL_EH_ARCS` は、ソース上の判定がない呼び出し行に付けます。  
 `gcovr_json_normalize.py` がその行の未到達枝だけを母数から外します。  
 `if` / `&&` / `||` / `?:` がある行へ分数なしのマーカーを付けてはなりません。  
 判定と呼び出しが同じ行に残る場合は、呼び出しを分けてからマーカーを付けます。  
 未到達本数を契約したいときは `TESTFW_EXCL_EH_ARCS: 1/4` のように書き、実測と一致しないときは集計が失敗します。  
-`--exclude-throw-branches` が先に弧を落として未到達が 0 本になった場合は、契約付きマーカーは何もしません。
+`--exclude-throw-branches` が先に弧を落として未到達が 0 本になった場合は、契約付きマーカーは何の処理も行いません。
 
 > [!NOTE]
 > 条件網羅を基準にするのは、C の防御的な入力検証が `||` で連結された複合条件に集約されやすいためです。  
@@ -126,7 +126,7 @@ prod/libsrc/sample/sample_name.c
 テスト対象と同じライブラリの実体 (`LIBS += <lib>`) を指定しません。
 
 > [!NOTE]
-> 実ライブラリをリンクすると、対象ソースが呼び出す依存関数がモックへ差し替わらず本物へ解決されます。
+> 実ライブラリをリンクすると、対象ソースが呼び出す依存関数がモックへ差し替わらず実体へ解決されます。
 > その結果、メモリ確保の失敗や書き込みエラーといった異常系の分岐へ到達できず、対象ソースの残り分岐が恒久的に未到達のまま残ります。
 
 必要なモックが不足している場合は、実ライブラリをリンクして回避せず、モックを追加してください。  
@@ -165,7 +165,7 @@ prod/libsrc/sample/sample_name.c
 
 > [!NOTE]
 > 統合テストが `TEST_SRCS` を宣言すると、その中の各ソースは単体テスト側と重複計上されます。
-> 統合テストは限られた経路しか通らないため、生成されるエントリは軒並み低いカバレッジになり、集計値を実態から乖離させます。
+> 統合テストは限られた経路しか通過しないため、生成されるエントリは軒並み低いカバレッジになり、集計値を実態から乖離させます。
 
 ## 個別のテストを行う方法
 
@@ -173,13 +173,13 @@ prod/libsrc/sample/sample_name.c
 
 ### テスト対象フォルダーにて make test
 
-テスト対象フォルダーにて `make test` すれば、コンパイルとテストが実行されます。
+テスト対象フォルダーで `make test` を実行すると、コンパイルとテストが実行されます。
 
 ### make test にフィルター文字列を指定
 
-`make test` を呼び出す際にフィルター文字列を指定し、任意のテストのみ行うことができます。
+`make test` を呼び出す際にフィルター文字列を指定し、任意のテストのみを実行できます。
 
-参考: [google test のオプションを使ってみた](https://country-programmer.dfkp.info/2021/05/re_google_test_003/)
+参考: [Google Test のオプションを使ってみた](https://country-programmer.dfkp.info/2021/05/re_google_test_003/)
 
 ```bash
 make test GTEST_FILTER=*call_times_check_with_args*
@@ -191,7 +191,7 @@ make test GTEST_FILTER=*call_times_check_with_args*
 export GTEST_FILTER=*call_times_check_with_args*
 make test
 ...
-export -n GTEST_FILTER # フィルター不要になったら、GTEST_FILTER 環境変数を削除
+export -n GTEST_FILTER # フィルターが不要になったら、GTEST_FILTER 環境変数を解除
 ```
 
 ### 再テストのスキップ
@@ -209,7 +209,7 @@ INFO: Skipping test (dependencies are unchanged and clean)
 `GTEST_FILTER` を指定した実行は、テスト対象の一部のみを検証したものであり「クリーンな全件成功」の証拠にならないため、  
 スキップ判定にもスタンプの更新にも使われません。
 
-`MAKEFW_TEST_FORCE=1` を指定すると、スタンプの内容に関わらず必ずテストを実行します。
+`MAKEFW_TEST_FORCE=1` を指定すると、スタンプの内容にかかわらず必ずテストを実行します。
 
 ```bash
 MAKEFW_TEST_FORCE=1 make test
@@ -220,7 +220,7 @@ app 単位のスキップは、途中で 1 つでもテストが失敗すると 
 leaf 単位の `test.stamp` はテスト対象フォルダーごとに個別に維持されるため、失敗箇所を修正した後の再実行では、  
 変更されていない leaf だけが引き続きスキップされます。
 
-品質の担保が取れた app をルートからのビルド確認に含めるときは、`assured.stamp` を使います。  
+品質が担保された app をルートからのビルド確認に含めるときは、`assured.stamp` を使います。  
 `app/<name>/assured.stamp` がある app は、app 直下の `make` / `make test` で `test/src` のコンパイルとテスト実行を行わず、製品とモックだけをコンパイルします。  
 `test/src` 配下での直接 `make test` は妨げません。  
 詳細は [ビルド構成](../../makefw/docs/build-configurations.md#assuredstamp-による保証済み-app-の扱い) を参照してください。

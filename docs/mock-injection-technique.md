@@ -104,7 +104,7 @@ include_override/
 
 **効果:**
 
-- テスト対象コードで `fopen("test.txt", "r")` と書くと、自動的に `mock_fopen(__FILE__, __LINE__, __func__, "test.txt", "r")` に展開される
+- テスト対象コードで `fopen("test.txt", "r")` と記述すると、自動的に `mock_fopen(__FILE__, __LINE__, __func__, "test.txt", "r")` に展開される
 - 呼び出し元のファイル名、行番号、関数名が自動的に記録される
 
 ### 二重定義の回避
@@ -233,10 +233,10 @@ FILE *delegate_fake_fopen(const char *file, const int line, const char *func,
 NiceMock<Mock_stdio> mock_stdio;
 
 // テスト実行中
-// → _mock_stdio != nullptr のため、Google Mock が呼ばれる
+// → _mock_stdio != nullptr のため、Google Mock が呼び出される
 
 // テスト終了後
-// → _mock_stdio == nullptr のため、本物の実装が呼ばれる
+// → _mock_stdio == nullptr のため、本物の実装が呼び出される
 ```
 
 ## ビルド設定
@@ -339,7 +339,7 @@ Mock_stdio::Mock_stdio()
 {
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_stdio);
 
-    // デフォルトの動作を設定
+    // 既定の動作を設定
     ON_CALL(*this, fopen(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_fopen));
 }
@@ -407,7 +407,7 @@ TEST_F(MyTest, TestFopenFailure)
         .WillOnce(Return(nullptr));
 
     // テスト対象関数を呼び出す
-    // (内部で fopen("test.txt", "r") が呼ばれる)
+    // (内部で fopen("test.txt", "r") が呼び出される)
     int result = my_function_that_opens_file();
 
     // エラー処理が正しく動作することを確認
@@ -433,7 +433,7 @@ TEST_F(MyTest, TestFopenSuccess)
 ### 非侵襲的
 
 - テスト対象の C コードを一切変更する必要がない
-- 依存性注入などのデザイン パターンを強制しません。
+- 依存性注入などのデザイン パターンを強制しない
 - レガシ コードにも適用可能
 
 ### 詳細なトレース
@@ -466,7 +466,7 @@ CFLAGS = -I/usr/include -I./include_override
 
 ### マクロの衝突
 
-標準関数をマクロで置き換えるため、以下の点に注意:
+標準関数をマクロで置き換えるため、以下の点に注意してください。
 
 - 関数ポインターとして使用する場合は、マクロ展開を避ける必要がある
 - `#undef` で一時的にマクロを無効化することも可能
@@ -485,7 +485,7 @@ void (*fp)(const char *) = printf;
 
 - `#include_next` は GCC/Clang 拡張機能 (MSVC では使用不可)
 - Windows では UCRT のパスを直接指定する必要がある
-- プラットフォーム固有の条件コンパイルを適切に使用してください。
+- プラットフォーム固有の条件コンパイルを適切に使用する
 
 ### モック インスタンスのライフサイクル
 
@@ -517,5 +517,5 @@ void (*fp)(const char *) = printf;
 ## 関連ドキュメント
 
 - [How to mock](how-to-mock.md) - モック関数の追加手順
-- [How to test](how-to-test.md) - テストの書き方
+- [How to test](how-to-test.md) - テストの作成方法
 - [How to expect](how-to-expect.md) - 期待値の設定方法

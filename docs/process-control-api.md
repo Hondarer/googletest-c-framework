@@ -46,7 +46,7 @@ struct ProcessOptions {
 |---|---|
 | `env_set` | 追加または上書きする環境変数 |
 | `preload_lib` | LD_PRELOAD に追加するライブラリの絶対パス **(Linux のみ)**。`framework/testfw/lib/$(TARGET_ARCH)/libmock_syslog.so` を指定すると syslog 出力を `getDebugLog()` でキャプチャできます。 |
-| `capture_debug_output` | OutputDebugString 出力をキャプチャする **(Windows のみ)**。`true` にすると `getDebugLog()` でキャプチャできます。Linux の `preload_lib` に相当します。**デフォルト `true`** |
+| `capture_debug_output` | OutputDebugString 出力をキャプチャする **(Windows のみ)**。`true` にすると `getDebugLog()` でキャプチャできます。Linux の `preload_lib` に相当します。**既定 `true`** |
 
 ### ProcessResult
 
@@ -89,7 +89,7 @@ inline ProcessResult startProcess(
 | `args` | コマンド ライン引数 (argv[1] 以降) |
 | `opts` | 実行オプション |
 | `stdin_lines` | stdin に渡す行リスト。各要素末尾に `\n` を付加して順次書き込む |
-| `timeout_ms` | タイムアウト (ms)。デフォルト 30000 |
+| `timeout_ms` | タイムアウト (ms)。既定 30000 |
 
 処理フロー:
 
@@ -141,9 +141,10 @@ stdout の読み取りはバックグラウンド スレッドが常時行って
 
 Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForOutput()` 完了後にはその時点までの全ログが利用可能です。
 
+> [!IMPORTANT]
 > **テスト対象側の要件**: stdout / stderr はパイプ経由で受け渡されるため、
-> テストが待機するパターンを出力した直後にテスト対象側で `fflush(stdout)` を呼ぶ必要があります。
-> 呼ばれていない場合、出力が stdio の内部バッファーに滞留し、タイムアウトまでパターンが届きません。
+> テストが待機するパターンを出力した直後にテスト対象側で `fflush(stdout)` を呼び出す必要があります。
+> 呼び出されていない場合、出力が stdio の内部バッファーに滞留し、タイムアウトまでパターンが検出されません。
 
 #### closeStdin
 
@@ -207,7 +208,7 @@ extern vector<string>  getDebugLog     (AsyncProcessHandle& handle, size_t from_
 - **Linux**: `preload_lib` を指定した場合に有効。syslog モック出力が対象。
 - **Windows**: `capture_debug_output = true` を指定した場合に有効。OutputDebugString 出力が対象。
 - `from_index` に `getDebugLogCount()` で記録したインデックスを渡すと、  
-  その時点以降のログのみを取り出せます。
+  その時点以降のログのみを取得できます。
 
 ## 使い方
 
@@ -287,7 +288,7 @@ ProcessOptions opts = makeOpts();
 #ifndef _WIN32
 opts.preload_lib = ws + "/framework/testfw/lib/" TOSTRING(TARGET_ARCH) "/libmock_syslog.so";
 #endif
-/* Windows は capture_debug_output がデフォルト true のため追加設定不要 */
+/* Windows は capture_debug_output が既定 true のため追加設定不要 */
 
 AsyncProcessHandle h = startProcessAsync(binary, args, opts);
 ASSERT_NO_THROW(waitForOutput(h, "起動完了", 5000));
@@ -301,7 +302,8 @@ EXPECT_TRUE(any_of(logs.begin(), logs.end(),
     [](const string& l) { return l.find("received message") != string::npos; }));
 ```
 
-> **注意**: Linux の `getDebugLogCount()` は `waitForExit()` 後にのみ意味のある値を返します。
+> [!NOTE]
+> Linux の `getDebugLogCount()` は `waitForExit()` 後にのみ意味のある値を返します。
 > ステップ別のログ分割は `waitForExit()` 後に `from_index` で行ってください。
 
 ## 旧 API (runProcess) からの移行

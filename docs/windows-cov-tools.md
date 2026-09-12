@@ -10,16 +10,16 @@ Windows 向けのオープンソース カバレッジ ツールです。gcov �
 
 **特徴**
 
-- コマンド ラインから実行できます。
-- PDB (Program Database) ファイルを使ってカバレッジを取得します。
-- HTML、Cobertura、Binary 形式でレポート出力できます。
+- コマンド ラインから実行可能
+- PDB (Program Database) ファイルを使ったカバレッジ取得
+- HTML、Cobertura、Binary 形式でのレポート出力に対応
 - CI/CD パイプラインに組み込みやすい
 - オープンソースで無料
 - C 言語と C++ の両方に対応
 
 **導入方法**
 
-- インストーラーをダウンロードして実行します。
+- インストーラーをダウンロードして実行
 - Chocolatey を使う場合: `choco install opencppcoverage`
 
 関連リンク: [OpenCppCoverage GitHub](https://github.com/OpenCppCoverage/OpenCppCoverage)
@@ -36,7 +36,7 @@ MSVC ではなく MinGW-w64 の GCC を使う選択肢もあります。この�
 
 ### MSVC 標準ツールの制限
 
-VSInstr.exe や VSPerfCmd.exe は Visual Studio に付属していますが、これらは主にプロファイリング用途であり、Code Coverage 機能自体は Enterprise エディション専用です。Build Tools だけでは完全なカバレッジ レポート生成は難しいです。
+VSInstr.exe や VSPerfCmd.exe は Visual Studio に付属していますが、これらは主にプロファイリング用途であり、Code Coverage 機能自体は Enterprise エディション専用です。Build Tools だけでは完全なカバレッジ レポートの生成は困難です。
 
 ## OpenCppCoverage の特徴
 
@@ -56,8 +56,8 @@ OpenCppCoverage.exe --sources "C:\your\source\path" -- your_program.exe
 
 ### 推奨ビルド オプション
 
-- `/Zi`: デバッグ情報 (PDB ファイル) を生成します。
-- `/Od`: 最適化を無効にする (カバレッジの精度が上がる)
+- `/Zi`: デバッグ情報 (PDB ファイル) を生成する
+- `/Od`: 最適化を無効にする (カバレッジの精度向上)
 
 最適化を有効にすると、コンパイラがコードを変形するため、カバレッジ結果が実際のソース コードと対応しにくくなることがあります。
 
@@ -65,7 +65,7 @@ OpenCppCoverage.exe --sources "C:\your\source\path" -- your_program.exe
 
 OpenCppCoverage が対応している出力形式は次のとおりです。
 
-- **HTML**: ブラウザーで閲覧できる詳細なレポート (デフォルト)
+- **HTML**: ブラウザーで閲覧できる詳細なレポート (既定)
 - **Cobertura XML**: Jenkins や Azure DevOps などの CI ツールで使える形式
 - **Binary**: OpenCppCoverage 独自のバイナリ形式 (複数実行結果のマージ用)
 
@@ -197,7 +197,7 @@ python cobertura_to_gcov.py coverage.xml gcov_output
 
 - Cobertura XML にはソース ファイルの内容が含まれないため、元のソース ファイルにアクセスできる必要があります
 - Cobertura XML のパス情報と実際のソース ファイルの配置が一致している必要があります
-- gcov の完全な互換性を目指す場合は、ブランチ カバレッジなどの情報も追加する必要があります
+- gcov との完全な互換性を目指す場合は、ブランチ カバレッジなどの情報も追加する必要があります
 
 このスクリプトを基に、必要に応じてカスタマイズできます。
 
