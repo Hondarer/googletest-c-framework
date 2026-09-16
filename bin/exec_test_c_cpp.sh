@@ -233,13 +233,12 @@ function run_test() {
             # --root だけを指定すると gcovr はワークスペース全体を走査し、
             # 他のディレクトリに残った無関係な gcda で読み取りに失敗すると、
             # そのテストの計測結果が失われる。
-            # gcov の作業ディレクトリ候補を、テスト ディレクトリ側から順に試させる。
-            # --gcov-object-directory を指定しない場合、gcovr は --root を最初の候補に
-            # 置くため、ワークスペース ルートで gcov を実行して中間 .gcov をそこへ出力する。
-            # テストを並列実行すると、共有ヘッダー由来の同名中間ファイルを別プロセスと
-            # 取り合い、カバレッジの読み取りに失敗する。
+            # gcov の作業ディレクトリは gcovr の自動判定に委ねる。--gcov-object-directory
+            # に固定値を与えると、候補がその 1 つに絞られ、サブディレクトリでコンパイル
+            # したソース (サブフォルダー コンパイル構成) の作業ディレクトリと一致せず、
+            # 読み取りに失敗する。
             local gcovr_error
-            gcovr_error=$(gcovr --root "$WORKSPACE_DIR" . --gcov-object-directory . \
+            gcovr_error=$(gcovr --root "$WORKSPACE_DIR" . \
                 --exclude-unreachable-branches \
                 --exclude-throw-branches --json --output coverage/coverage.raw.json 2>&1 1> /dev/null)
             if [ ! -f coverage/coverage.raw.json ]; then
