@@ -41,6 +41,9 @@ extern "C"
     extern DWORD mock_GetLastError(const char *, const int, const char *);
     extern DWORD mock_GetModuleFileNameW(const char *, const int, const char *, HMODULE, LPWSTR, DWORD);
     extern BOOL mock_GetComputerNameExW(const char *, const int, const char *, COMPUTER_NAME_FORMAT, LPWSTR, LPDWORD);
+    extern BOOL mock_GetUserPreferredUILanguages(const char *, const int, const char *, DWORD, PULONG, PZZWSTR,
+                                                 PULONG);
+    extern int mock_GetUserDefaultLocaleName(const char *, const int, const char *, LPWSTR, int);
     extern BOOL mock_GetExitCodeProcess(const char *, const int, const char *, HANDLE, LPDWORD);
     extern BOOL mock_TerminateProcess(const char *, const int, const char *, HANDLE, UINT);
     extern BOOL mock_InitializeProcThreadAttributeList(const char *, const int, const char *,
@@ -94,6 +97,11 @@ extern "C"
                 mock_GetModuleFileNameW(__FILE__, __LINE__, __func__, module, filename, size)
             #define GetComputerNameExW(name_type, buffer, size) \
                 mock_GetComputerNameExW(__FILE__, __LINE__, __func__, name_type, buffer, size)
+            #define GetUserPreferredUILanguages(flags, language_count, languages, language_size) \
+                mock_GetUserPreferredUILanguages(__FILE__, __LINE__, __func__, flags, language_count, languages, \
+                                                 language_size)
+            #define GetUserDefaultLocaleName(locale_name, locale_name_count) \
+                mock_GetUserDefaultLocaleName(__FILE__, __LINE__, __func__, locale_name, locale_name_count)
             #define GetExitCodeProcess(process, exit_code) \
                 mock_GetExitCodeProcess(__FILE__, __LINE__, __func__, process, exit_code)
             #define TerminateProcess(process, exit_code) \
@@ -149,6 +157,9 @@ extern DWORD delegate_real_GetLastError(const char *, const int, const char *);
 extern DWORD delegate_real_GetModuleFileNameW(const char *, const int, const char *, HMODULE, LPWSTR, DWORD);
 extern BOOL delegate_real_GetComputerNameExW(const char *, const int, const char *, COMPUTER_NAME_FORMAT, LPWSTR,
                                              LPDWORD);
+extern BOOL delegate_real_GetUserPreferredUILanguages(const char *, const int, const char *, DWORD, PULONG, PZZWSTR,
+                                                      PULONG);
+extern int delegate_real_GetUserDefaultLocaleName(const char *, const int, const char *, LPWSTR, int);
 extern BOOL delegate_real_GetExitCodeProcess(const char *, const int, const char *, HANDLE, LPDWORD);
 extern BOOL delegate_real_TerminateProcess(const char *, const int, const char *, HANDLE, UINT);
 extern BOOL delegate_real_InitializeProcThreadAttributeList(const char *, const int, const char *,
@@ -191,6 +202,9 @@ class Mock_windows
     MOCK_METHOD(DWORD, GetModuleFileNameW, (const char *, const int, const char *, HMODULE, LPWSTR, DWORD));
     MOCK_METHOD(BOOL, GetComputerNameExW,
                 (const char *, const int, const char *, COMPUTER_NAME_FORMAT, LPWSTR, LPDWORD));
+    MOCK_METHOD(BOOL, GetUserPreferredUILanguages,
+                (const char *, const int, const char *, DWORD, PULONG, PZZWSTR, PULONG));
+    MOCK_METHOD(int, GetUserDefaultLocaleName, (const char *, const int, const char *, LPWSTR, int));
     MOCK_METHOD(BOOL, GetExitCodeProcess, (const char *, const int, const char *, HANDLE, LPDWORD));
     MOCK_METHOD(BOOL, TerminateProcess, (const char *, const int, const char *, HANDLE, UINT));
     MOCK_METHOD(BOOL, InitializeProcThreadAttributeList,
