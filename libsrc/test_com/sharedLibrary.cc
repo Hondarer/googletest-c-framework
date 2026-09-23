@@ -223,10 +223,36 @@ void *resolveSharedSymbolOrExit(const std::string &lib_name, const std::string &
         return result.symbol;
     }
 
-    fprintf(stderr, "shared library resolve failed: %s!%s: %s\n", lib_name.c_str(), symbol_name.c_str(),
-            result.diagnostic.c_str());
-    fflush(stderr);
-    exit(1);
+    bool library_loaded;
+    {
+        std::lock_guard<std::mutex> lock(getSharedLibraryMutex());
+        library_loaded = (getSharedLibraryHandles().count(lib_name) != 0);
+    }
+
+    if (!library_loaded)
+    {
+#ifndef _WIN32
+        const char *search_path_name = "LD_LIBRARY_PATH";
+#else
+        const char *search_path_name = "PATH";
+#endif
+        const char *search_path = getenv(search_path_name);
+
+        fprintf(stderr, "shared library not found: %s: %s\n", lib_name.c_str(), result.diagnostic.c_str());
+        fprintf(stderr, "  check that %s contains the directory of %s.\n", search_path_name, lib_name.c_str());
+        fprintf(stderr, "  %s=%s\n", search_path_name, (search_path != nullptr) ? search_path : "(not set)");
+    }
+    else
+    {
+        fprintf(stderr, "shared library symbol not found: %s!%s: %s\n", lib_name.c_str(), symbol_name.c_str(),
+                result.diagnostic.c_str());
+    }
+
+    // exit() は静的デストラクターを実行し、gmock が解決失敗の副作用として生存中の mock を
+    // リークとして報告するため、本来の原因が埋もれる。後処理を行わない _Exit() で終了する。
+    // see: https://en.cppreference.com/w/cpp/utility/program/_Exit
+    fflush(nullptr);
+    std::_Exit(1);
 }
 
 } // namespace testing
