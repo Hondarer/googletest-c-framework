@@ -2,6 +2,11 @@ SUBDIRS = $(wildcard */)
 
 MAKEFW_HOME ?= $(abspath $(CURDIR)/../../makefw)
 ROOT_RUNNER = $(MAKEFW_HOME)/bin/run_ordered_subdir_target.sh
+
+# "#!/bin/bash" のスクリプトを "$(SHELL)" で起動すると shebang は使われない。
+# make の既定は /bin/sh なので、ここで bash を指定する。
+SHELL := /bin/bash
+
 include $(MAKEFW_HOME)/makefiles/_parallel.mk
 MAKEFW_ALLOW_JOB_FALLBACK := 1
 
