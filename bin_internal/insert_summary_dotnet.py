@@ -161,10 +161,25 @@ def insert_summary():
     is_theory = False
     param_count = 0
 
+    # サマリー項目が存在するかチェック
     any_content = False
+    # テスト属性・メソッド前の // コメント行 (description)
+    desc = []
+    found_test = False
 
     # 各行を解析してタグを検出
     for line in lines:
+        # テスト属性・メソッド前の // コメントを description として収集
+        if not found_test:
+            if re.search(r'^\s*\[(Fact|Theory)', line) or re.search(r'^\s*(public|private|protected|internal|void|async|Task)\b', line):
+                found_test = True
+            elif re.match(r'^\s*//', line):
+                s = re.sub(r'^\s*//+\s*', '', line).rstrip()
+                if s:
+                    desc.append(s)
+            elif not re.match(r'^\s*$', line):
+                desc = []
+
         # [Theory] を検出
         if re.search(r'\[Theory\]', line):
             is_theory = True
@@ -287,11 +302,15 @@ def insert_summary():
             continue
 
     # サマリー項目が存在するかチェック
-    has_summary = any_content
+    has_summary = bool(desc) or any_content
 
     # サマリーを出力 (AWK 版と完全に同じロジック)
     if has_summary:
         sys.stdout.write("## テスト項目\n")
+        if desc:
+            sys.stdout.write("\n")
+            for d in desc:
+                sys.stdout.write(d + "\n")
 
         cycles = range(1, max_cycle + 1) if max_cycle >= 2 else [1]
         multi = max_cycle >= 2

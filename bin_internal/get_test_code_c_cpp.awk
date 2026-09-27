@@ -250,21 +250,31 @@ extracting {
     if (extracting == 1)
     {
         if (active) {
+            code_line = $0;
+            sub(/\/\/.*$/, "", code_line);
+            gsub(/"([^"\\]|\\.)*"/, "\"\"", code_line);
+            gsub(/'([^'\\]|\\.)*'/, "''", code_line);
+
             # { の数を増加
-            brace_count += gsub(/\{/, "{");
+            brace_count += gsub(/\{/, "{", code_line);
 
             # } の数を減少
-            brace_count -= gsub(/\}/, "}");
+            brace_count -= gsub(/\}/, "}", code_line);
         }
     }
     else if (extracting == 2)
     {
         if (active) {
+            code_line = $0;
+            sub(/\/\/.*$/, "", code_line);
+            gsub(/"([^"\\]|\\.)*"/, "\"\"", code_line);
+            gsub(/'([^'\\]|\\.)*'/, "''", code_line);
+
             # ( の数を増加
-            brace_count += gsub(/\(/, "(");
+            brace_count += gsub(/\(/, "(", code_line);
 
             # ) の数を減少
-            brace_count -= gsub(/\)/, ")");
+            brace_count -= gsub(/\)/, ")", code_line);
         }
     }
 
