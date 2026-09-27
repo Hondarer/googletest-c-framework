@@ -11,19 +11,19 @@
 !/gtest
 
 # 以下は管理対象外
-obj
-gen
-gcov
+obj/
+gen/
+gcov/
 *.gcda
 *.gcno
 *.gcov
-lcov
-coverage
-results
+lcov/
+coverage/
+results/
 core
 coverage.xml
 LastCoverageResults.log
-pages
+pages/
 
 ## ビルド/テスト スキップ用スタンプ
 make_build.stamp
@@ -36,9 +36,9 @@ test.stamp
 __pycache__/
 
 ## 成果物
-lib
-bin
-!/bin
+lib/
+bin/
+!/bin/
 *.exe
 *.pdb
 *.warn
