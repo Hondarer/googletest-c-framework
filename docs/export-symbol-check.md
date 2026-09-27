@@ -27,6 +27,8 @@ Linux の `nm -D --defined-only` が返すリンカー合成シンボル (`__bss
 | `testing::identManifestSymbolName(target)` | IDENT 機能 ([ident.md](../../makefw/docs/ident.md)) が自動生成するシンボル名を組み立てる |
 | `testing::joinNames(names)` | 文字列一覧をカンマ区切りで連結する (失敗メッセージ整形用) |
 
+Table: エクスポート シンボル検査用マクロおよび関数一覧
+
 ## app 側で書くもの (固有定義)
 
 app 側のテストには、EXPORT_ENTRY マクロ テーブル本体と、パスを渡すだけの `TEST_F` のみを記述します。

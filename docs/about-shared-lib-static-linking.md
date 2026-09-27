@@ -59,6 +59,8 @@ This feature automatically implements option 1 (the recommended approach). By em
 | `-L` オプション | 検索パスとして使用 | `-L/path/to/libs` |
 | その他リンク オプション | そのまま渡す | `-Wl,-rpath,/path` |
 
+Table: LIBS 記述形式に応じたリンク処理方法
+
 | LIBS format | Processing | Example |
 |-------------|------------|---------|
 | Direct `.a` specification | Static linking | `libcalcbase.a` |
@@ -67,6 +69,8 @@ This feature automatically implements option 1 (the recommended approach). By em
 | Direct `.so` specification | Dynamic linking | `libfoo.so` |
 | `-L` option | Used as search path | `-L/path/to/libs` |
 | Other link options | Passed as-is | `-Wl,-rpath,/path` |
+
+Table: LIBS 記述形式に応じたリンク処理方法 (英語版)
 
 ### ライブラリ検索パス / Library Search Path
 

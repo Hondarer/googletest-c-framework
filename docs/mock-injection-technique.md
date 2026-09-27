@@ -118,6 +118,8 @@ include_override/
 | テスト対象 C コード | `_IN_OVERRIDE_HEADER_STDIO_H` が定義される | マクロによる関数置き換えが有効 |
 | テスト コード (C++) | `_IN_OVERRIDE_HEADER_STDIO_H` が未定義 | Google Mock のクラス定義が有効 |
 
+Table: コンテキスト別のオーバーライド マクロ定義と適用効果
+
 **include/mock_stdio.h の構造:**
 
 ```c

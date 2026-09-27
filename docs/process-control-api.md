@@ -12,6 +12,8 @@
 | 同期 | `startProcess()` | 短命プロセス (起動 → 終了まで待機) |
 | 非同期 | `startProcessAsync()` + 各操作関数 | 常駐プロセス・対話プロセスの制御 |
 
+Table: プロセス制御 API の実行モードと対象関数
+
 `startProcess()` は `startProcessAsync()` のラッパーとして実装されており、実質的な処理はすべて非同期 API 側に集約されています。
 
 ## 型・構造体
@@ -47,6 +49,8 @@ struct ProcessOptions {
 | `env_set` | 追加または上書きする環境変数 |
 | `preload_lib` | LD_PRELOAD に追加するライブラリの絶対パス **(Linux のみ)**。`framework/testfw/lib/$(TARGET_ARCH)/libmock_syslog.so` を指定すると syslog 出力を `getDebugLog()` でキャプチャできます。 |
 | `capture_debug_output` | OutputDebugString 出力をキャプチャする **(Windows のみ)**。`true` にすると `getDebugLog()` でキャプチャできます。Linux の `preload_lib` に相当します。**既定 `true`** |
+
+Table: ProcessOptions 構造体の設定フィールド一覧
 
 ### ProcessResult
 
@@ -90,6 +94,8 @@ inline ProcessResult startProcess(
 | `opts` | 実行オプション |
 | `stdin_lines` | stdin に渡す行リスト。各要素末尾に `\n` を付加して順次書き込む |
 | `timeout_ms` | タイムアウト (ms)。既定 30000 |
+
+Table: startProcess の引数一覧
 
 処理フロー:
 
@@ -311,6 +317,8 @@ EXPECT_TRUE(any_of(logs.begin(), logs.end(),
 | 旧 | 新 |
 |---|---|
 | `runProcess()` | `startProcess()` |
+
+Table: 旧 API と新 API の対応
 
 `ProcessOptions` から `args`・`timeout_ms`・`stdin_lines` フィールドが削除されました。  
 それぞれ `startProcess()` の独立した引数として渡します。
