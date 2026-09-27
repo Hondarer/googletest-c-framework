@@ -15,7 +15,7 @@
 ## 主なファイル
 
 - `makefile` - ルートの入口
-- `bin/` - 実行補助スクリプト
+- `bin_internal/` - 実行補助スクリプト
 - `include/`、`include_override/` - テスト用ヘッダー
 - `libsrc/` - 共通ライブラリやモックのソース
 - `lib/` - 配布ライブラリ
@@ -48,7 +48,7 @@ makefw が生成する `TARGET_ARCH` とライブラリの配置先は、RHEL �
 
 ## 補足
 
-- C/C++ テストと .NET テストの補助スクリプトはすべて `bin/` にあります。
+- C/C++ テストと .NET テストの補助スクリプトはすべて `bin_internal/` にあります。
 - 詳細な作業ルールは [AGENTS.md](./AGENTS.md)、補足資料は `docs/` を参照してください。
 
 ## ライセンス

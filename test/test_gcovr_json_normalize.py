@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 
 
-SCRIPT_PATH = Path(__file__).parents[1] / "bin" / "gcovr_json_normalize.py"
+SCRIPT_PATH = Path(__file__).parents[1] / "bin_internal" / "gcovr_json_normalize.py"
 SPEC = importlib.util.spec_from_file_location("gcovr_json_normalize", SCRIPT_PATH)
 MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)

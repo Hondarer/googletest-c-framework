@@ -40,7 +40,7 @@ Windows の計測に使う OpenCppCoverage は行カバレッジのみを提供�
 参考: [OpenCppCoverage の Features](https://github.com/OpenCppCoverage/OpenCppCoverage#features)
 
 > [!WARNING]
-> 分岐情報を持たない Cobertura XML では、集計時に `branch-rate` が `1.0` に設定されます (`bin/cobertura_merge.py`)。
+> 分岐情報を持たない Cobertura XML では、集計時に `branch-rate` が `1.0` に設定されます (`bin_internal/cobertura_merge.py`)。
 > これは分岐を 100% 網羅したことを意味せず、分岐を計測していないことを意味します。Windows で生成した XML の `branch-rate` を網羅率として読まないでください。
 
 ### 到達できない条件への対処

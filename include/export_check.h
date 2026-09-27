@@ -80,7 +80,7 @@ extern void expectExportNamesMatch(const set<string> &expected, const set<string
 extern vector<string> findUndecoratedExternVariables(const string &include_dir, const string &export_macro_name);
 
 /**
- * IDENT 機能 (framework/makefw/bin/gen_ident_manifest.py) が自動生成する
+ * IDENT 機能 (framework/makefw/bin_internal/gen_ident_manifest.py) が自動生成する
  * ビルド識別データ シンボルの名前を組み立てる。
  * 生成規則は gen_ident_manifest.py の sanitize_symbol() と揃える必要がある
  * (対象名に含まれる英数字・アンダースコア以外の文字はアンダースコアに置換される)。
