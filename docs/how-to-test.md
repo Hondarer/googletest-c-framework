@@ -224,7 +224,7 @@ app 単位のスキップは、途中で 1 つでもテストが失敗すると 
 leaf 単位の `test.stamp` はテスト対象フォルダーごとに個別に維持されるため、失敗箇所を修正した後の再実行では、  
 変更されていない leaf だけが引き続きスキップされます。
 
-品質が担保された app をルートからのビルド確認に含めるときは、`assured.stamp` を使用します。  
-`app/<name>/assured.stamp` がある app は、app 直下の `make` / `make test` で `test/src` のコンパイルとテスト実行を行わず、製品とモックだけをコンパイルします。  
+品質が担保されたサブモジュール app をルートからのビルド確認に含めるときは、`app/<name>.assured.stamp` を使用します。  
+ファイルに書いたコミット ハッシュが HEAD と一致し、追加・削除・変更がないとき、app 直下の `make` / `make test` は `test/src` のコンパイルとテスト実行を行わず、製品とモックだけをコンパイルします。  
 `test/src` 配下での直接 `make test` は妨げません。  
 詳細は [ビルド構成](../../makefw/docs/build-configurations.md#assuredstamp-による保証済み-app-の扱い) を参照してください。
