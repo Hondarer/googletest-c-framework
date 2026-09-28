@@ -233,14 +233,23 @@ void *resolveSharedSymbolOrExit(const std::string &lib_name, const std::string &
     {
 #ifndef _WIN32
         const char *search_path_name = "LD_LIBRARY_PATH";
+        const char *search_path = getenv(search_path_name);
+        const char *search_path_fallback = "(not set)";
 #else
         const char *search_path_name = "PATH";
+        char *search_path = nullptr;
+        // _dupenv_s が確保したバッファーは、表示後に free で解放する。
+        // see: https://learn.microsoft.com/en-us/cpp/c-runtime-library/reference/dupenv-s-wdupenv-s
+        const errno_t search_path_error = _dupenv_s(&search_path, nullptr, search_path_name);
+        const char *search_path_fallback = (search_path_error == 0) ? "(not set)" : "(unavailable)";
 #endif
-        const char *search_path = getenv(search_path_name);
 
         fprintf(stderr, "shared library not found: %s: %s\n", lib_name.c_str(), result.diagnostic.c_str());
         fprintf(stderr, "  check that %s contains the directory of %s.\n", search_path_name, lib_name.c_str());
-        fprintf(stderr, "  %s=%s\n", search_path_name, (search_path != nullptr) ? search_path : "(not set)");
+        fprintf(stderr, "  %s=%s\n", search_path_name, (search_path != nullptr) ? search_path : search_path_fallback);
+#ifdef _WIN32
+        free(search_path);
+#endif
     }
     else
     {
