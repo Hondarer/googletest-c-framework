@@ -16,6 +16,7 @@
 
 - `makefile` - ルートの入口
 - `bin_internal/` - 実行補助スクリプト
+- `bin_test/` - 実行補助スクリプトのテスト
 - `include/`、`include_override/` - テスト用ヘッダー
 - `libsrc/` - 共通ライブラリやモックのソース
 - `lib/` - 配布ライブラリ

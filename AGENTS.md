@@ -15,6 +15,7 @@
 
 - `makefile` - ルートの入口。`libsrc/` 配下のビルドを実行
 - `bin_internal/` - C/C++ テスト、.NET テスト、集計、色付け、カバレッジ変換のスクリプト群
+- `bin_test/` - `bin_internal/` のスクリプトのテスト
 - `include/` - テスト支援ヘッダー
 - `include_override/` - 既存コードに差し替えるための override 用ヘッダー
 - `libsrc/` - 共通ライブラリとモックのソース
