@@ -1,13 +1,19 @@
 SUBDIRS = $(wildcard */)
 
-MAKEFW_HOME ?= $(abspath $(CURDIR)/../../makefw)
+MAKEFW_HOME ?= $(CURDIR)/../../makefw
+MAKEFW_HOME := $(subst \,/,$(MAKEFW_HOME))
+_makefw_empty :=
+_makefw_space := $(_makefw_empty) $(_makefw_empty)
+_makefw_escape_path = $(subst $(_makefw_space),\$(_makefw_space),$(1))
+include $(call _makefw_escape_path,$(MAKEFW_HOME)/makefiles/_path_functions.mk)
+MAKEFW_HOME := $(call _makefw_path_abspath,$(MAKEFW_HOME))
 ROOT_RUNNER = $(MAKEFW_HOME)/bin_internal/run_ordered_subdir_target.sh
 
 # "#!/bin/bash" のスクリプトを "$(SHELL)" で起動すると shebang は使われない。
 # make の既定は /bin/sh なので、ここで bash を指定する。
 SHELL := /bin/bash
 
-include $(MAKEFW_HOME)/makefiles/_parallel.mk
+include $(call _makefw_escape_path,$(MAKEFW_HOME)/makefiles/_parallel.mk)
 MAKEFW_ALLOW_JOB_FALLBACK := 1
 
 .DEFAULT_GOAL := default

@@ -28,7 +28,7 @@ endif
 ifeq ($(strip $(TESTFW_HOME)),)
     $(error $(TESTFW_HOME_ERROR))
 endif
-ifeq ($(wildcard $(TESTFW_HOME)),)
+ifeq ($(call _makefw_path_exists,$(TESTFW_HOME)),)
     $(error $(TESTFW_HOME_ERROR))
 endif
 

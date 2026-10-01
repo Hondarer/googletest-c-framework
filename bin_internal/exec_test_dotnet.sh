@@ -13,6 +13,9 @@ PROJECT_NAME=$(basename "$(pwd)")
 OUTPUT_DIR=${OUTPUT_DIR:-bin}
 RESULTS_DIR=results
 
+# make のビルドと同じ SDK を使用する。実行ファイルのパスは単一の引数に保つ。
+DOTNET_CMD=${DOTNET:-dotnet}
+
 # 最終結果用変数
 EXIT_CODE=0
 SUCCESS_COUNT=0
@@ -31,9 +34,10 @@ function safe_tput() {
 
 # テスト一覧を取得
 function list_tests() {
-    dotnet test --list-tests --no-build -c "$CONFIG" -o "$OUTPUT_DIR" 2>/dev/null | \
+    "$DOTNET_CMD" test --list-tests --no-build -c "$CONFIG" -o "$OUTPUT_DIR" 2>/dev/null | \
         grep -E '^\s+' | \
         sed -e 's/^[ \t]*//'
+    return ${PIPESTATUS[0]}
 }
 
 # テストを一括実行して結果をパース
@@ -42,7 +46,14 @@ function run_all_tests_batch() {
     echo -e "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"
 
     # テスト一覧を取得 (パラメーター付きテストは重複を除去)
-    local tests=$(list_tests | sed 's/(.*//' | sort -u)
+    local tests
+    tests=$(list_tests)
+    local list_exit_code=$?
+    if [ "$list_exit_code" -ne 0 ]; then
+        echo "Error: dotnet test --list-tests failed with exit code $list_exit_code." >&2
+        return "$list_exit_code"
+    fi
+    tests=$(printf '%s\n' "$tests" | sed 's/(.*//' | sort -u)
 
     if [ -z "$tests" ]; then
         echo "No tests found."
@@ -60,7 +71,7 @@ function run_all_tests_batch() {
     local batch_exit_code=0
 
     echo "Running all tests in batch mode..." > "$batch_output"
-    dotnet test \
+    "$DOTNET_CMD" test \
         --no-build -c "$CONFIG" -o "$OUTPUT_DIR" \
         --verbosity normal \
         --logger "trx;LogFileName=results.trx" \

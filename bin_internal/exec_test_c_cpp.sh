@@ -11,7 +11,45 @@ fi
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ワークスペースのディレクトリ
-WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
+WORKSPACE_DIR=${WORKSPACE_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}
+
+# make が渡す空白区切りのリストを配列へ読み、共通配置先の空白を保護する。
+# 改行区切りの明示指定も受け付ける。
+# 保護する接頭辞は最初に必要になったときに 1 回だけ求め、cygpath の起動を抑える。
+# cygpath -w の結果は cygpath -m の区切り文字を逆斜線にしたものと同じため、-m だけを起動する。
+declare -a PATH_LIST_PREFIXES=()
+function parse_path_list() {
+    local -n destination="$1"
+    local value="$2"
+    local prefix token mixed_path
+    destination=()
+    if [ -z "${value//[[:space:]]/}" ]; then
+        return
+    fi
+    if [[ "$value" == *$'\n'* ]]; then
+        mapfile -t destination <<< "$value"
+        return
+    fi
+    if [ ${#PATH_LIST_PREFIXES[@]} -eq 0 ]; then
+        PATH_LIST_PREFIXES=("$WORKSPACE_DIR" "$PWD")
+        if [ "$IS_WINDOWS" -eq 1 ]; then
+            mixed_path=$(cygpath -m "$WORKSPACE_DIR")
+            PATH_LIST_PREFIXES+=("$mixed_path" "${mixed_path//\//\\}")
+        fi
+    fi
+    for prefix in "${PATH_LIST_PREFIXES[@]}"; do
+        [ -n "$prefix" ] || continue
+        value=${value//"$prefix"/"${prefix// /__MAKEFW_SPACE__}"}
+    done
+    IFS=$' \t\n' read -r -a destination <<< "$value"
+    for token in "${!destination[@]}"; do
+        destination[$token]=${destination[$token]//__MAKEFW_SPACE__/ }
+    done
+}
+declare -a TEST_SOURCE_FILES ADD_SOURCE_FILES TEST_LIBRARY_FILES
+parse_path_list TEST_SOURCE_FILES "${TEST_SRCS:-}"
+parse_path_list ADD_SOURCE_FILES "${ADD_SRCS:-}"
+parse_path_list TEST_LIBRARY_FILES "${MAKEFW_TEST_LIBS:-}"
 
 # ソース ファイルのエンコード指定から LANG を得る
 FILES_LANG=$(bash "$WORKSPACE_DIR/framework/makefw/bin_internal/get_files_lang.sh" "$WORKSPACE_DIR")
@@ -126,13 +164,13 @@ function compute_test_signature() {
     local -a sig_srcs=()
     local src
 
-    for src in $TEST_SRCS $ADD_SRCS; do
+    for src in "${TEST_SOURCE_FILES[@]}" "${ADD_SOURCE_FILES[@]}"; do
         [ -n "$src" ] && sig_srcs+=("$src")
     done
     for src in makepart.mk makelocal.mk; do
         [ -f "$src" ] && sig_srcs+=("$src")
     done
-    for src in $MAKEFW_TEST_LIBS; do
+    for src in "${TEST_LIBRARY_FILES[@]}"; do
         [ -n "$src" ] && [ -f "$src" ] && sig_srcs+=("$src")
     done
     # このディレクトリ直下で自動収集・コンパイルされる *.c/*.cc/*.cpp も対象に含める。
@@ -161,10 +199,47 @@ function compute_test_signature() {
 
 # テスト一覧を取得
 function list_tests() {
-    ./$TEST_BINARY --gtest_list_tests | awk '
+    "./$TEST_BINARY" --gtest_list_tests | awk '
     /^[^ ]/ {suite=$1}
     /^  / {print suite substr($0, 3)}'
     return ${PIPESTATUS[0]}
+}
+
+# テスト バイナリと各引数を個別に渡す。空白を含む配置先でも再解析しない。
+function execute_test_case() {
+    local test_name="$1"
+    local exit_file="$2"
+    local -a command=("./$TEST_BINARY" --gtest_color=yes "--gtest_filter=$test_name")
+    local exit_code
+
+    export LANG="$FILES_LANG"
+    printf '%s\n' '----'
+    find . -type f \( -name '*.cc' -o -name '*.cpp' \) -print0 2>/dev/null |
+        xargs -0 -r cat 2>/dev/null |
+        awk -v test_id="$test_name" -v is_windows="$IS_WINDOWS" -f "$SCRIPT_DIR/get_test_code_c_cpp.awk" |
+        awk -f "$SCRIPT_DIR/insert_summary_c_cpp.awk"
+    printf '%s\n' '----'
+    printf './%s --gtest_filter=%s\n' "$TEST_BINARY" "$test_name"
+    if [ "$IS_WINDOWS" -eq 1 ] && [ -n "$TEST_SRCS" ]; then
+        command=(OpenCppCoverage.exe "${SOURCES_OPTS[@]}" --quiet
+            --export_type cobertura:coverage/coverage.xml -- "${command[@]}")
+    fi
+    "${command[@]}" 2>&1 | grep -v 'Note: Google Test filter' | grep -v 'Your program stop with error code:'
+    exit_code=${PIPESTATUS[0]}
+    if [ "$IS_WINDOWS" -ne 1 ] && [ "$exit_code" -ge 128 ]; then
+        local signal=$((exit_code - 128))
+        printf '\n\e[31m[  FAILED  ]\e[0m Terminated by signal %s, ' "$signal"
+        case "$signal" in
+            6) echo 'SIGABRT: abort.' ;;
+            11) echo 'SIGSEGV: segmentation fault.' ;;
+            8) echo 'SIGFPE: floating-point exception.' ;;
+            4) echo 'SIGILL: illegal instruction.' ;;
+            *) echo 'Abnormal termination by other signal.' ;;
+        esac
+    elif [ "$IS_WINDOWS" -eq 1 ] && [ "$exit_code" -ne 0 ]; then
+        printf '\n\e[31m[  FAILED  ]\e[0m Exit code: %s\n' "$exit_code"
+    fi
+    printf '%s\n' "$exit_code" > "$exit_file"
 }
 
 # テストを実行 (個別カバレッジあり)
@@ -195,38 +270,20 @@ function run_test() {
     find . -name "*.gcda" -delete 2>/dev/null
     rm -rf obj/*.info gcov lcov > /dev/null
 
-    mkdir -p results/$test_id
+    mkdir -p "results/$test_id"
     local temp_file=$(mktemp)
     local temp_exit_code=$(mktemp)
 
     echo -e "\nRunning test: $test_id$test_comment_delim$test_comment on $TEST_BINARY"
     safe_tput cr
-    echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > $temp_file
+    echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > "$temp_file"
 
     # テスト コードに着色する場合:
-    # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk | source-highlight -s cpp -f esc;
+    # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f "$SCRIPT_DIR/get_test_code_c_cpp.awk" | awk -f "$SCRIPT_DIR/insert_summary_c_cpp.awk" | source-highlight -s cpp -f esc;
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
-        LANG=$FILES_LANG bash -c \
-           "echo \"----\"; \
-            find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -v is_windows=\"$IS_WINDOWS\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
-            echo \"----\"; \
-            echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-            ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-            exit_code=\${PIPESTATUS[0]}; \
-            if [ \$exit_code -ge 128 ]; then \
-                signal=\$((exit_code - 128)); \
-                echo -n -e \"\\n\\e[31m[  FAILED  ]\\e[0m Terminated by signal \$signal, \"; \
-                case \$signal in \
-                    6)  echo \"SIGABRT: abort.\";; \
-                    11) echo \"SIGSEGV: segmentation fault.\";; \
-                    8)  echo \"SIGFPE: floating-point exception.\";; \
-                    4)  echo \"SIGILL: illegal instruction.\";; \
-                    *)  echo \"Abnormal termination by other signal.\";; \
-                esac; \
-            fi; \
-            echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file
+        execute_test_case "$test_name" "$temp_exit_code" 2>&1 | tee -a "$temp_file"
         if [ -n "$TEST_SRCS" ]; then
             # TEST_SRCS が指定されている場合のみカバレッジ計測
             # 探索範囲をテスト ディレクトリへ限定する。
@@ -247,8 +304,7 @@ function run_test() {
             fi
             if [ -f coverage/coverage.raw.json ]; then
                 # 大域の IFS の状態に依存せず、TEST_SRCS を空白区切りで分割する
-                local -a test_src_list
-                IFS=$' \t\n' read -r -a test_src_list <<< "$TEST_SRCS"
+                local -a test_src_list=("${TEST_SOURCE_FILES[@]}")
                 if ! python "$SCRIPT_DIR/gcovr_json_normalize.py" \
                     coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" "${test_src_list[@]}"; then
                     echo -e "\e[31m[  FAILED  ]\e[0m gcovr_json_normalize.py rejected coverage data." | tee -a results/all_tests/summary.log
@@ -261,41 +317,18 @@ function run_test() {
         fi
     else
         # Windows
+        execute_test_case "$test_name" "$temp_exit_code" 2>&1 |
+            tee -a "$temp_file" | python "$SCRIPT_DIR/add_gtest_color.py"
         if [ -n "$TEST_SRCS" ]; then
-            # TEST_SRCS が指定されている場合のみカバレッジ計測
-            LANG=$FILES_LANG bash -c \
-               "echo \"----\"; \
-                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -v is_windows=\"$IS_WINDOWS\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
-                echo \"----\"; \
-                echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                OpenCppCoverage.exe $SOURCES_OPTS --quiet --export_type cobertura:coverage/coverage.xml -- ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\" | grep -v \"Your program stop with error code:\"; \
-                exit_code=\${PIPESTATUS[0]}; \
-                if [ \$exit_code -ne 0 ]; then \
-                    echo -e \"\\n\\e[31m[  FAILED  ]\\e[0m Exit code: \$exit_code\"; \
-                fi; \
-                echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
             rm -f LastCoverageResults.log 1> /dev/null 2>&1
-        else
-            # TEST_SRCS が未指定の場合はカバレッジ計測なし
-            LANG=$FILES_LANG bash -c \
-               "echo \"----\"; \
-                find . -name '*.cc' -o -name '*.cpp' 2>/dev/null | xargs cat 2>/dev/null | awk -v test_id=\"$test_name\" -v is_windows=\"$IS_WINDOWS\" -f $SCRIPT_DIR/get_test_code_c_cpp.awk | awk -f $SCRIPT_DIR/insert_summary_c_cpp.awk; \
-                echo \"----\"; \
-                echo ./$TEST_BINARY --gtest_filter=\"$test_name\"; \
-                ./$TEST_BINARY --gtest_color=yes --gtest_filter=\"$test_name\" 2>&1 | grep -v \"Note: Google Test filter\"; \
-                exit_code=\${PIPESTATUS[0]}; \
-                if [ \$exit_code -ne 0 ]; then \
-                    echo -e \"\\n\\e[31m[  FAILED  ]\\e[0m Exit code: \$exit_code\"; \
-                fi; \
-                echo \$exit_code > $temp_exit_code" 2>&1 | tee -a $temp_file | python $SCRIPT_DIR/add_gtest_color.py
         fi
     fi
 
     # ファイル内容を直接読み込み (cat 相当)
     local result=$(<"$temp_exit_code")
-    rm -f $temp_exit_code
+    rm -f "$temp_exit_code"
     if [ $result -eq 0 ]; then
-        if grep -qE "\[ *WARNING *\]" $temp_file; then
+        if grep -qE "\[ *WARNING *\]" "$temp_file"; then
             #                echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment"
             test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment")"$'\n'
             echo -e "$test_id\tWARNING\t$test_comment" >> results/all_tests/summary.log
@@ -312,8 +345,8 @@ function run_test() {
         echo -e "$test_id\tFAILED\t$test_comment" >> results/all_tests/summary.log
         FAILURE_COUNT=$((FAILURE_COUNT + 1))
     fi
-    cat $temp_file | sed -r 's/\x1b\[[0-9;]*m//g' > results/$test_id/results.log
-    rm -f $temp_file
+    cat "$temp_file" | sed -r 's/\x1b\[[0-9;]*m//g' > "results/$test_id/results.log"
+    rm -f "$temp_file"
 
     # gcov で生成したファイルを削除する
     # Delete any existing .gcov files
@@ -327,9 +360,9 @@ function run_test() {
             # gcov でカバレッジ情報を取得する (サブフォルダーを含む)
             # Run gcov to collect coverage (including subdirectories)
             local base_dir=$(pwd)
-            for obj_dir in $(find . -type d -name obj 2>/dev/null); do
+            while IFS= read -r -d '' obj_dir; do
                 # obj ディレクトリ内の gcda ファイルに対応するソース ファイルのカバレッジを取得
-                for gcda in $obj_dir/*.gcda; do
+                for gcda in "$obj_dir"/*.gcda; do
                     if [ -f "$gcda" ]; then
                         # gcda ファイルからベース名を取得
                         base_name=$(basename "$gcda" .gcda)
@@ -349,7 +382,7 @@ function run_test() {
                         fi
                     fi
                 done
-            done
+            done < <(find . -type d -name obj -print0 2>/dev/null)
             # カバレッジ未通過の *.gcov ファイルは削除する
             # Delete *.gcov files without coverage
             if [ -n "`ls *.gcov 2>/dev/null`" ]; then
@@ -363,7 +396,7 @@ function run_test() {
         else
             # Windows
             if [ -f coverage/coverage.xml ]; then
-                python $SCRIPT_DIR/cobertura2gcov.py coverage/coverage.xml gcov/ 1> /dev/null 2>&1
+                python "$SCRIPT_DIR/cobertura2gcov.py" coverage/coverage.xml gcov/ 1> /dev/null 2>&1
             fi
         fi
 
@@ -385,7 +418,7 @@ function run_test() {
                 cp -p coverage/coverage.json coverage/accumulated_coverage.json
             fi
         elif [ -f coverage/coverage.xml ]; then
-            python $SCRIPT_DIR/cobertura_accumulate.py coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+            python "$SCRIPT_DIR/cobertura_accumulate.py" coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
         else
             echo -e "\e[33m[ WARNING ]\e[0m Coverage file was not generated: coverage/coverage.xml" | tee -a results/all_tests/summary.log
         fi
@@ -404,36 +437,34 @@ function main() {
     # サブフォルダーを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
 
-    # TEST_SRCS が空の場合、サブフォルダーの makepart.mk から TEST_SRCS を収集
-    if [ -z "$TEST_SRCS" ]; then
-        # カレント ディレクトリから app 名を抽出 (MYAPP_DIR 置換用)
-        # Extract app name from current directory for MYAPP_DIR substitution
-        local current_app=""
-        local rel_from_ws="${PWD#$WORKSPACE_DIR/}"
-        if [[ "$rel_from_ws" == app/* ]]; then
-            current_app="${rel_from_ws#app/}"
-            current_app="${current_app%%/*}"
-        fi
-
-        for makepart in $(find . -mindepth 2 -name "makepart.mk" 2>/dev/null); do
-            # makepart.mk から TEST_SRCS の値を抽出 (複数行対応)
-            # TEST_SRCS を含む行とその後の継続行からソース ファイル パスを取得
-            subdir_test_srcs=$(grep -A10 "^TEST_SRCS" "$makepart" 2>/dev/null | \
-                grep -v "^TEST_SRCS" | grep -v "^#" | grep -v "^--$" | \
-                sed -e "s|\\\$(WORKSPACE_DIR)|$WORKSPACE_DIR|g" \
-                    -e "s|\\\$(MYAPP_DIR)|$WORKSPACE_DIR/app/$current_app|g" | \
-                xargs 2>/dev/null)
-            # 各パスを realpath -m で正規化 (.. を除去)
-            # Normalize each path with realpath -m to resolve ..
-            if [ -n "$subdir_test_srcs" ]; then
-                local normalized=""
-                for src in $subdir_test_srcs; do
-                    normalized="$normalized $(realpath -m "$src" 2>/dev/null || echo "$src")"
-                done
-                TEST_SRCS="$TEST_SRCS $normalized"
+    # 子の設定は makefw 自身に解釈させる。引用した配置先を文字列分割しない。
+    if [ ${#TEST_SOURCE_FILES[@]} -eq 0 ]; then
+        local child_makefile child_dir source source_file report_file
+        local make_command="${MAKEFW_SUBDIR_MAKE:-make}"
+        report_file=$(mktemp)
+        while IFS= read -r -d '' child_makefile; do
+            child_dir=${child_makefile%/*}
+            if ! MAKEFLAGS= MFLAGS= "$make_command" --no-print-directory -s \
+                -C "$child_dir" -f makefile -f "$SCRIPT_DIR/query_test_sources.mk" \
+                MAKEFW_BUILD=0 SUBDIRS= "MAKEFW_TEST_SRC_REPORT_FILE=$report_file" \
+                __testfw_query_sources; then
+                rm -f "$report_file"
+                return 1
             fi
-        done
-        TEST_SRCS=$(echo "$TEST_SRCS" | xargs)  # トリム
+            while IFS= read -r -d '' source; do
+                [ -n "$source" ] || continue
+                source_file=$(realpath -m --relative-to="$PWD" "$child_dir/$source") || {
+                    rm -f "$report_file"
+                    return 1
+                }
+                TEST_SOURCE_FILES+=("$source_file")
+            done < "$report_file"
+        done < <(find . -mindepth 2 -type f -name makefile -print0 2>/dev/null)
+        rm -f "$report_file"
+        if [ ${#TEST_SOURCE_FILES[@]} -gt 0 ]; then
+            mapfile -d '' -t TEST_SOURCE_FILES < <(printf '%s\0' "${TEST_SOURCE_FILES[@]}" | LC_ALL=C sort -zu)
+            printf -v TEST_SRCS '%s ' "${TEST_SOURCE_FILES[@]}"
+        fi
     fi
 
     # 再テスト スキップ判定
@@ -448,13 +479,13 @@ function main() {
     if [ $IS_WINDOWS -eq 1 ]; then
         local -a signature_srcs_for_cache=()
         local ssrc
-        for ssrc in $TEST_SRCS $ADD_SRCS; do
+        for ssrc in "${TEST_SOURCE_FILES[@]}" "${ADD_SOURCE_FILES[@]}"; do
             [ -n "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
         done
         for ssrc in makepart.mk makelocal.mk; do
             [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
         done
-        for ssrc in $MAKEFW_TEST_LIBS; do
+        for ssrc in "${TEST_LIBRARY_FILES[@]}"; do
             [ -n "$ssrc" ] && [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
         done
         for ssrc in *.c *.cc *.cpp; do
@@ -486,16 +517,16 @@ function main() {
     if [ $IS_WINDOWS -eq 1 ]; then
         # Windows
         # OpenCppCoverage のソース指定オプションを生成
-        SOURCES_OPTS=""
+        SOURCES_OPTS=()
         # カレント ディレクトリの絶対パスを Windows 形式で取得 (スラッシュをバックスラッシュに変換)
         local current_dir=$(pwd -W 2>/dev/null || cygpath -w "$(pwd)")
         current_dir=${current_dir//\//\\}
-        for src in $TEST_SRCS; do
+        for src in "${TEST_SOURCE_FILES[@]}"; do
             # パスからファイル名のみを抽出 (basename 相当)
             local src_basename=${src##*/}
             # Windows 形式の絶対パスに結合
             local src_fullpath="$current_dir\\$src_basename"
-            SOURCES_OPTS="$SOURCES_OPTS --sources \"$src_fullpath\""
+            SOURCES_OPTS+=(--sources "$src_fullpath")
         done
     fi
 
@@ -518,14 +549,14 @@ function main() {
         safe_tput cr
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
         safe_tput cr
-        for src in $TEST_SRCS; do
+        for src in "${TEST_SOURCE_FILES[@]}"; do
             local checksum
             local display_src
 
             checksum=$(get_md5_checksum "$src")
             if [ -z "$checksum" ]; then
                 echo -e "\e[31mError: Failed to calculate MD5: $src\e[0m" | tee -a results/all_tests/summary.log
-                bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+                bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
                 rm -f "$test_stamp_file" "$test_signature_file"
                 return 1
             fi
@@ -541,7 +572,7 @@ function main() {
     # TEST_BINARY の存在チェック
     if [ ! -f "$TEST_BINARY" ]; then
         echo -e "\e[31mError: Test binary not found: $TEST_BINARY\e[0m" | tee -a results/all_tests/summary.log
-        bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
         rm -f "$test_stamp_file" "$test_signature_file"
         return 1
     fi
@@ -551,7 +582,7 @@ function main() {
     #tests=$(echo "$tests" | sort)
     if [ $list_exit_code -ne 0 ]; then
         echo -e "\e[31mError: Failed to execute test binary: $TEST_BINARY (exit code: $list_exit_code)\e[0m" | tee -a results/all_tests/summary.log
-        bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
         echo ""
         rm -f "$test_stamp_file" "$test_signature_file"
         return 1
@@ -620,7 +651,7 @@ function main() {
         # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
         # 個別テストの gcov を残したままにせず、累積 XML から生成したファイルだけをコピーする
         rm -rf gcov/*
-        python $SCRIPT_DIR/cobertura2gcov.py coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
+        python "$SCRIPT_DIR/cobertura2gcov.py" coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
 
         if ls gcov/*.gcov 1> /dev/null 2>&1; then
             for file in gcov/*.gcov; do
@@ -637,13 +668,13 @@ function main() {
             mkdir -p lcov
 
             # coverage/accumulated_coverage.xml をもとに、lcov の出力と互換性がある .info を生成する
-            python $SCRIPT_DIR/cobertura2lcov.py coverage/accumulated_coverage.xml obj/$TEST_BINARY.info 1> /dev/null 2>&1
+            python "$SCRIPT_DIR/cobertura2lcov.py" coverage/accumulated_coverage.xml "obj/$TEST_BINARY.info" 1> /dev/null 2>&1
 
             # genhtml は空のファイルを指定するとエラーを出力して終了するため
             # lcov の出力ファイルが空でないか確認してから genhtml を実行する
             # genhtml fails on empty files; verify that .info is not empty first
-            if [ -s obj/$TEST_BINARY.info ]; then
-                genhtml --function-coverage -o lcov obj/$TEST_BINARY.info 1> /dev/null 2>&1
+            if [ -s "obj/$TEST_BINARY.info" ]; then
+                genhtml --function-coverage -o lcov "obj/$TEST_BINARY.info" 1> /dev/null 2>&1
             fi
         else
             # Windows
@@ -668,7 +699,7 @@ function main() {
         echo "" | tee -a results/all_tests/summary.log
 
         # Code Coverage Report
-        python $SCRIPT_DIR/cobertura2gcovr.py coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
+        python "$SCRIPT_DIR/cobertura2gcovr.py" coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
 
         # 全体カバレッジ計測用に、カバレッジ xml を保持
         cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
@@ -687,15 +718,15 @@ function main() {
     echo ""
     if [ $FAILURE_COUNT -eq 0 ]; then
         if [ $WARNING_COUNT -eq 0 ]; then
-            bash $SCRIPT_DIR/banner.sh PASSED "\e[32m"
+            bash "$SCRIPT_DIR/banner.sh" PASSED "\e[32m"
             echo ""
         else
-            bash $SCRIPT_DIR/banner.sh WARNING "\e[33m"
+            bash "$SCRIPT_DIR/banner.sh" WARNING "\e[33m"
             echo ""
             #return 1
         fi
     else
-        bash $SCRIPT_DIR/banner.sh FAILED "\e[31m"
+        bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
         echo ""
         return 1
     fi
