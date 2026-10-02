@@ -98,7 +98,7 @@ clean : $(SUBDIRS)
 .PHONY: test
 test : $(SUBDIRS)
 	@$(MAKE) -C test test
-	python -m unittest discover -s test -p 'test_*.py'
+	python -m unittest discover -s bin_test -p 'test_*.py'
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :
