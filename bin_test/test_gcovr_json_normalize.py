@@ -4,6 +4,7 @@
 
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -81,6 +82,8 @@ class GcovrJsonNormalizeTest(unittest.TestCase):
                 ],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                env=dict(os.environ, PYTHONIOENCODING="utf-8"),
                 check=True,
             )
             normalized = json.loads(output_path.read_text(encoding="utf-8"))
@@ -376,7 +379,7 @@ class GcovrJsonNormalizeTest(unittest.TestCase):
 
     @unittest.skipUnless(
         sys.platform == "linux",
-        "gcovr の分岐統合テストは Linux のカバレッジ環境で実行します。",
+        "[Linux] gcovr の分岐統合テストは Linux のカバレッジ環境で実行します。",
     )
     def test_gcovr_merge_preserves_branch_identity(self):
         with tempfile.TemporaryDirectory() as temp_dir_text:

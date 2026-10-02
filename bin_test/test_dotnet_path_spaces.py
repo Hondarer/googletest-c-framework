@@ -28,7 +28,7 @@ class DotnetPathSpacesTest(unittest.TestCase):
             (MAKEFW / "makefiles/__template.mk").read_text(encoding="utf-8"),
             encoding="utf-8", newline="\n",
         )
-        sdk = subprocess.check_output(["dotnet", "--version"], text=True).strip().split(".")[0]
+        sdk = subprocess.check_output(["dotnet", "--version"], text=True, encoding="utf-8").strip().split(".")[0]
         (cls.leaf / "ExampleTests.csproj").write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net{sdk}.0</TargetFramework>
