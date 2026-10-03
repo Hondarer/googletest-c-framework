@@ -7,6 +7,11 @@ import subprocess
 import tempfile
 import unittest
 
+# Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると
+# WSL の bash.exe を選ぶことがある。PATH 上の bash (Git Bash など) を明示して使う。
+# see: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
+BASH = shutil.which("bash") or "bash"
+
 
 TESTFW = Path(__file__).resolve().parents[1]
 MAKEFW = TESTFW.parent / "makefw"
@@ -100,7 +105,7 @@ public class ExampleTests {
     def test_missing_sdk_is_reported(self):
         env = dict(self.env, DOTNET=(self.root / "missing sdk/dotnet").as_posix(), CONFIG="Debug")
         result = subprocess.run(
-            ["bash", str(TESTFW / "bin_internal/exec_test_dotnet.sh")],
+            [BASH, str(TESTFW / "bin_internal/exec_test_dotnet.sh")],
             cwd=self.leaf, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             encoding="utf-8", errors="replace", timeout=30,
         )

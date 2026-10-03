@@ -8,6 +8,11 @@ import subprocess
 import tempfile
 import unittest
 
+# Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると
+# WSL の bash.exe を選ぶことがある。PATH 上の bash (Git Bash など) を明示して使う。
+# see: https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
+BASH = shutil.which("bash") or "bash"
+
 
 TESTFW = Path(__file__).resolve().parents[1]
 MAKEFW = TESTFW.parent / "makefw"
@@ -97,7 +102,7 @@ int main(int argc, char **argv) {
         if source_path is not None:
             env["TEST_SRCS"] = source_path
         return subprocess.run(
-            ["bash", str(self.script)], cwd=self.leaf, env=env,
+            [BASH, str(self.script)], cwd=self.leaf, env=env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             encoding="utf-8", errors="replace", timeout=120,
         )
