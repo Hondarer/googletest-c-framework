@@ -519,7 +519,10 @@ function main() {
         # OpenCppCoverage のソース指定オプションを生成
         SOURCES_OPTS=()
         # カレント ディレクトリの絶対パスを Windows 形式で取得 (スラッシュをバックスラッシュに変換)
-        local current_dir=$(pwd -W 2>/dev/null || cygpath -w "$(pwd)")
+        # PDB には長い形式のパスが記録されるため、8.3 形式の短い名前 (RUNNER~1 など) を含む
+        # パスのままでは --sources が一致しない。cygpath -l で長い形式へ展開する。
+        # see: https://www.cygwin.com/cygwin-ug-net/cygpath.html
+        local current_dir=$(cygpath -l -w "$(pwd)" 2>/dev/null || pwd -W 2>/dev/null)
         current_dir=${current_dir//\//\\}
         for src in "${TEST_SOURCE_FILES[@]}"; do
             # パスからファイル名のみを抽出 (basename 相当)
