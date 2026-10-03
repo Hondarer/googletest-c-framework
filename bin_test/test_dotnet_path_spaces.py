@@ -24,10 +24,8 @@ class DotnetPathSpacesTest(unittest.TestCase):
         for directory in ("makefiles", "bin_internal"):
             shutil.copytree(MAKEFW / directory, cls.root / "framework/makefw" / directory)
         shutil.copytree(TESTFW / "bin_internal", cls.root / "framework/testfw/bin_internal")
-        (cls.leaf / "makefile").write_text(
-            (MAKEFW / "makefiles/__template.mk").read_text(encoding="utf-8"),
-            encoding="utf-8", newline="\n",
-        )
+        with open(cls.leaf / "makefile", "w", encoding="utf-8", newline="\n") as handle:
+            handle.write((MAKEFW / "makefiles/__template.mk").read_text(encoding="utf-8"))
         sdk = subprocess.check_output(["dotnet", "--version"], text=True, encoding="utf-8").strip().split(".")[0]
         (cls.leaf / "ExampleTests.csproj").write_text(f'''<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -64,10 +62,8 @@ public class ExampleTests {
         tools = cls.root / "tools space"
         tools.mkdir()
         cls.wrapper = tools / "dotnet wrapper.sh"
-        cls.wrapper.write_text(
-            '#!/bin/bash\nprintf "%s\\n" "$*" >> "$DOTNET_CALL_LOG"\nexec dotnet "$@"\n',
-            encoding="utf-8", newline="\n",
-        )
+        with open(cls.wrapper, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write('#!/bin/bash\nprintf "%s\\n" "$*" >> "$DOTNET_CALL_LOG"\nexec dotnet "$@"\n')
         cls.wrapper.chmod(0o755)
         cls.env = {
             key: value for key, value in os.environ.items()

@@ -142,10 +142,8 @@ int main(int argc, char **argv) {
         child = self.leaf / "child"
         child.mkdir()
         self.addCleanup(shutil.rmtree, child)
-        (child / "makefile").write_text(
-            (self.root / "framework/makefw/makefiles/__template.mk").read_text(encoding="utf-8"),
-            encoding="utf-8", newline="\n",
-        )
+        with open(child / "makefile", "w", encoding="utf-8", newline="\n") as handle:
+            handle.write((self.root / "framework/makefw/makefiles/__template.mk").read_text(encoding="utf-8"))
         (child / "makelocal.mk").write_text(
             "TEST_SRCS := $(WORKSPACE_DIR)/source/sample.c\n", encoding="utf-8"
         )
