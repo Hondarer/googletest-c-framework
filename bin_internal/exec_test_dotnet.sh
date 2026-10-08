@@ -105,7 +105,11 @@ function run_all_tests_batch() {
 
     # TRX を解析してテストごとの結果を取得
     local trx_results=$(mktemp)
-    python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" > "$trx_results"
+    if ! python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" --with-counts > "$trx_results"; then
+        rm -f "$batch_output" "$trx_results"
+        rm -rf "$trx_dir"
+        return 1
+    fi
 
     # 各テストについてループ処理
     for test in $tests; do
@@ -129,22 +133,33 @@ function run_all_tests_batch() {
         # テスト ファイルを探す
         local test_file=$(find . -name "${class_name}.cs" -type f | head -1)
 
+        local test_result record_count record_status
+        IFS=$'\t' read -r _ test_result record_count record_status < <(
+            awk -F '\t' -v id="$test_id" '$1 == id { print; exit }' "$trx_results"
+        )
+        local evidence_failed=0
+        local -a summary_options=(--test-id "$test_id")
+        if [[ "$record_count" =~ ^[1-9][0-9]*$ ]]; then
+            summary_options+=(--param-count "$record_count")
+        fi
+        if [ "$record_status" = "Partial" ]; then
+            summary_options+=(--partial)
+        fi
         if [ -n "$test_file" ]; then
-            # テスト コードを抽出してサマリーを生成
-            python3 "$SCRIPT_DIR/get_test_code_dotnet.py" "$test_file" "$class_name" "$method_name" 2>/dev/null | \
-                python3 "$SCRIPT_DIR/insert_summary_dotnet.py" >> "$temp_file"
+            # 抽出・解析のどちらの失敗も実行結果へ反映する。
+            if ! (set -o pipefail
+                python3 "$SCRIPT_DIR/get_test_code_dotnet.py" "$test_file" "$class_name" "$method_name" |
+                    python3 "$SCRIPT_DIR/insert_summary_dotnet.py" "${summary_options[@]}"
+            ) >> "$temp_file" 2>&1; then
+                evidence_failed=1
+            fi
             echo -e "----" >> "$temp_file"
         fi
-
-        # TRX 結果からこのテストの結果を取得
-        local test_result=$(grep "^${test_id}"$'\t' "$trx_results" | cut -f2)
-        if [ -z "$test_result" ]; then
-            # TRX に結果がない場合、バッチの exit code で判定
-            if [ $batch_exit_code -eq 0 ]; then
-                test_result="Passed"
-            else
-                test_result="Failed"
-            fi
+        if [ "$evidence_failed" -ne 0 ]; then
+            test_result="Failed"
+        elif [ -z "$test_result" ]; then
+            test_result="Failed"
+            printf '%s\n' '[  FAILED  ] Test result was not found in TRX.' >> "$temp_file"
         fi
 
         # バッチ出力から該当テスト分を抽出

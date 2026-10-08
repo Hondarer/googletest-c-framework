@@ -184,6 +184,12 @@ function compute_test_signature() {
         return 1
     fi
 
+    # 集計処理を変更した場合も古いエビデンスを再利用しない。
+    for src in exec_test_c_cpp.sh get_test_code_c_cpp.awk insert_summary_c_cpp.py \
+        test_summary.py gtest_summary_groups.py; do
+        sig_srcs+=("$SCRIPT_DIR/$src")
+    done
+
     local entries=""
     for src in "${sig_srcs[@]}"; do
         local checksum
@@ -199,7 +205,11 @@ function compute_test_signature() {
 
 # テスト一覧を取得
 function list_tests() {
-    "./$TEST_BINARY" --gtest_list_tests | awk '
+    local -a command=("./$TEST_BINARY" --gtest_list_tests)
+    if [ "${1:-}" = "all" ]; then
+        command=(env -u GTEST_FILTER "./$TEST_BINARY" --gtest_list_tests "--gtest_filter=*")
+    fi
+    "${command[@]}" | awk '
     /^[^ ]/ {suite=$1}
     /^  / {print suite substr($0, 3)}'
     return ${PIPESTATUS[0]}
@@ -214,10 +224,22 @@ function execute_test_case() {
 
     export LANG="$FILES_LANG"
     printf '%s\n' '----'
+    local -a summary_options=(--test-id "$test_name" --encoding "${FILES_LANG#*.}")
+    # パラメーター テストの全体サマリーは定義単位で生成済み。
+    if [[ "${test_name#*.}" == */* ]]; then
+        summary_options+=(--code-only)
+    fi
+    local -a evidence_status
     find . -type f \( -name '*.cc' -o -name '*.cpp' \) -print0 2>/dev/null |
         xargs -0 -r cat 2>/dev/null |
         awk -v test_id="$test_name" -v is_windows="$IS_WINDOWS" -f "$SCRIPT_DIR/get_test_code_c_cpp.awk" |
-        awk -f "$SCRIPT_DIR/insert_summary_c_cpp.awk"
+        python3 "$SCRIPT_DIR/insert_summary_c_cpp.py" "${summary_options[@]}"
+    evidence_status=("${PIPESTATUS[@]}")
+    if [[ " ${evidence_status[*]} " =~ [[:space:]][1-9][0-9]*[[:space:]] ]]; then
+        printf '%s\n' '[  FAILED  ] Test evidence generation failed.'
+        printf '%s\n' 1 > "$exit_file"
+        return 1
+    fi
     printf '%s\n' '----'
     printf './%s --gtest_filter=%s\n' "$TEST_BINARY" "$test_name"
     if [ "$IS_WINDOWS" -eq 1 ] && [ -n "$TEST_SRCS" ]; then
@@ -277,9 +299,6 @@ function run_test() {
     echo -e "\nRunning test: $test_id$test_comment_delim$test_comment on $TEST_BINARY"
     safe_tput cr
     echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > "$temp_file"
-
-    # テスト コードに着色する場合:
-    # cat *.cc *.cpp 2>/dev/null | awk -v test_name=\"$test_name\" -f "$SCRIPT_DIR/get_test_code_c_cpp.awk" | awk -f "$SCRIPT_DIR/insert_summary_c_cpp.awk" | source-highlight -s cpp -f esc;
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
@@ -608,6 +627,26 @@ function main() {
     fi
     #echo "Test results:" >> results/all_tests/summary.log
 
+    # フィルター適用前の一覧で PARAM を確定し、全体件数を重複掲載しない。
+    local all_tests full_test_list selected_test_list group_manifest
+    all_tests=$(list_tests all)
+    if [ $? -ne 0 ]; then
+        rm -f "$test_stamp_file" "$test_signature_file"
+        return 1
+    fi
+    full_test_list=$(mktemp)
+    selected_test_list=$(mktemp)
+    group_manifest=$(mktemp)
+    printf '%s\n' "$all_tests" > "$full_test_list"
+    printf '%s\n' "$tests" > "$selected_test_list"
+    if ! python3 "$SCRIPT_DIR/gtest_summary_groups.py" prepare "$group_manifest" \
+        --full-list "$full_test_list" --selected-list "$selected_test_list" \
+        --is-windows "$IS_WINDOWS" --encoding "${FILES_LANG#*.}"; then
+        rm -f "$full_test_list" "$selected_test_list" "$group_manifest" "$test_stamp_file" "$test_signature_file"
+        return 1
+    fi
+    rm -f "$full_test_list" "$selected_test_list"
+
     # テスト バイナリが標準入力を消費しないように、専用の記述子から読み取る。
     while IFS= read -r test_name_w_comment <&3; do
         if [ -z "$test_name_w_comment" ]; then
@@ -621,6 +660,11 @@ function main() {
         #    return 1
         #fi
     done 3<<< "$tests"
+
+    if ! python3 "$SCRIPT_DIR/gtest_summary_groups.py" finish "$group_manifest" --encoding "${FILES_LANG#*.}"; then
+        FAILURE_COUNT=$((FAILURE_COUNT + 1))
+    fi
+    rm -f "$group_manifest"
 
     # 全体結果を出力
     printf '\n----\n%s' "$test_summary"

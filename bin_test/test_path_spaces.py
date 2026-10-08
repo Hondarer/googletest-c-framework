@@ -50,6 +50,31 @@ TEST(PathSpaces, Pass) {
 TEST(PathSpaces, Fail) {
     EXPECT_EQ(sample(1), 3);
 }
+class Repeats : public ::testing::TestWithParam<int> {};
+TEST_P(Repeats, Uniform) {
+    // Arrange
+    int value = GetParam();
+    ASSERT_GT(value, 0); // [状態確認] - 正の値であること。
+    // Assert
+    for (int i = 0; i < 3; ++i) {
+        EXPECT_GT(value, 0); // [確認_正常系 回数=PARAM*3] - 正の値であること。
+    }
+}
+TEST_P(Repeats, Branch) {
+    // Arrange
+    int value = GetParam();
+    // Assert
+    if (value < 3) {
+        EXPECT_LT(value, 3); // [確認_正常系 回数=1+1] - 3 未満であること。
+    } else {
+        EXPECT_EQ(value, 3); // [確認_異常系] - 3 であること。
+    }
+}
+INSTANTIATE_TEST_SUITE_P(A, Repeats, ::testing::Values(1, 2));
+INSTANTIATE_TEST_SUITE_P(B, Repeats, ::testing::Values(3));
+TEST(InvalidComment, Case) {
+    EXPECT_TRUE(true); // [確認_正常系 回数=1+] - true であること。
+}
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
@@ -122,6 +147,89 @@ int main(int argc, char **argv) {
         self.assertEqual(result.returncode, 1, result.stdout)
         log = (self.leaf / "results/PathSpaces.Fail/results.log").read_text(encoding="utf-8")
         self.assertIn("[  FAILED  ] PathSpaces.Fail", log)
+        self.assertFalse((self.leaf / "test.stamp").exists())
+
+    def test_parameter_records_have_one_definition_summary(self):
+        result = self.run_tests("*/Repeats.*/*")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="utf-8")
+        self.assertEqual(log.count("### 確認内容"), 1)
+        self.assertIn("### 確認内容 (正常系:9)", log)
+        self.assertIn("PARAM=3", log)
+        for name in ("Repeats.Uniform/A/0", "Repeats.Uniform/A/1", "Repeats.Uniform/B/0"):
+            record = (self.leaf / "results" / name / "results.log").read_text(encoding="utf-8")
+            self.assertNotIn("### 確認内容", record)
+        branch = (self.leaf / "results/Repeats.Branch/results.log").read_text(encoding="utf-8")
+        self.assertIn("### 確認内容 (正常系:2, 異常系:1)", branch)
+
+    def test_partial_parameter_filter_leaves_counts_unevaluated(self):
+        result = self.run_tests("A/Repeats.Uniform/0")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="utf-8")
+        self.assertIn("### 確認内容 (未評価)", log)
+        self.assertNotIn("正常系:9", log)
+        self.assertIn("[       OK ] A/Repeats.Uniform/0", log)
+        self.assertNotIn("[       OK ] B/Repeats.Uniform/0", log)
+
+    def test_shiftjis_source_and_evidence(self):
+        settings = self.root / ".vscode/settings.json"
+        settings.parent.mkdir(exist_ok=True)
+        source = self.leaf / "sampleTest.cc"
+        original = source.read_bytes()
+        try:
+            settings.write_text('{"files.encoding": "shiftjis"}', encoding="utf-8")
+            source.write_bytes(original.decode("utf-8").encode("cp932"))
+            result = self.run_tests("*/Repeats.Uniform/*")
+            self.assertEqual(result.returncode, 0, result.stdout)
+            log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="cp932")
+            self.assertIn("### 確認内容 (正常系:9)", log)
+            self.assertIn("正の値であること。", log)
+        finally:
+            source.write_bytes(original)
+            settings.unlink()
+
+    def test_summary_changes_invalidate_stamp(self):
+        source = self.leaf / "sampleTest.cc"
+        original = source.read_text(encoding="utf-8")
+        summary_script = self.script.parent / "test_summary.py"
+        original_script = summary_script.read_text(encoding="utf-8")
+        env = dict(self.env, TEST_SRCS="", ADD_SRCS="")
+        env.pop("GTEST_FILTER", None)
+        env.pop("MAKEFW_TEST_FORCE", None)
+        # テスト本体の失敗は別テストで検証し、ここでは成功する定義だけを展開する。
+        wrapper = self.leaf / "bin/only pass.sh"
+        binary = "test leaf.exe" if os.name == "nt" else "test leaf"
+        wrapper.write_text('#!/bin/bash\nexec "./bin/' + binary + '" --gtest_filter=PathSpaces.Pass "$@"\n', encoding="utf-8")
+        wrapper.chmod(0o755)
+        # 実行スクリプトが使うバイナリ名はカレント ディレクトリで決まるため、
+        # テスト用にコピーしたスクリプトだけでラッパーを指定する。
+        script_text = self.script.read_text(encoding="utf-8")
+        try:
+            self.script.write_text(script_text.replace("TEST_BINARY=bin/${PWD##*/}", "TEST_BINARY='bin/only pass.sh'"), encoding="utf-8")
+            source.write_text(original.replace("回数=1+]", "回数=1]"), encoding="utf-8")
+            def run():
+                return subprocess.run([BASH, str(self.script)], cwd=self.leaf, env=env,
+                                      stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                      encoding="utf-8", errors="replace", timeout=60)
+            first = run()
+            self.assertEqual(first.returncode, 0, first.stdout)
+            second = run()
+            self.assertIn("Skipping test", second.stdout)
+            summary_script.write_text(original_script + "\n", encoding="utf-8")
+            third = run()
+            self.assertEqual(third.returncode, 0, third.stdout)
+            self.assertNotIn("Skipping test", third.stdout)
+        finally:
+            self.script.write_text(script_text, encoding="utf-8")
+            summary_script.write_text(original_script, encoding="utf-8")
+            source.write_text(original, encoding="utf-8")
+
+    def test_invalid_comment_fails_runner(self):
+        result = self.run_tests("InvalidComment.Case")
+        self.assertEqual(result.returncode, 1, result.stdout)
+        log = (self.leaf / "results/InvalidComment.Case/results.log").read_text(encoding="utf-8")
+        self.assertIn("InvalidComment.Case:抽出コード:", log)
+        self.assertNotIn("[       OK ] InvalidComment.Case", log)
         self.assertFalse((self.leaf / "test.stamp").exists())
 
     def test_coverage_is_saved(self):

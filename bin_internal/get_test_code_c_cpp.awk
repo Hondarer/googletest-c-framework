@@ -137,6 +137,17 @@ in_multiline_comment {
         buffer = "";  # バッファをクリア
 
         print $0;
+        # マクロと同じ行にある本体の開始括弧も数える。
+        # INSTANTIATE_TEST_SUITE_P は 1 行で完結する場合もある。
+        code_line = $0;
+        sub(/\/\/.*$/, "", code_line);
+        gsub(/"([^"\\]|\\.)*"/, "\"\"", code_line);
+        if (extracting == 1) {
+            brace_count = gsub(/\{/, "{", code_line) - gsub(/\}/, "}", code_line);
+        } else {
+            brace_count = gsub(/\(/, "(", code_line) - gsub(/\)/, ")", code_line);
+            if (brace_count <= 0) extracting = 0;
+        }
         next;
     }
 }

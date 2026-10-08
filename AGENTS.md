@@ -37,3 +37,4 @@ make test
 - `TEST_SRCS` / `ADD_SRCS` で取り込まれたソースは、ビルド ディレクトリのリンクやコピーではなく、指定元の実体ファイルを変更してください。  
   詳細は [makeparts](../makefw/docs/makeparts.md) の「TEST_SRCS / ADD_SRCS の留意事項」を参照してください。
 - テスト コードのフェーズ分割コメント (`// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` と `[状態]` などのブラケット タグ) は `docs/about-test-phase.md` の規則に従ってください。1 テスト内で Arrange/Act/Assert のサイクルを複数回含むマルチ フェーズ テストの番号付与規則は同ドキュメントの「シングル フェーズ テストとマルチ フェーズ テスト」を参照してください。
+- 確認タグの回数式や件数集計を変更する場合は、`docs/about-test-phase.md` の「期待を確認する行為 1 回を 1 件として集計する」を参照し、`bin_internal/` の共通集計処理、C/C++・.NET の実行スクリプト、`bin_test/` の局所テストを同時に確認してください。
