@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-cobertura_merge.py - 指定フォルダ以下の coverage.xml を合成するスクリプト
+cobertura_merge.py - 指定ディレクトリ配下の coverage.xml を合成するスクリプト
 
 使用方法:
     python cobertura_merge.py <search_dir> [output.xml]
 
 引数:
-    search_dir  - coverage.xml を検索するルートディレクトリ
+    search_dir  - coverage.xml を検索するルート ディレクトリ
     output.xml  - 合成結果の出力先ファイル (省略時: search_dir/coverage.xml)
 
 動作:
-    - search_dir 以下を再帰的に検索し、すべての coverage.xml を収集する
+    - search_dir 配下を再帰的に検索し、すべての coverage.xml を収集する
     - 出力先ファイル自体は合成対象から除外する
     - 各ファイルのカバレッジ情報を合成 (同一ファイル・同一行の hits を加算)
     - 合成結果を output.xml に出力する
@@ -44,10 +44,10 @@ def parse_condition_coverage(coverage_str):
 
 def find_coverage_files(search_dir):
     """
-    指定ディレクトリ以下の coverage.xml を再帰的に検索する。
+    指定ディレクトリ配下の coverage.xml を再帰的に検索する。
 
     Args:
-        search_dir: 検索ルートディレクトリ
+        search_dir: 検索ルート ディレクトリ
 
     Returns:
         list: coverage.xml ファイルパスのリスト

@@ -72,7 +72,7 @@ void SetUp() override
 ### 対象関数と出力仕様
 
 processController は全体で 1 つの機能であり、キーは `processController` 1 つとします。  
-それぞれの機能で出力を以下のようにします。
+それぞれの機能で出力を次のようにします。
 
 | 機能 | TRACE_INFO の出力 | TRACE_DETAIL の追加出力 |
 |---|---|---|

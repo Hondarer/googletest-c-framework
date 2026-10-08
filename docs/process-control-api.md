@@ -65,7 +65,7 @@ struct ProcessResult {
 };
 ```
 
-`debug_log` は以下の場合に内容が入ります。
+`debug_log` は次の場合に内容が入ります。
 
 - Linux: `preload_lib` を指定した場合 (syslog モック出力)
 - Windows: `capture_debug_output = true` を指定した場合 (OutputDebugString 出力)

@@ -3,7 +3,9 @@
 
 using namespace testing;
 
-int delegate_real_EVP_DecryptInit_ex(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type, ENGINE *impl, const unsigned char *key, const unsigned char *iv)
+int delegate_real_EVP_DecryptInit_ex(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx,
+                                     const EVP_CIPHER *type, ENGINE *impl, const unsigned char *key,
+                                     const unsigned char *iv)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -13,7 +15,8 @@ int delegate_real_EVP_DecryptInit_ex(const char *file, const int line, const cha
     return EVP_DecryptInit_ex(ctx, type, impl, key, iv);
 }
 
-int mock_EVP_DecryptInit_ex(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, const EVP_CIPHER *type, ENGINE *impl, const unsigned char *key, const unsigned char *iv)
+int mock_EVP_DecryptInit_ex(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx,
+                            const EVP_CIPHER *type, ENGINE *impl, const unsigned char *key, const unsigned char *iv)
 {
     int mock_ret;
 

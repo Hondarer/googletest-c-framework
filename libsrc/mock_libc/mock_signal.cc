@@ -35,7 +35,7 @@ int mock_sigaction(const char *file, const int line, const char *func, int signu
                    struct sigaction *oldact)
 {
     int mock_ret = (_mock_signal != nullptr) ? _mock_signal->sigaction(file, line, func, signum, act, oldact)
-                                           : delegate_real_sigaction(file, line, func, signum, act, oldact);
+                                             : delegate_real_sigaction(file, line, func, signum, act, oldact);
     return mock_ret;
 }
 

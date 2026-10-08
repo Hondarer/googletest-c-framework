@@ -30,14 +30,14 @@ BOOL mock_CreateProcessW(const char *file, const int line, const char *func, LPC
     if (_mock_windows != nullptr)
     {
         mock_ret = _mock_windows->CreateProcessW(file, line, func, application_name, command_line, process_attributes,
-                                            thread_attributes, inherit_handles, creation_flags, environment,
-                                            current_directory, startup_info, process_information);
+                                                 thread_attributes, inherit_handles, creation_flags, environment,
+                                                 current_directory, startup_info, process_information);
     }
     else
     {
         mock_ret = delegate_real_CreateProcessW(file, line, func, application_name, command_line, process_attributes,
-                                           thread_attributes, inherit_handles, creation_flags, environment,
-                                           current_directory, startup_info, process_information);
+                                                thread_attributes, inherit_handles, creation_flags, environment,
+                                                current_directory, startup_info, process_information);
     }
 
     if (getTraceLevel() > TRACE_NONE)

@@ -60,7 +60,8 @@ int mock_inet_pton(const char *file, const int line, const char *func, int af, c
     return mock_ret;
 }
 
-const char *delegate_real_inet_ntop(const char *file, const int line, const char *func, int af, const void *src, char *dst, socklen_t size)
+const char *delegate_real_inet_ntop(const char *file, const int line, const char *func, int af, const void *src,
+                                    char *dst, socklen_t size)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -70,7 +71,8 @@ const char *delegate_real_inet_ntop(const char *file, const int line, const char
     return inet_ntop(af, src, dst, size);
 }
 
-const char *mock_inet_ntop(const char *file, const int line, const char *func, int af, const void *src, char *dst, socklen_t size)
+const char *mock_inet_ntop(const char *file, const int line, const char *func, int af, const void *src, char *dst,
+                           socklen_t size)
 {
     const char *mock_ret;
 

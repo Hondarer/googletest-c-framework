@@ -3,7 +3,8 @@
 
 using namespace testing;
 
-int delegate_real_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+int delegate_real_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, int type,
+                                      int arg, void *ptr)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -13,7 +14,8 @@ int delegate_real_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const ch
     return EVP_CIPHER_CTX_ctrl(ctx, type, arg, ptr);
 }
 
-int mock_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, int type, int arg, void *ptr)
+int mock_EVP_CIPHER_CTX_ctrl(const char *file, const int line, const char *func, EVP_CIPHER_CTX *ctx, int type, int arg,
+                             void *ptr)
 {
     int mock_ret;
 

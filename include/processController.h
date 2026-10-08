@@ -38,12 +38,12 @@ struct ProcessOptions
 #ifdef _WIN32
     /** OutputDebugString 出力をキャプチャする (Windows のみ)。
      *  true にすると DEBUG_ONLY_THIS_PROCESS で起動し debug_log / getDebugLog() でキャプチャできる。
-     *  Linux の preload_lib に相当する。デフォルト true (Linux の常時収集に合わせた既定値)。 */
+     *  Linux の preload_lib に相当する。既定値は true (Linux の常時収集に合わせた設定)。 */
     bool capture_debug_output = true;
 
     /** ETW (Event Tracing for Windows) イベントをキャプチャする (Windows のみ)。
      *  プロバイダー GUID 文字列を "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" 形式で指定する。
-     *  空文字列の場合 ETW キャプチャは無効 (デフォルト)。
+     *  空文字列の場合 ETW キャプチャは無効 (既定)。
      *  キャプチャした ETW イベントは OutputDebugString と同じ debug_log_lines に
      *  到着順でマージされ、getDebugLog() で取得できる。
      *  ETW セッションの開始には Administrators または Performance Log Users
@@ -132,7 +132,7 @@ extern void killProcess(AsyncProcessHandle &handle);
 /**
  * プロセス終了を待機し、終了コードを返す。
  *
- * @param timeout_ms タイムアウト (ms)。-1 で無制限。デフォルト 10000。
+ * @param timeout_ms タイムアウト (ms)。-1 で無制限。既定値は 10000。
  * @return           終了コード。タイムアウト時は -1。
  */
 extern int waitForExit(AsyncProcessHandle &handle, int timeout_ms = 10000);
@@ -168,7 +168,7 @@ extern size_t getDebugLogCount(AsyncProcessHandle &handle);
  *          到着順にマージした内容。
  *          リアルタイム収集されるが、実用上は waitForExit() 後に参照することを推奨する。
  *
- * @param from_index  返却を開始する行インデックス (デフォルト 0 = 全件)。
+ * @param from_index  返却を開始する行インデックス (既定値 0 = 全件)。
  */
 extern vector<string> getDebugLog(AsyncProcessHandle &handle, size_t from_index = 0);
 
@@ -179,8 +179,8 @@ extern vector<string> getDebugLog(AsyncProcessHandle &handle, size_t from_index 
  * @param binary      実行するバイナリの絶対パス
  * @param args        コマンド ライン引数 (argv[1] 以降)
  * @param opts        実行オプション (env_set / preload_lib 等)
- * @param stdin_lines stdin に渡す行リスト (各要素末尾に \n を付加して書き込む)。デフォルト空。
- * @param timeout_ms  タイムアウト (ms)。デフォルト 30000。
+ * @param stdin_lines stdin に渡す行リスト (各要素末尾に \n を付加して書き込む)。既定値は空。
+ * @param timeout_ms  タイムアウト (ms)。既定値は 30000。
  * @return            実行結果
  */
 inline ProcessResult startProcess(const string &binary, const vector<string> &args = {},

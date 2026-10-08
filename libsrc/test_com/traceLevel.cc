@@ -31,7 +31,7 @@ class TraceLevelDictionary
     TraceLevelDictionary(const TraceLevelDictionary &) = delete;
     TraceLevelDictionary &operator=(const TraceLevelDictionary &) = delete;
 
-    // デフォルト値を設定する
+    // 既定値を設定する
     void setDefault(int defaultTraceLevel)
     {
         defaultLavel = defaultTraceLevel;

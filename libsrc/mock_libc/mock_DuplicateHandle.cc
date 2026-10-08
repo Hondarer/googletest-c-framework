@@ -26,12 +26,12 @@ BOOL mock_DuplicateHandle(const char *file, const int line, const char *func, HA
     if (_mock_windows != nullptr)
     {
         mock_ret = _mock_windows->DuplicateHandle(file, line, func, source_process, source_handle, target_process,
-                                             target_handle, desired_access, inherit_handle, options);
+                                                  target_handle, desired_access, inherit_handle, options);
     }
     else
     {
         mock_ret = delegate_real_DuplicateHandle(file, line, func, source_process, source_handle, target_process,
-                                            target_handle, desired_access, inherit_handle, options);
+                                                 target_handle, desired_access, inherit_handle, options);
     }
 
     if (getTraceLevel() > TRACE_NONE)

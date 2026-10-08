@@ -8,8 +8,7 @@ using namespace testing;
 
 /* 可変長引数は展開済みの文字列として Mock クラスへ渡す。
  * see: .claude/skills/create-testfw-mock/SKILL.md の「printf 系モック」 */
-int delegate_real_snprintf(const char *file, const int line, const char *func, char *s, const size_t n,
-                           const char *str)
+int delegate_real_snprintf(const char *file, const int line, const char *func, char *s, const size_t n, const char *str)
 {
     (void)file;
     (void)line;
@@ -18,8 +17,7 @@ int delegate_real_snprintf(const char *file, const int line, const char *func, c
     return snprintf(s, n, "%s", str);
 }
 
-int mock_snprintf(const char *file, const int line, const char *func, char *s, const size_t n, const char *format,
-                  ...)
+int mock_snprintf(const char *file, const int line, const char *func, char *s, const size_t n, const char *format, ...)
 {
     va_list args;
     char *str;

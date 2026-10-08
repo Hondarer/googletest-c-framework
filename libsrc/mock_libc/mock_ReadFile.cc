@@ -23,7 +23,8 @@ BOOL mock_ReadFile(const char *file, const int line, const char *func, HANDLE fi
 
     if (_mock_windows != nullptr)
     {
-        mock_ret = _mock_windows->ReadFile(file, line, func, file_handle, buffer, bytes_to_read, bytes_read, overlapped);
+        mock_ret =
+            _mock_windows->ReadFile(file, line, func, file_handle, buffer, bytes_to_read, bytes_read, overlapped);
     }
     else
     {

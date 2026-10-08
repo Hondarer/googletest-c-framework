@@ -3,7 +3,8 @@
 
 using namespace testing;
 
-int delegate_real_EVP_DigestUpdate(const char *file, const int line, const char *func, EVP_MD_CTX *ctx, const void *d, size_t cnt)
+int delegate_real_EVP_DigestUpdate(const char *file, const int line, const char *func, EVP_MD_CTX *ctx, const void *d,
+                                   size_t cnt)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -13,7 +14,8 @@ int delegate_real_EVP_DigestUpdate(const char *file, const int line, const char 
     return EVP_DigestUpdate(ctx, d, cnt);
 }
 
-int mock_EVP_DigestUpdate(const char *file, const int line, const char *func, EVP_MD_CTX *ctx, const void *d, size_t cnt)
+int mock_EVP_DigestUpdate(const char *file, const int line, const char *func, EVP_MD_CTX *ctx, const void *d,
+                          size_t cnt)
 {
     int mock_ret;
 

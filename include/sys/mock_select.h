@@ -10,8 +10,7 @@ extern "C"
 {
     #endif
 
-    extern int mock_select(const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *,
-                           struct timeval *);
+    extern int mock_select(const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *, struct timeval *);
 
     #ifdef __cplusplus
 }

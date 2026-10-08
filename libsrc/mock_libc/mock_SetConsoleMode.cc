@@ -5,8 +5,7 @@
 
 using namespace testing;
 
-BOOL delegate_real_SetConsoleMode(const char *file, const int line, const char *func, HANDLE console_handle,
-                                  DWORD mode)
+BOOL delegate_real_SetConsoleMode(const char *file, const int line, const char *func, HANDLE console_handle, DWORD mode)
 {
     // avoid -Wunused-parameter
     (void)file;

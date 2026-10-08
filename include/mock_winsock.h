@@ -34,7 +34,8 @@ extern "C"
     extern int mock_getsockopt(const char *, const int, const char *, SOCKET, int, int, char *, int *);
     extern int mock_send(const char *, const int, const char *, SOCKET, const char *, int, int);
     extern int mock_recv(const char *, const int, const char *, SOCKET, char *, int, int);
-    extern int mock_sendto(const char *, const int, const char *, SOCKET, const char *, int, int, const struct sockaddr *, int);
+    extern int mock_sendto(const char *, const int, const char *, SOCKET, const char *, int, int,
+                           const struct sockaddr *, int);
     extern int mock_recvfrom(const char *, const int, const char *, SOCKET, char *, int, int, struct sockaddr *, int *);
     extern INT mock_inet_pton(const char *, const int, const char *, INT, PCSTR, PVOID);
     extern PCSTR mock_inet_ntop(const char *, const int, const char *, INT, const void *, PSTR, size_t);
@@ -51,18 +52,17 @@ extern "C"
 
             #define WSAStartup(version_required, wsa_data) \
                 mock_WSAStartup(__FILE__, __LINE__, __func__, version_required, wsa_data)
-            #define WSACleanup()     mock_WSACleanup(__FILE__, __LINE__, __func__)
-            #define WSAGetLastError() mock_WSAGetLastError(__FILE__, __LINE__, __func__)
-            #define WSAPoll(fd_array, fds, timeout) \
-                mock_WSAPoll(__FILE__, __LINE__, __func__, fd_array, fds, timeout)
-            #define socket(af, type, protocol) mock_socket(__FILE__, __LINE__, __func__, af, type, protocol)
-            #define bind(s, name, namelen)     mock_bind(__FILE__, __LINE__, __func__, s, name, namelen)
-            #define listen(s, backlog)         mock_listen(__FILE__, __LINE__, __func__, s, backlog)
-            #define accept(s, addr, addrlen)   mock_accept(__FILE__, __LINE__, __func__, s, addr, addrlen)
-            #define connect(s, name, namelen)  mock_connect(__FILE__, __LINE__, __func__, s, name, namelen)
-            #define shutdown(s, how)           mock_shutdown(__FILE__, __LINE__, __func__, s, how)
-            #define closesocket(s)             mock_closesocket(__FILE__, __LINE__, __func__, s)
-            #define ioctlsocket(s, cmd, argp)  mock_ioctlsocket(__FILE__, __LINE__, __func__, s, cmd, argp)
+            #define WSACleanup()                    mock_WSACleanup(__FILE__, __LINE__, __func__)
+            #define WSAGetLastError()               mock_WSAGetLastError(__FILE__, __LINE__, __func__)
+            #define WSAPoll(fd_array, fds, timeout) mock_WSAPoll(__FILE__, __LINE__, __func__, fd_array, fds, timeout)
+            #define socket(af, type, protocol)      mock_socket(__FILE__, __LINE__, __func__, af, type, protocol)
+            #define bind(s, name, namelen)          mock_bind(__FILE__, __LINE__, __func__, s, name, namelen)
+            #define listen(s, backlog)              mock_listen(__FILE__, __LINE__, __func__, s, backlog)
+            #define accept(s, addr, addrlen)        mock_accept(__FILE__, __LINE__, __func__, s, addr, addrlen)
+            #define connect(s, name, namelen)       mock_connect(__FILE__, __LINE__, __func__, s, name, namelen)
+            #define shutdown(s, how)                mock_shutdown(__FILE__, __LINE__, __func__, s, how)
+            #define closesocket(s)                  mock_closesocket(__FILE__, __LINE__, __func__, s)
+            #define ioctlsocket(s, cmd, argp)       mock_ioctlsocket(__FILE__, __LINE__, __func__, s, cmd, argp)
             #define setsockopt(s, level, optname, optval, optlen) \
                 mock_setsockopt(__FILE__, __LINE__, __func__, s, level, optname, optval, optlen)
             #define getsockopt(s, level, optname, optval, optlen) \
@@ -101,11 +101,14 @@ extern int delegate_real_setsockopt(const char *, const int, const char *, SOCKE
 extern int delegate_real_getsockopt(const char *, const int, const char *, SOCKET, int, int, char *, int *);
 extern int delegate_real_send(const char *, const int, const char *, SOCKET, const char *, int, int);
 extern int delegate_real_recv(const char *, const int, const char *, SOCKET, char *, int, int);
-extern int delegate_real_sendto(const char *, const int, const char *, SOCKET, const char *, int, int, const struct sockaddr *, int);
-extern int delegate_real_recvfrom(const char *, const int, const char *, SOCKET, char *, int, int, struct sockaddr *, int *);
+extern int delegate_real_sendto(const char *, const int, const char *, SOCKET, const char *, int, int,
+                                const struct sockaddr *, int);
+extern int delegate_real_recvfrom(const char *, const int, const char *, SOCKET, char *, int, int, struct sockaddr *,
+                                  int *);
 extern INT delegate_real_inet_pton(const char *, const int, const char *, INT, PCSTR, PVOID);
 extern PCSTR delegate_real_inet_ntop(const char *, const int, const char *, INT, const void *, PSTR, size_t);
-extern INT delegate_real_getaddrinfo(const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *, PADDRINFOA *);
+extern INT delegate_real_getaddrinfo(const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *,
+                                     PADDRINFOA *);
 extern void delegate_real_freeaddrinfo(const char *, const int, const char *, PADDRINFOA);
 
 class Mock_winsock
@@ -127,11 +130,14 @@ class Mock_winsock
     MOCK_METHOD(int, getsockopt, (const char *, const int, const char *, SOCKET, int, int, char *, int *));
     MOCK_METHOD(int, send, (const char *, const int, const char *, SOCKET, const char *, int, int));
     MOCK_METHOD(int, recv, (const char *, const int, const char *, SOCKET, char *, int, int));
-    MOCK_METHOD(int, sendto, (const char *, const int, const char *, SOCKET, const char *, int, int, const struct sockaddr *, int));
-    MOCK_METHOD(int, recvfrom, (const char *, const int, const char *, SOCKET, char *, int, int, struct sockaddr *, int *));
+    MOCK_METHOD(int, sendto,
+                (const char *, const int, const char *, SOCKET, const char *, int, int, const struct sockaddr *, int));
+    MOCK_METHOD(int, recvfrom,
+                (const char *, const int, const char *, SOCKET, char *, int, int, struct sockaddr *, int *));
     MOCK_METHOD(INT, inet_pton, (const char *, const int, const char *, INT, PCSTR, PVOID));
     MOCK_METHOD(PCSTR, inet_ntop, (const char *, const int, const char *, INT, const void *, PSTR, size_t));
-    MOCK_METHOD(INT, getaddrinfo, (const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *, PADDRINFOA *));
+    MOCK_METHOD(INT, getaddrinfo,
+                (const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *, PADDRINFOA *));
     MOCK_METHOD(void, freeaddrinfo, (const char *, const int, const char *, PADDRINFOA));
 
     Mock_winsock();

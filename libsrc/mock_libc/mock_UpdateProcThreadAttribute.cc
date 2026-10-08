@@ -25,13 +25,13 @@ BOOL mock_UpdateProcThreadAttribute(const char *file, const int line, const char
 
     if (_mock_windows != nullptr)
     {
-        mock_ret = _mock_windows->UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value, size,
-                                                       previous, return_size);
+        mock_ret = _mock_windows->UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value,
+                                                            size, previous, return_size);
     }
     else
     {
-        mock_ret = delegate_real_UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value, size,
-                                                      previous, return_size);
+        mock_ret = delegate_real_UpdateProcThreadAttribute(file, line, func, attribute_list, flags, attribute, value,
+                                                           size, previous, return_size);
     }
 
     if (getTraceLevel() > TRACE_NONE)

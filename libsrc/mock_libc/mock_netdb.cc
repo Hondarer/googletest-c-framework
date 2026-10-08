@@ -22,7 +22,8 @@ Mock_netdb::~Mock_netdb()
     TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_netdb);
 }
 
-int delegate_real_getaddrinfo(const char *file, const int line, const char *func, const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)
+int delegate_real_getaddrinfo(const char *file, const int line, const char *func, const char *node, const char *service,
+                              const struct addrinfo *hints, struct addrinfo **res)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -32,7 +33,8 @@ int delegate_real_getaddrinfo(const char *file, const int line, const char *func
     return getaddrinfo(node, service, hints, res);
 }
 
-int mock_getaddrinfo(const char *file, const int line, const char *func, const char *node, const char *service, const struct addrinfo *hints, struct addrinfo **res)
+int mock_getaddrinfo(const char *file, const int line, const char *func, const char *node, const char *service,
+                     const struct addrinfo *hints, struct addrinfo **res)
 {
     int mock_ret;
 

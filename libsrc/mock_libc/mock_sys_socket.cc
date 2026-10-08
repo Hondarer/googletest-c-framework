@@ -77,7 +77,8 @@ int mock_socket(const char *file, const int line, const char *func, int domain, 
     return mock_ret;
 }
 
-int delegate_real_bind(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int delegate_real_bind(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr,
+                       socklen_t addrlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -87,7 +88,8 @@ int delegate_real_bind(const char *file, const int line, const char *func, int s
     return bind(sockfd, addr, addrlen);
 }
 
-int mock_bind(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int mock_bind(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr,
+              socklen_t addrlen)
 {
     int mock_ret;
 
@@ -133,7 +135,8 @@ int mock_listen(const char *file, const int line, const char *func, int sockfd, 
     return mock_ret;
 }
 
-int delegate_real_accept(const char *file, const int line, const char *func, int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+int delegate_real_accept(const char *file, const int line, const char *func, int sockfd, struct sockaddr *addr,
+                         socklen_t *addrlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -143,7 +146,8 @@ int delegate_real_accept(const char *file, const int line, const char *func, int
     return accept(sockfd, addr, addrlen);
 }
 
-int mock_accept(const char *file, const int line, const char *func, int sockfd, struct sockaddr *addr, socklen_t *addrlen)
+int mock_accept(const char *file, const int line, const char *func, int sockfd, struct sockaddr *addr,
+                socklen_t *addrlen)
 {
     int mock_ret;
 
@@ -161,7 +165,8 @@ int mock_accept(const char *file, const int line, const char *func, int sockfd, 
     return mock_ret;
 }
 
-int delegate_real_connect(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int delegate_real_connect(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr,
+                          socklen_t addrlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -171,7 +176,8 @@ int delegate_real_connect(const char *file, const int line, const char *func, in
     return connect(sockfd, addr, addrlen);
 }
 
-int mock_connect(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr, socklen_t addrlen)
+int mock_connect(const char *file, const int line, const char *func, int sockfd, const struct sockaddr *addr,
+                 socklen_t addrlen)
 {
     int mock_ret;
 
@@ -217,7 +223,8 @@ int mock_shutdown(const char *file, const int line, const char *func, int sockfd
     return mock_ret;
 }
 
-int delegate_real_setsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, const void *optval, socklen_t optlen)
+int delegate_real_setsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname,
+                             const void *optval, socklen_t optlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -227,7 +234,8 @@ int delegate_real_setsockopt(const char *file, const int line, const char *func,
     return setsockopt(sockfd, level, optname, optval, optlen);
 }
 
-int mock_setsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, const void *optval, socklen_t optlen)
+int mock_setsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname,
+                    const void *optval, socklen_t optlen)
 {
     int mock_ret;
 
@@ -245,7 +253,8 @@ int mock_setsockopt(const char *file, const int line, const char *func, int sock
     return mock_ret;
 }
 
-int delegate_real_getsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, void *optval, socklen_t *optlen)
+int delegate_real_getsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname,
+                             void *optval, socklen_t *optlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -255,7 +264,8 @@ int delegate_real_getsockopt(const char *file, const int line, const char *func,
     return getsockopt(sockfd, level, optname, optval, optlen);
 }
 
-int mock_getsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname, void *optval, socklen_t *optlen)
+int mock_getsockopt(const char *file, const int line, const char *func, int sockfd, int level, int optname,
+                    void *optval, socklen_t *optlen)
 {
     int mock_ret;
 
@@ -273,7 +283,8 @@ int mock_getsockopt(const char *file, const int line, const char *func, int sock
     return mock_ret;
 }
 
-ssize_t delegate_real_send(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags)
+ssize_t delegate_real_send(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len,
+                           int flags)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -283,7 +294,8 @@ ssize_t delegate_real_send(const char *file, const int line, const char *func, i
     return send(sockfd, buf, len, flags);
 }
 
-ssize_t mock_send(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags)
+ssize_t mock_send(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len,
+                  int flags)
 {
     ssize_t mock_ret;
 
@@ -301,7 +313,8 @@ ssize_t mock_send(const char *file, const int line, const char *func, int sockfd
     return mock_ret;
 }
 
-ssize_t delegate_real_recv(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags)
+ssize_t delegate_real_recv(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len,
+                           int flags)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -329,7 +342,8 @@ ssize_t mock_recv(const char *file, const int line, const char *func, int sockfd
     return mock_ret;
 }
 
-ssize_t delegate_real_sendto(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
+ssize_t delegate_real_sendto(const char *file, const int line, const char *func, int sockfd, const void *buf,
+                             size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -339,7 +353,8 @@ ssize_t delegate_real_sendto(const char *file, const int line, const char *func,
     return sendto(sockfd, buf, len, flags, dest_addr, addrlen);
 }
 
-ssize_t mock_sendto(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len, int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
+ssize_t mock_sendto(const char *file, const int line, const char *func, int sockfd, const void *buf, size_t len,
+                    int flags, const struct sockaddr *dest_addr, socklen_t addrlen)
 {
     ssize_t mock_ret;
 
@@ -357,7 +372,8 @@ ssize_t mock_sendto(const char *file, const int line, const char *func, int sock
     return mock_ret;
 }
 
-ssize_t delegate_real_recvfrom(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
+ssize_t delegate_real_recvfrom(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len,
+                               int flags, struct sockaddr *src_addr, socklen_t *addrlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -367,7 +383,8 @@ ssize_t delegate_real_recvfrom(const char *file, const int line, const char *fun
     return recvfrom(sockfd, buf, len, flags, src_addr, addrlen);
 }
 
-ssize_t mock_recvfrom(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags, struct sockaddr *src_addr, socklen_t *addrlen)
+ssize_t mock_recvfrom(const char *file, const int line, const char *func, int sockfd, void *buf, size_t len, int flags,
+                      struct sockaddr *src_addr, socklen_t *addrlen)
 {
     ssize_t mock_ret;
 

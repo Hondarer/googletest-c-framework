@@ -24,13 +24,13 @@ BOOL mock_InitializeProcThreadAttributeList(const char *file, const int line, co
 
     if (_mock_windows != nullptr)
     {
-        mock_ret = _mock_windows->InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count, flags,
-                                                               size);
+        mock_ret = _mock_windows->InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count,
+                                                                    flags, size);
     }
     else
     {
-        mock_ret = delegate_real_InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count, flags,
-                                                              size);
+        mock_ret = delegate_real_InitializeProcThreadAttributeList(file, line, func, attribute_list, attribute_count,
+                                                                   flags, size);
     }
 
     if (getTraceLevel() > TRACE_NONE)

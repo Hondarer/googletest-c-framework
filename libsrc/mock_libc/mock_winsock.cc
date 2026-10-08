@@ -61,7 +61,8 @@ Mock_winsock::~Mock_winsock()
             } \
         } while (0)
 
-int delegate_real_WSAStartup(const char *file, const int line, const char *func, WORD version_required, LPWSADATA wsa_data)
+int delegate_real_WSAStartup(const char *file, const int line, const char *func, WORD version_required,
+                             LPWSADATA wsa_data)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -149,7 +150,8 @@ int mock_WSAGetLastError(const char *file, const int line, const char *func)
     return mock_ret;
 }
 
-int delegate_real_WSAPoll(const char *file, const int line, const char *func, LPWSAPOLLFD fd_array, ULONG fds, INT timeout)
+int delegate_real_WSAPoll(const char *file, const int line, const char *func, LPWSAPOLLFD fd_array, ULONG fds,
+                          INT timeout)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -205,7 +207,8 @@ SOCKET mock_socket(const char *file, const int line, const char *func, int af, i
     return mock_ret;
 }
 
-int delegate_real_bind(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name, int namelen)
+int delegate_real_bind(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name,
+                       int namelen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -261,7 +264,8 @@ int mock_listen(const char *file, const int line, const char *func, SOCKET s, in
     return mock_ret;
 }
 
-SOCKET delegate_real_accept(const char *file, const int line, const char *func, SOCKET s, struct sockaddr *addr, int *addrlen)
+SOCKET delegate_real_accept(const char *file, const int line, const char *func, SOCKET s, struct sockaddr *addr,
+                            int *addrlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -289,7 +293,8 @@ SOCKET mock_accept(const char *file, const int line, const char *func, SOCKET s,
     return mock_ret;
 }
 
-int delegate_real_connect(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name, int namelen)
+int delegate_real_connect(const char *file, const int line, const char *func, SOCKET s, const struct sockaddr *name,
+                          int namelen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -401,7 +406,8 @@ int mock_ioctlsocket(const char *file, const int line, const char *func, SOCKET 
     return mock_ret;
 }
 
-int delegate_real_setsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, const char *optval, int optlen)
+int delegate_real_setsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname,
+                             const char *optval, int optlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -411,7 +417,8 @@ int delegate_real_setsockopt(const char *file, const int line, const char *func,
     return setsockopt(s, level, optname, optval, optlen);
 }
 
-int mock_setsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, const char *optval, int optlen)
+int mock_setsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname,
+                    const char *optval, int optlen)
 {
     int mock_ret;
 
@@ -429,7 +436,8 @@ int mock_setsockopt(const char *file, const int line, const char *func, SOCKET s
     return mock_ret;
 }
 
-int delegate_real_getsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, char *optval, int *optlen)
+int delegate_real_getsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname,
+                             char *optval, int *optlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -439,7 +447,8 @@ int delegate_real_getsockopt(const char *file, const int line, const char *func,
     return getsockopt(s, level, optname, optval, optlen);
 }
 
-int mock_getsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, char *optval, int *optlen)
+int mock_getsockopt(const char *file, const int line, const char *func, SOCKET s, int level, int optname, char *optval,
+                    int *optlen)
 {
     int mock_ret;
 
@@ -457,7 +466,8 @@ int mock_getsockopt(const char *file, const int line, const char *func, SOCKET s
     return mock_ret;
 }
 
-int delegate_real_send(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags)
+int delegate_real_send(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len,
+                       int flags)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -513,7 +523,8 @@ int mock_recv(const char *file, const int line, const char *func, SOCKET s, char
     return mock_ret;
 }
 
-int delegate_real_sendto(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen)
+int delegate_real_sendto(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len,
+                         int flags, const struct sockaddr *to, int tolen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -523,7 +534,8 @@ int delegate_real_sendto(const char *file, const int line, const char *func, SOC
     return sendto(s, buf, len, flags, to, tolen);
 }
 
-int mock_sendto(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen)
+int mock_sendto(const char *file, const int line, const char *func, SOCKET s, const char *buf, int len, int flags,
+                const struct sockaddr *to, int tolen)
 {
     int mock_ret;
 
@@ -541,7 +553,8 @@ int mock_sendto(const char *file, const int line, const char *func, SOCKET s, co
     return mock_ret;
 }
 
-int delegate_real_recvfrom(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen)
+int delegate_real_recvfrom(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags,
+                           struct sockaddr *from, int *fromlen)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -551,7 +564,8 @@ int delegate_real_recvfrom(const char *file, const int line, const char *func, S
     return recvfrom(s, buf, len, flags, from, fromlen);
 }
 
-int mock_recvfrom(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen)
+int mock_recvfrom(const char *file, const int line, const char *func, SOCKET s, char *buf, int len, int flags,
+                  struct sockaddr *from, int *fromlen)
 {
     int mock_ret;
 
@@ -569,7 +583,8 @@ int mock_recvfrom(const char *file, const int line, const char *func, SOCKET s, 
     return mock_ret;
 }
 
-INT delegate_real_inet_pton(const char *file, const int line, const char *func, INT family, PCSTR addr_string, PVOID addr_buf)
+INT delegate_real_inet_pton(const char *file, const int line, const char *func, INT family, PCSTR addr_string,
+                            PVOID addr_buf)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -597,7 +612,8 @@ INT mock_inet_pton(const char *file, const int line, const char *func, INT famil
     return mock_ret;
 }
 
-PCSTR delegate_real_inet_ntop(const char *file, const int line, const char *func, INT family, const void *addr, PSTR string_buf, size_t string_buf_size)
+PCSTR delegate_real_inet_ntop(const char *file, const int line, const char *func, INT family, const void *addr,
+                              PSTR string_buf, size_t string_buf_size)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -607,7 +623,8 @@ PCSTR delegate_real_inet_ntop(const char *file, const int line, const char *func
     return inet_ntop(family, addr, string_buf, string_buf_size);
 }
 
-PCSTR mock_inet_ntop(const char *file, const int line, const char *func, INT family, const void *addr, PSTR string_buf, size_t string_buf_size)
+PCSTR mock_inet_ntop(const char *file, const int line, const char *func, INT family, const void *addr, PSTR string_buf,
+                     size_t string_buf_size)
 {
     PCSTR mock_ret;
 
@@ -625,7 +642,8 @@ PCSTR mock_inet_ntop(const char *file, const int line, const char *func, INT fam
     return mock_ret;
 }
 
-INT delegate_real_getaddrinfo(const char *file, const int line, const char *func, PCSTR node_name, PCSTR service_name, const ADDRINFOA *hints, PADDRINFOA *result_out)
+INT delegate_real_getaddrinfo(const char *file, const int line, const char *func, PCSTR node_name, PCSTR service_name,
+                              const ADDRINFOA *hints, PADDRINFOA *result_out)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -635,7 +653,8 @@ INT delegate_real_getaddrinfo(const char *file, const int line, const char *func
     return getaddrinfo(node_name, service_name, hints, result_out);
 }
 
-INT mock_getaddrinfo(const char *file, const int line, const char *func, PCSTR node_name, PCSTR service_name, const ADDRINFOA *hints, PADDRINFOA *result_out)
+INT mock_getaddrinfo(const char *file, const int line, const char *func, PCSTR node_name, PCSTR service_name,
+                     const ADDRINFOA *hints, PADDRINFOA *result_out)
 {
     INT mock_ret;
 

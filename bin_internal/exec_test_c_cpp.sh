@@ -296,7 +296,7 @@ function run_test() {
         test_id="$test_name"
     fi
 
-    # サブフォルダーを含めて gcda ファイルをクリア
+    # サブディレクトリを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
     rm -rf obj/*.info gcov lcov > /dev/null
 
@@ -384,7 +384,7 @@ function run_test() {
         # TEST_SRCS が指定されている場合のみカバレッジ情報を取得
         if [ $IS_WINDOWS -ne 1 ]; then
             # Linux
-            # gcov でカバレッジ情報を取得する (サブフォルダーを含む)
+            # gcov でカバレッジ情報を取得する (サブディレクトリを含む)
             # Run gcov to collect coverage (including subdirectories)
             local base_dir=$(pwd)
             while IFS= read -r -d '' obj_dir; do
@@ -461,7 +461,7 @@ function run_test() {
 
 # メイン処理
 function main() {
-    # サブフォルダーを含めて gcda ファイルをクリア
+    # サブディレクトリを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
 
     # 子の設定は makefw 自身に解釈させる。引用した配置先を文字列分割しない。
@@ -765,7 +765,7 @@ function main() {
         echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a results/all_tests/summary.log
     fi
 
-    # Clean (サブフォルダーを含めて gcda ファイルをクリア)
+    # Clean (サブディレクトリを含めて gcda ファイルをクリア)
     find . -name "*.gcda" -delete 2>/dev/null
     rm -rf obj/*.info gcov lcov coverage
 

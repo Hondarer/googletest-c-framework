@@ -29,8 +29,7 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, CloseHandle(_, _, _, _)).WillByDefault(Invoke(delegate_real_CloseHandle));
     ON_CALL(*this, GetLastError(_, _, _)).WillByDefault(Invoke(delegate_real_GetLastError));
     ON_CALL(*this, GetModuleFileNameW(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetModuleFileNameW));
-    ON_CALL(*this, GetComputerNameExW(_, _, _, _, _, _))
-        .WillByDefault(Invoke(delegate_real_GetComputerNameExW));
+    ON_CALL(*this, GetComputerNameExW(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetComputerNameExW));
     ON_CALL(*this, GetUserPreferredUILanguages(_, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_GetUserPreferredUILanguages));
     ON_CALL(*this, GetUserDefaultLocaleName(_, _, _, _, _))

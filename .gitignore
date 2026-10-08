@@ -10,7 +10,7 @@
 # gtestは管理対象
 !/gtest
 
-# 以下は管理対象外
+# 次は管理対象外
 obj/
 gen/
 gcov/

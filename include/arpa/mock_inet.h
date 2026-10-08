@@ -22,9 +22,8 @@ extern "C"
 
     #ifdef _IN_OVERRIDE_HEADER_ARPA_INET_H
 
-        #define inet_pton(af, src, dst) mock_inet_pton(__FILE__, __LINE__, __func__, af, src, dst)
-        #define inet_ntop(af, src, dst, size) \
-            mock_inet_ntop(__FILE__, __LINE__, __func__, af, src, dst, size)
+        #define inet_pton(af, src, dst)       mock_inet_pton(__FILE__, __LINE__, __func__, af, src, dst)
+        #define inet_ntop(af, src, dst, size) mock_inet_ntop(__FILE__, __LINE__, __func__, af, src, dst, size)
 
     #else // _IN_OVERRIDE_HEADER_ARPA_INET_H
 

@@ -25,12 +25,12 @@ HANDLE mock_CreateFileMappingA(const char *file, const int line, const char *fun
     if (_mock_windows != nullptr)
     {
         mock_ret = _mock_windows->CreateFileMappingA(file, line, func, mapping_file, attributes, protect, size_high,
-                                                size_low, name);
+                                                     size_low, name);
     }
     else
     {
-        mock_ret = delegate_real_CreateFileMappingA(file, line, func, mapping_file, attributes, protect, size_high, size_low,
-                                               name);
+        mock_ret = delegate_real_CreateFileMappingA(file, line, func, mapping_file, attributes, protect, size_high,
+                                                    size_low, name);
     }
 
     if (getTraceLevel() > TRACE_NONE)

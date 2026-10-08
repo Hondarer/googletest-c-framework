@@ -98,10 +98,10 @@ def read_source_file(source_path):
     ソースファイルを読み込む。
 
     Args:
-        source_path: ソースファイルのパス
+        source_path: ソース ファイルのパス
 
     Returns:
-        list: ソースコードの各行のリスト。読み込めない場合は None。
+        list: ソース コードの各行のリスト。読み込めない場合は None。
     """
     try:
         # 複数のエンコーディングを試行
@@ -123,13 +123,13 @@ def generate_gcov(source_path, coverage_info, output_dir):
     gcov 形式のファイルを生成する。
 
     gcov 形式:
-        実行回数:行番号:ソースコード
+        実行回数:行番号:ソース コード
         - 実行回数が 0 の場合は "#####"
         - 実行対象外の行は "-"
         - 分岐情報: branch X taken Y% または branch X never executed
 
     Args:
-        source_path: ソースファイルのパス
+        source_path: ソース ファイルのパス
         coverage_info: {'lines': {行番号: ヒット数}, 'branches': {行番号: (covered, valid)}} の辞書
         output_dir: 出力ディレクトリ
     """

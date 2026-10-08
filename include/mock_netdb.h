@@ -13,7 +13,8 @@ extern "C"
 {
     #endif
 
-    extern int mock_getaddrinfo(const char *, const int, const char *, const char *, const char *, const struct addrinfo *, struct addrinfo **);
+    extern int mock_getaddrinfo(const char *, const int, const char *, const char *, const char *,
+                                const struct addrinfo *, struct addrinfo **);
     extern void mock_freeaddrinfo(const char *, const int, const char *, struct addrinfo *);
     extern const char *mock_gai_strerror(const char *, const int, const char *, int);
 
@@ -32,14 +33,17 @@ extern "C"
 
         #include <gmock/gmock.h>
 
-extern int delegate_real_getaddrinfo(const char *, const int, const char *, const char *, const char *, const struct addrinfo *, struct addrinfo **);
+extern int delegate_real_getaddrinfo(const char *, const int, const char *, const char *, const char *,
+                                     const struct addrinfo *, struct addrinfo **);
 extern void delegate_real_freeaddrinfo(const char *, const int, const char *, struct addrinfo *);
 extern const char *delegate_real_gai_strerror(const char *, const int, const char *, int);
 
 class Mock_netdb
 {
   public:
-    MOCK_METHOD(int, getaddrinfo, (const char *, const int, const char *, const char *, const char *, const struct addrinfo *, struct addrinfo **));
+    MOCK_METHOD(int, getaddrinfo,
+                (const char *, const int, const char *, const char *, const char *, const struct addrinfo *,
+                 struct addrinfo **));
     MOCK_METHOD(void, freeaddrinfo, (const char *, const int, const char *, struct addrinfo *));
     MOCK_METHOD(const char *, gai_strerror, (const char *, const int, const char *, int));
 
