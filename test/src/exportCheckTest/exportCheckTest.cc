@@ -35,7 +35,7 @@ TEST(exportCheckTest, handles_linker_synthetic_symbol_by_platform)
     // Assert
 #if defined(PLATFORM_LINUX)
     testing::expectExportNamesMatch(expected,
-                                    actual); // [確認_正常系] - Linux ではリンカー合成シンボルが除外されること。
+                                    actual); // [確認_正常系 回数=2] - Linux ではリンカー合成シンボルが除外されること。
 #elif defined(PLATFORM_WINDOWS)
     EXPECT_NONFATAL_FAILURE(testing::expectExportNamesMatch(expected, actual),
                             "__bss_start"); // [確認_異常系] - Windows では同名シンボルが想定外として報告されること。

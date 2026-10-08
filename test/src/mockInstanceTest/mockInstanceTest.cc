@@ -38,6 +38,7 @@ TEST(mockInstanceTest, rejects_multiple_instances)
             (void)duplicate_mock_testfw;
         },
         "Only one mock instance may exist for s_mock_testfw at a time."); // [手順] - 2 個目の Mock_testfw を生成する。
+    // [確認_異常系] - EXPECT_NONFATAL_FAILURE({ Mock_testfw duplicate_mock_testfw; (void)duplicate_mock_testfw; }, "Only one mock instance may exist for s_mock_testfw at a time.") の期待が成立すること。
 
     // Assert
     EXPECT_EQ(&mock_testfw,
