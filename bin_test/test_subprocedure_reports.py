@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin_internal"))
 from test_subprocedures import SourceIndex, dedent_source, platform_lines
@@ -118,9 +119,9 @@ class SubprocedureTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             header = root / "helper.h"
-            header.write_text(definition("A", 'EXPECT_TRUE(ok); // [確認_正常系] - A。'))
+            header.write_text(definition("A", 'EXPECT_TRUE(ok); // [確認_正常系] - A。'), encoding="utf-8")
             cpp = root / "test.cc"
-            cpp.write_text('#include "helper.h"\n' + test('a(); // [サブ手順参照 名前=A]'))
+            cpp.write_text('#include "helper.h"\n' + test('a(); // [サブ手順参照 名前=A]'), encoding="utf-8")
             alias = root / "alias.cc"
             alias.symlink_to(cpp)
             index = SourceIndex.from_paths([cpp, alias])
@@ -197,12 +198,15 @@ class SubprocedureTest(unittest.TestCase):
             SourceIndex({"sample.cc": 'void a() {\nEXPECT_TRUE(ok); // [確認_正常系] - A。\n}\n'})
         SourceIndex({"sample.cc": 'void a() {\nEXPECT_TRUE(ok); // [状態確認] - A。\n}\n'})
 
-    def test_cli_failure_has_no_partial_output(self):
+    # 既定文字コードへの依存を Linux でも検出する。
+    @patch("subprocess._text_encoding", return_value="cp1252")
+    def test_cli_failure_has_no_partial_output(self, _default_encoding):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "test.cc"
-            path.write_text(test('// [サブ手順参照 名前=Missing]'))
+            path.write_text(test('// [サブ手順参照 名前=Missing]'), encoding="utf-8")
             script = Path(__file__).resolve().parents[1] / 'bin_internal/test_subprocedures.py'
-            result = subprocess.run([sys.executable, str(script), '--test-id', 'Suite.Case'], cwd=directory, text=True, capture_output=True)
+            result = subprocess.run([sys.executable, str(script), '--test-id', 'Suite.Case'], cwd=directory,
+                                    text=True, encoding="utf-8", capture_output=True)
             self.assertEqual(result.returncode, 1)
             self.assertEqual(result.stdout, '')
             self.assertIn('test.cc:', result.stderr)

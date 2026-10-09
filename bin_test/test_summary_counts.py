@@ -7,6 +7,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "bin_internal"))
 from test_summary import CountExpression, SummaryError, render_summary
@@ -138,21 +139,24 @@ Assert.True(true); // [確認_正常系] - 一致すること。
         with self.assertRaises(SummaryError):
             render_summary('// [確認_正常系] 説明文だけ。')
 
-    def test_cli_error_is_nonzero_without_partial_summary(self):
+    # 既定文字コードへの依存を Linux でも検出する。
+    @patch("subprocess._text_encoding", return_value="cp1252")
+    def test_cli_error_is_nonzero_without_partial_summary(self, _default_encoding):
         for script in ["insert_summary_c_cpp.py", "insert_summary_dotnet.py"]:
             result = subprocess.run([sys.executable, str(HERE / script), "--test-id", "Suite.Case"],
                                     input='// [確認_正常系 回数=1+] - 一致すること。',
-                                    text=True, capture_output=True)
+                                    text=True, encoding="utf-8", capture_output=True)
             self.assertEqual(result.returncode, 1)
             self.assertEqual(result.stdout, "")
             self.assertIn("Suite.Case:抽出コード:1", result.stderr)
 
-    def test_languages_use_the_same_summary(self):
+    @patch("subprocess._text_encoding", return_value="cp1252")
+    def test_languages_use_the_same_summary(self, _default_encoding):
         source = '// [確認_正常系 回数=2*(3+4)] - 一致すること。\n'
         summaries = []
         for script in ["insert_summary_c_cpp.py", "insert_summary_dotnet.py"]:
             result = subprocess.run([sys.executable, str(HERE / script), "--summary-only"],
-                                    input=source, text=True, capture_output=True, check=True)
+                                    input=source, text=True, encoding="utf-8", capture_output=True, check=True)
             summaries.append(result.stdout)
         self.assertEqual(summaries[0], summaries[1])
 
