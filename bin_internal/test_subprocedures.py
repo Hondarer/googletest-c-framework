@@ -413,7 +413,8 @@ def main():
     try:
         encoding = text_encoding(args.encoding)
         if hasattr(sys.stdout, "reconfigure"):
-            sys.stdout.reconfigure(encoding="utf-8" if encoding == "utf-8-sig" else encoding)
+            # Windows でも LF で出力し、bash 側で行末の \r が残らないようにする
+            sys.stdout.reconfigure(encoding="utf-8" if encoding == "utf-8-sig" else encoding, newline="\n")
             sys.stderr.reconfigure(encoding="utf-8")
         paths = list(discover(args.language)) + [Path(p) for p in args.source]
         index = SourceIndex.from_paths(paths, args.language, None if args.is_windows is None else args.is_windows == "1", encoding)

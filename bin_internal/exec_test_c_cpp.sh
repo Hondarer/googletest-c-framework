@@ -191,8 +191,6 @@ function compute_test_signature() {
         return 1
     fi
     while IFS= read -r src; do
-        # Windows の Python はテキスト出力の改行を CRLF にするため、末尾の \r を除去する
-        src="${src%$'\r'}"
         [ -n "$src" ] && sig_srcs+=("$src")
     done <<< "$evidence_sources"
 
