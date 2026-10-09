@@ -7,7 +7,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-from test_summary import SummaryError, render_summary, text_encoding
+from test_summary import SummaryError, text_encoding
+from test_subprocedures import SourceIndex, discover
 
 
 HERE = Path(__file__).resolve().parent
@@ -59,23 +60,13 @@ def extract_code(name, source, is_windows, encoding):
 
 def prepare(full, selected, manifest, is_windows, encoding):
     groups = group_tests(test_names(full), test_names(selected))
-    # 元コードは一度だけ読み、各定義の抽出には所属する全 prefix を含める。
-    paths = sorted(set(Path(".").rglob("*.cc")) | set(Path(".").rglob("*.cpp")))
-    source = "\n".join(path.read_text(encoding=encoding) for path in paths) if groups else ""
+    index = SourceIndex.from_paths(discover("c_cpp"), is_windows=is_windows == "1", encoding=encoding) if groups else None
     outputs = []
     for key, group in groups.items():
-        code = ""
-        definition = ""
-        for name in dict.fromkeys(n.split(".", 1)[0] for n in group["all"]):
-            representative = next(n for n in group["all"] if n.startswith(name + "."))
-            extracted = extract_code(representative, source, is_windows, encoding)
-            # 同じテスト本体のタグを prefix 数分重複集計しない。
-            if not definition:
-                definition = extracted
-            code += extracted + "\n"
         partial = set(group["all"]) != set(group["selected"])
-        summary = render_summary(definition, True, len(group["all"]), partial, key)
-        outputs.append((key, f"Running test definition: {key}\n----\n{summary}{code}----\n"))
+        prefixes = {name.split("/", 1)[0] for name in group["all"]}
+        report = index.report(key, True, len(group["all"]), partial, prefixes=prefixes)
+        outputs.append((key, f"Running test definition: {key}\n----\n{report}----\n"))
     # 全定義の解析が成功してから成果物を作る。
     for key, content in outputs:
         path = Path("results") / key / "results.log"

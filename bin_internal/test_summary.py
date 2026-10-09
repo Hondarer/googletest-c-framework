@@ -165,7 +165,7 @@ def source_lines(source):
 PHASE = re.compile(r"^\s*(Arrange|Pre-Assert|Act|Assert)(?:_([0-9]+))?\s*$")
 CHECK = re.compile(r"(Pre-Assert確認|確認)_(正常系|異常系)(?:\s+回数\s*=\s*(.+))?")
 LIST = re.compile(r"^(?:[-*+]\s+|[0-9]+\.\s+)(\S.*)$")
-TAG_START = re.compile(r"\[(?:Pre-Assert確認|確認|状態|手順|Pre-Assert手順)")
+TAG_START = re.compile(r"\[(?:Pre-Assert確認|確認|状態|手順|Pre-Assert手順|サブ手順)")
 TAG = re.compile(r"\[([^\]]*)\]")
 TEST = re.compile(r"\b(?:TEST(?:_[FP])?|TYPED_TEST(?:_P)?)\s*\(|^\s*\[(?:Fact|Theory)\b|^\s*(?:public|private|protected|internal|void|async|Task)\b")
 
@@ -195,7 +195,7 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
         if not found_test:
             if TEST.search(line):
                 found_test = True
-            elif original.lstrip().startswith("//"):
+            elif original.lstrip().startswith("//") and not TAG_START.search(comment):
                 text = comment.lstrip("/ ").rstrip()
                 if text:
                     desc.append(text)
@@ -238,6 +238,8 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
                         else:
                             text += f"〔{value} 回〕"
                     (cycle.pre_check if match.group(1).startswith("Pre-") else cycle.check).append(text)
+                elif name.startswith("サブ手順"):
+                    raise SummaryError("サブ手順は定義一覧を使って解決してから集計してください")
                 elif name.startswith(("確認", "Pre-Assert確認")):
                     raise SummaryError(f"不正な確認タグ: [{name}]")
                 elif text:

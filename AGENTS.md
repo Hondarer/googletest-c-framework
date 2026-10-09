@@ -38,3 +38,4 @@ make test
   詳細は [makeparts](../makefw/docs/makeparts.md) の「TEST_SRCS / ADD_SRCS の留意事項」を参照してください。
 - テスト コードのフェーズ分割コメント (`// Arrange` `// Pre-Assert` `// Act` `// Assert` `// Cleanup` と `[状態]` などのブラケット タグ) は `docs/about-test-phase.md` の規則に従ってください。1 テスト内で Arrange/Act/Assert のサイクルを複数回含むマルチ フェーズ テストの番号付与規則は同ドキュメントの「シングル フェーズ テストとマルチ フェーズ テスト」を参照してください。
 - 確認タグの回数式や件数集計を変更する場合は、`docs/about-test-phase.md` の「期待を確認する行為 1 回を 1 件として集計する」を参照し、`bin_internal/` の共通集計処理、C/C++・.NET の実行スクリプト、`bin_test/` の局所テストを同時に確認してください。
+- 共通関数や fixture のエビデンスを変更する場合は、`docs/test-subprocedures.md` を参照してください。サブ手順の解析を変更する場合は、概要、ソース抜粋、C/C++・.NET の実行経路、コメント検査を同時に確認してください。

@@ -184,9 +184,19 @@ function compute_test_signature() {
         return 1
     fi
 
+    # 抜粋する共通ソースと相対 include のヘッダーも変更検出に含める。
+    local evidence_sources
+    if ! evidence_sources=$(python3 "$SCRIPT_DIR/test_subprocedures.py" \
+        --list-inputs --is-windows "$IS_WINDOWS" --encoding "${FILES_LANG#*.}"); then
+        return 1
+    fi
+    while IFS= read -r src; do
+        [ -n "$src" ] && sig_srcs+=("$src")
+    done <<< "$evidence_sources"
+
     # 集計処理を変更した場合も古いエビデンスを再利用しない。
     for src in exec_test_c_cpp.sh get_test_code_c_cpp.awk insert_summary_c_cpp.py \
-        test_summary.py gtest_summary_groups.py; do
+        test_summary.py test_subprocedures.py gtest_summary_groups.py; do
         sig_srcs+=("$SCRIPT_DIR/$src")
     done
 
@@ -230,10 +240,8 @@ function execute_test_case() {
         summary_options+=(--code-only)
     fi
     local -a evidence_status
-    find . -type f \( -name '*.cc' -o -name '*.cpp' \) -print0 2>/dev/null |
-        xargs -0 -r cat 2>/dev/null |
-        awk -v test_id="$test_name" -v is_windows="$IS_WINDOWS" -f "$SCRIPT_DIR/get_test_code_c_cpp.awk" |
-        python3 "$SCRIPT_DIR/insert_summary_c_cpp.py" "${summary_options[@]}"
+    python3 "$SCRIPT_DIR/test_subprocedures.py" --language c_cpp \
+        --is-windows "$IS_WINDOWS" "${summary_options[@]}"
     evidence_status=("${PIPESTATUS[@]}")
     if [[ " ${evidence_status[*]} " =~ [[:space:]][1-9][0-9]*[[:space:]] ]]; then
         printf '%s\n' '[  FAILED  ] Test evidence generation failed.'

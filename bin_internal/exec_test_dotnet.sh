@@ -148,8 +148,8 @@ function run_all_tests_batch() {
         if [ -n "$test_file" ]; then
             # 抽出・解析のどちらの失敗も実行結果へ反映する。
             if ! (set -o pipefail
-                python3 "$SCRIPT_DIR/get_test_code_dotnet.py" "$test_file" "$class_name" "$method_name" |
-                    python3 "$SCRIPT_DIR/insert_summary_dotnet.py" "${summary_options[@]}"
+                python3 "$SCRIPT_DIR/test_subprocedures.py" --language dotnet \
+                    --source "$test_file" "${summary_options[@]}"
             ) >> "$temp_file" 2>&1; then
                 evidence_failed=1
             fi

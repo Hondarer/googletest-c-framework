@@ -170,6 +170,7 @@ bool isLinkerSyntheticSymbol(const string &name)
 
 } // namespace
 
+// [サブ手順 名前=testing.expectExportNamesMatch]
 void expectExportNamesMatch(const set<string> &expected, const set<string> &actual,
                             const map<string, string> &signatures)
 {
@@ -208,6 +209,7 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
         }
     }
     EXPECT_TRUE(missing.empty()) << "不足しているエクスポート: " << joinNames(missing);
+    // [確認_正常系] - `missing.empty()` が true であること。
 
     // Windows (明示 dllexport) と Linux (-fvisibility=hidden + 公開印 default) の双方で、
     // 期待テーブルとの過不足なし完全一致を要求する。
@@ -221,7 +223,9 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
         }
     }
     EXPECT_TRUE(extra.empty()) << "想定外のエクスポート: " << joinNames(extra);
+    // [確認_正常系] - `extra.empty()` が true であること。
 }
+// [サブ手順終了]
 
 vector<string> findUndecoratedExternVariables(const string &include_dir, const string &export_macro_name)
 {

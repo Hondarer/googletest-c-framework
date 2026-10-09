@@ -37,7 +37,29 @@ class PathSpacesTest(unittest.TestCase):
         (cls.root / "source").mkdir()
         (cls.root / "source/sample.c").write_text(source, encoding="utf-8")
         (cls.leaf / "sample.c").write_text(source, encoding="utf-8")
+        (cls.leaf / "subprocedure helper.h").write_text('''#include <gtest/gtest.h>
+class EvidenceFixture : public ::testing::Test {
+    // [サブ手順 名前=EvidenceFixture.SetUp]
+    void SetUp() override {
+        EXPECT_TRUE(true); // [確認_正常系] - 初期値が true であること。
+    }
+    // [サブ手順終了]
+    // [サブ手順 名前=EvidenceFixture.TearDown]
+    void TearDown() override {
+        EXPECT_TRUE(true); // [確認_正常系] - 後処理が完了すること。
+    }
+    // [サブ手順終了]
+protected:
+    // [サブ手順 名前=EvidenceFixture.Check]
+    void Check() {
+        EXPECT_TRUE(true); // [確認_正常系] - 結果が true であること。
+    }
+    // [サブ手順終了]
+};
+class EvidenceParams : public EvidenceFixture, public ::testing::WithParamInterface<int> {};
+''', encoding="utf-8")
         (cls.leaf / "sampleTest.cc").write_text('''#include <gtest/gtest.h>
+#include "subprocedure helper.h"
 extern "C" int sample(int value);
 TEST(PathSpaces, Pass) {
     // Arrange
@@ -75,6 +97,24 @@ INSTANTIATE_TEST_SUITE_P(B, Repeats, ::testing::Values(3));
 TEST(InvalidComment, Case) {
     EXPECT_TRUE(true); // [確認_正常系 回数=1+] - true であること。
 }
+
+// [サブ手順参照 名前=EvidenceFixture.SetUp]
+TEST_F(EvidenceFixture, ReportsSubprocedures) {
+    for (int i = 0; i < 2; ++i) {
+        Check(); // [サブ手順参照 名前=EvidenceFixture.Check 回数=2]
+    }
+}
+// [サブ手順参照 名前=EvidenceFixture.TearDown]
+
+// [サブ手順参照 名前=EvidenceFixture.SetUp 回数=PARAM]
+TEST_P(EvidenceParams, ReportsSubprocedures) {
+    for (int i = 0; i < 2; ++i) {
+        Check(); // [サブ手順参照 名前=EvidenceFixture.Check 回数=PARAM*2]
+    }
+}
+// [サブ手順参照 名前=EvidenceFixture.TearDown 回数=PARAM]
+
+INSTANTIATE_TEST_SUITE_P(Records, EvidenceParams, ::testing::Values(1, 2));
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
@@ -162,6 +202,26 @@ int main(int argc, char **argv) {
         branch = (self.leaf / "results/Repeats.Branch/results.log").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:2, 異常系:1)", branch)
 
+    def test_fixture_and_header_subprocedures_are_included(self):
+        result = self.run_tests("EvidenceFixture.ReportsSubprocedures")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        log = (self.leaf / "results/EvidenceFixture.ReportsSubprocedures/results.log").read_text(encoding="utf-8")
+        self.assertIn("確認内容 (正常系:4)", log)
+        self.assertEqual(log.count("// サブ手順: EvidenceFixture.Check\n"), 1)
+        self.assertIn("subprocedure helper.h:", log)
+        self.assertIn("\nvoid Check()", log)
+
+    def test_parameter_subprocedures_are_aggregated_once(self):
+        result = self.run_tests("Records/EvidenceParams.ReportsSubprocedures/*")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        log = (self.leaf / "results/EvidenceParams.ReportsSubprocedures/results.log").read_text(encoding="utf-8")
+        self.assertIn("確認内容 (正常系:8)", log)
+        self.assertEqual(log.count("### 確認内容"), 1)
+        self.assertEqual(log.count("// サブ手順: EvidenceFixture.Check\n"), 1)
+        for n in (0, 1):
+            record = (self.leaf / f"results/EvidenceParams.ReportsSubprocedures/Records/{n}/results.log").read_text(encoding="utf-8")
+            self.assertNotIn("### 確認内容", record)
+
     def test_partial_parameter_filter_leaves_counts_unevaluated(self):
         result = self.run_tests("A/Repeats.Uniform/0")
         self.assertEqual(result.returncode, 0, result.stdout)
@@ -176,9 +236,12 @@ int main(int argc, char **argv) {
         settings.parent.mkdir(exist_ok=True)
         source = self.leaf / "sampleTest.cc"
         original = source.read_bytes()
+        header = self.leaf / "subprocedure helper.h"
+        original_header = header.read_bytes()
         try:
             settings.write_text('{"files.encoding": "shiftjis"}', encoding="utf-8")
             source.write_bytes(original.decode("utf-8").encode("cp932"))
+            header.write_bytes(original_header.decode("utf-8").encode("cp932"))
             result = self.run_tests("*/Repeats.Uniform/*")
             self.assertEqual(result.returncode, 0, result.stdout)
             log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="cp932")
@@ -186,6 +249,7 @@ int main(int argc, char **argv) {
             self.assertIn("正の値であること。", log)
         finally:
             source.write_bytes(original)
+            header.write_bytes(original_header)
             settings.unlink()
 
     def test_summary_changes_invalidate_stamp(self):
@@ -219,6 +283,15 @@ int main(int argc, char **argv) {
             third = run()
             self.assertEqual(third.returncode, 0, third.stdout)
             self.assertNotIn("Skipping test", third.stdout)
+            header = self.leaf / "subprocedure helper.h"
+            original_header = header.read_text(encoding="utf-8")
+            try:
+                header.write_text(original_header + "\n", encoding="utf-8")
+                fourth = run()
+                self.assertEqual(fourth.returncode, 0, fourth.stdout)
+                self.assertNotIn("Skipping test", fourth.stdout)
+            finally:
+                header.write_text(original_header, encoding="utf-8")
         finally:
             self.script.write_text(script_text, encoding="utf-8")
             summary_script.write_text(original_script, encoding="utf-8")

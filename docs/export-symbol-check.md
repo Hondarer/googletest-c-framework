@@ -50,7 +50,7 @@ TEST_F(myLibExportTest, symbol_names_match)
     expected.insert(testing::identManifestSymbolName("libmylib" TESTFW_SHARED_LIBRARY_EXTENSION));
 #endif /* PLATFORM_WINDOWS */
     std::set<std::string> actual = testing::getActualExportNames(dll_path);
-    testing::expectExportNamesMatch(expected, actual, kExpectedExportSignatures);
+    testing::expectExportNamesMatch(expected, actual, kExpectedExportSignatures); // [サブ手順参照 名前=testing.expectExportNamesMatch]
 }
 
 TEST_F(myLibExportTest, public_header_variables_declare_export_macro)
@@ -61,7 +61,9 @@ TEST_F(myLibExportTest, public_header_variables_declare_export_macro)
 }
 ```
 
-実シンボルを取得する処理と Linux のリンカー合成シンボルを除外する処理は、共通関数の内部で切り替わります。
+実シンボルを取得する処理と Linux のリンカー合成シンボルを除外する処理は、共通関数の内部で切り替わります。  
+共通照合のエビデンスは [サブ手順](test-subprocedures.md) の参照で取り込みます。  
+不足と想定外の確認をそれぞれ 1 件として集計し、実装のソースもレポートへ抜粋します。
 
 Windows の共有ライブラリに自動追加される IDENT manifest や、ライブラリ固有の OS 別 API は、app 側でプラットフォームごとの期待値へ明示的に追加します。  
 テスト本体で `PLATFORM_WINDOWS` または `PLATFORM_LINUX` を判定する場合は、テストの `makepart.mk` で make の同名変数に対応する `DEFINES` を追加します。  

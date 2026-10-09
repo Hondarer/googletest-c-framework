@@ -80,6 +80,37 @@ public class ExampleTests {
     }
 }
 ''', encoding="utf-8")
+        (cls.leaf / "SubprocedureTests.cs").write_text('''using Xunit;
+using System;
+public class SubprocedureTests : IDisposable {
+    // [サブ手順 名前=SubprocedureTests.Constructor]
+    public SubprocedureTests() {
+        Assert.True(true); // [確認_正常系] - 準備が完了すること。
+    }
+    // [サブ手順終了]
+
+    // [サブ手順 名前=SubprocedureTests.Check]
+    private void Check() {
+        Assert.Equal(2, 1 + 1); // [確認_正常系] - 加算の結果が 2 であること。
+    }
+    // [サブ手順終了]
+
+    // [サブ手順参照 名前=SubprocedureTests.Constructor]
+    [Fact]
+    public void Case() {
+        for (int i = 0; i < 2; ++i) {
+            Check(); // [サブ手順参照 名前=SubprocedureTests.Check 回数=2]
+        }
+    }
+    // [サブ手順参照 名前=SubprocedureTests.Dispose]
+
+    // [サブ手順 名前=SubprocedureTests.Dispose]
+    public void Dispose() {
+        Assert.True(true); // [確認_正常系] - 後処理が完了すること。
+    }
+    // [サブ手順終了]
+}
+''', encoding="utf-8")
         hooks = []
         for hook in ("pre-build", "post-build", "pre-test", "post-test"):
             hooks.append(f'{hook}:\n\t@printf "%s\\n" "{hook}" >> hooks.log\n')
@@ -119,6 +150,11 @@ public class ExampleTests {
         uniform = (self.leaf / "results/ExampleTests.Uniform/results.log").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:9)", uniform)
         self.assertIn("PARAM=3", uniform)
+        subprocedure = (self.leaf / "results/SubprocedureTests.Case/results.log").read_text(encoding="utf-8")
+        self.assertIn("### 確認内容 (正常系:4)", subprocedure)
+        self.assertIn("\nprivate void Check()", subprocedure)
+        self.assertEqual(subprocedure.count("// サブ手順: SubprocedureTests.Check\n"), 1)
+        self.assertIn("SubprocedureTests.cs:", subprocedure)
         summary = (self.leaf / "results/all_tests/summary.log").read_text(encoding="utf-8")
         self.assertIn("ExampleTests.Pass\tPASSED", summary)
         hooks = (self.leaf / "hooks.log").read_text(encoding="utf-8").splitlines()
