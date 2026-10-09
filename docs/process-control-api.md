@@ -272,8 +272,7 @@ EXPECT_NE(string::npos, getStdout(recv_h).find("Hello Porter"));
 
 ### テスト失敗時のプロセス リーク防止
 
-`ASSERT_*` マクロでテストが中断された場合でもプロセスを確実に終了させるため、  
-`TearDown()` に終了処理を実装します。
+`ASSERT_*` マクロでテストが中断された場合でもプロセスを確実に終了させるため、`TearDown()` に終了処理を実装します。
 
 ```cpp
 void TearDown() override {
