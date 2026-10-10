@@ -194,6 +194,29 @@ public class SubprocedureTests : IDisposable {
         self.assertNotEqual(result.returncode, 0, result.stdout)
         self.assertIn("--list-tests failed", result.stdout)
 
+    def test_empty_test_list_is_failure(self):
+        # テスト ホストとの通信に失敗した dotnet test --list-tests は、終了コード 0 で一覧を空にする。
+        fake = self.root / "tools space/empty list dotnet.sh"
+        with open(fake, "w", encoding="utf-8", newline="\n") as handle:
+            handle.write(
+                '#!/bin/bash\n'
+                'printf "The following Tests are available:\\n"\n'
+                'printf " System.Net.Sockets.SocketException (13): Permission denied\\n" >&2\n'
+                'exit 0\n'
+            )
+        fake.chmod(0o755)
+        env = dict(self.env, DOTNET=fake.as_posix(), CONFIG="Debug")
+        result = subprocess.run(
+            [BASH, str(TESTFW / "bin_internal/exec_test_dotnet.sh")],
+            cwd=self.leaf, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            encoding="utf-8", errors="replace", timeout=30,
+        )
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn("--list-tests found no tests", result.stdout)
+        self.assertIn("SocketException", result.stdout)
+        summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+        self.assertIn("--list-tests found no tests", summary)
+
 
 if __name__ == "__main__":
     unittest.main()

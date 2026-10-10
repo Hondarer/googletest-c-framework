@@ -49,7 +49,7 @@ function safe_tput() {
 
 # テスト一覧を取得
 function list_tests() {
-    "$DOTNET_CMD" test --list-tests --no-build -c "$CONFIG" -o "$OUTPUT_DIR" 2>/dev/null | \
+    "$DOTNET_CMD" test --list-tests --no-build -c "$CONFIG" -o "$OUTPUT_DIR" 2> "$REPORT_STATE/list_error" | \
         grep -E '^\s+' | \
         sed -e 's/^[ \t]*//'
     return ${PIPESTATUS[0]}
@@ -64,15 +64,22 @@ function run_all_tests_batch() {
     local tests
     tests=$(list_tests)
     local list_exit_code=$?
-    if [ "$list_exit_code" -ne 0 ]; then
-        echo "Error: dotnet test --list-tests failed with exit code $list_exit_code." | tee -a "$SUMMARY_JOURNAL" >&2
-        return "$list_exit_code"
-    fi
     tests=$(printf '%s\n' "$tests" | sed 's/(.*//' | sort -u)
-
-    if [ -z "$tests" ]; then
-        echo "No tests found."
-        return 0
+    # テスト ホストとの通信に失敗しても、dotnet test --list-tests は終了コード 0 で
+    # 一覧を空にすることがある。0 件を成功扱いにすると、テストを実行していないのに
+    # 成功のスタンプが残るため、失敗として扱う。
+    local list_error=""
+    if [ "$list_exit_code" -ne 0 ]; then
+        list_error="Error: dotnet test --list-tests failed with exit code $list_exit_code."
+    elif [ -z "$tests" ]; then
+        list_error="Error: dotnet test --list-tests found no tests."
+        list_exit_code=1
+    fi
+    if [ -n "$list_error" ]; then
+        cat "$REPORT_STATE/list_error" >&2
+        echo "$list_error" >> "$SUMMARY_JOURNAL"
+        echo -e "\e[31m$list_error\e[0m" >&2
+        return "$list_exit_code"
     fi
 
     local test_count=$(echo "$tests" | wc -l)
