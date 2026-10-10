@@ -336,6 +336,9 @@ else:
 ''', encoding='utf-8')
         fake.chmod(0o755)
         env = dict(os.environ, DOTNET=str(fake), CONFIG='Debug', ENCODING=encoding)
+        # make test から起動すると実ワークスペースの WORKSPACE_DIR を引き継ぎ、
+        # 一時ワークスペースの settings.json ではなく実ワークスペースの文字コードを使ってしまう。
+        env.pop('WORKSPACE_DIR', None)
         if partial:
             env['PARTIAL'] = '1'
         if list_error:
