@@ -321,8 +321,17 @@ function run_test() {
             # に固定値を与えると、候補がその 1 つに絞られ、サブディレクトリでコンパイル
             # したソース (サブフォルダー コンパイル構成) の作業ディレクトリと一致せず、
             # 読み取りに失敗する。
+            # gcovr は gcov の作業ディレクトリとして --root を最初に試すため、並列に動く
+            # 他のテスト ディレクトリの gcovr と同名の .gcov をワークスペース ルートで取り合う。
+            # 削除の競合 (FileNotFoundError) や他のテストの .gcov の読み込みを避けるため、
+            # ワークスペース単位のロックで gcovr の実行を直列化する。
+            # see: https://github.com/gcovr/gcovr/blob/8.6/src/gcovr/formats/gcov/read.py
+            local -a gcovr_lock=()
+            if command -v flock > /dev/null 2>&1; then
+                gcovr_lock=(flock "${TMPDIR:-/tmp}/testfw-gcovr-$(printf '%s' "$WORKSPACE_DIR" | md5sum | cut -c1-16).lock")
+            fi
             local gcovr_error
-            gcovr_error=$(gcovr --root "$WORKSPACE_DIR" . \
+            gcovr_error=$("${gcovr_lock[@]}" gcovr --root "$WORKSPACE_DIR" . \
                 --exclude-unreachable-branches \
                 --exclude-throw-branches --json --output coverage/coverage.raw.json 2>&1 1> /dev/null)
             if [ ! -f coverage/coverage.raw.json ]; then
