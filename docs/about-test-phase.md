@@ -239,37 +239,55 @@ remove(outputPath);
 ### 確認内容_N (正常系:n1, 異常系:n2)
 ```
 
-## テスト エビデンス (results.log)
+## テスト エビデンス (results.md)
 
-`make test` を実行すると、各テスト ケースごとに results.log が生成されます。
+`make test` を実行すると、各テスト ケースごとに `results.md` が生成されます。
 
 ### 出力先
 
 ```text
-<テストディレクトリ>/results/<TestSuite>.<TestName>/results.log
+<テストディレクトリ>/results/<TestSuite>.<TestName>/results.md
 ```
 
 **例**:
 
 ```text
-app/sample/test/src/libsampleTest/sampleCloseTest/results/sampleCloseTest.handle_null/results.log
+app/sample/test/src/libsampleTest/sampleCloseTest/results/sampleCloseTest.handle_null/results.md
 ```
 
 ### ファイル構成
 
-results.log は `----` で区切られた 3 つのブロックで構成されます。
+`results.md` は、先頭のテスト ID と判定に続いて、次の 3 節で構成されます。  
+C/C++ ではテスト バイナリのパスを記載し、コメントがある場合は備考を記載します。
 
 ```text
-Running test: <TestSuite>.<TestName> on bin/<TestBinary>
-----
-<ブロック 1: テスト項目サマリー>
-----
-<ブロック 2: 元のテストコード>
-----
-<ブロック 3: gtest 実行結果>
+# `<TestSuite>.<TestName>`
+
+- 判定: PASSED
+- テスト バイナリ: `bin/<TestBinary>`
+
+## テスト項目
+
+<テスト項目サマリー>
+
+## テスト コード
+
+<cpp または csharp のコード ブロック>
+
+## 実行結果
+
+<実行コマンドと出力の text コード ブロック>
 ```
 
-#### ブロック 1: テスト項目サマリー
+概要とタグがないテストでは、テスト項目の本文を「なし」とします。  
+状態、手順、確認内容の本文が空の場合も「なし」とします。確認件数合計は見出しに値を示すため、本文はありません。  
+エビデンス生成が失敗した場合は判定を FAILED とし、テスト項目に `> [!CAUTION]` でエラーを記載します。
+
+すべての結果ファイルは BOM なしの UTF-8、LF 改行で出力し、末尾を改行 1 つで終えます。  
+コード ブロックのフェンスは、内容中の最長のバッククォート連続より 1 つ長い長さとし、最低 3 個とします。  
+実行結果の ANSI エスケープ シーケンスはファイルから除去します。
+
+#### テスト項目
 
 テスト コード内のコメント タグからテスト エビデンスが自動生成されます。
 
@@ -285,7 +303,7 @@ Running test: <TestSuite>.<TestName> on bin/<TestBinary>
 ### 確認内容    ← [確認_*] / [Pre-Assert確認_*] タグから生成 (件数も集計)
 ```
 
-#### ブロック 2: 元のテスト コード
+#### テスト コード
 
 テスト コードそのもの (コメント含む) が記録されます。
 
@@ -334,22 +352,27 @@ C/C++ のテスト エビデンス生成では、テスト本体内にある Lin
 
 同名のテストをプラットフォームごとに重複定義すると各定義が連結して抽出されるため、テスト本体を一つにして、本体内の差異だけを対応する条件分岐で記載します。
 
-#### ブロック 3: gtest 実行結果
+#### gtest 実行結果
 
 `[ RUN ] / [ OK ] / [ FAILED ]` などの Google Test の出力が記録されます。
 
 ### 出力例
 
-次は、`sampleCloseTest.handle_null` (異常系) の results.log の例です。
+次は、`sampleCloseTest.handle_null` (異常系) の `results.md` の例です。
 
-```text
-Running test: sampleCloseTest.handle_null on bin/sampleCloseTest
-----
+````markdown
+# `sampleCloseTest.handle_null`
+
+- 判定: PASSED
+- テスト バイナリ: `bin/sampleCloseTest`
+
 ## テスト項目
 
 ハンドルが NULL の場合に SAMPLE_ERR を返すことの確認
 
 ### 状態
+
+なし
 
 ### 手順
 
@@ -359,7 +382,10 @@ Running test: sampleCloseTest.handle_null on bin/sampleCloseTest
 
 - ERROR ログに "handle is NULL" が含まれること。
 - sample_close の戻り値が SAMPLE_ERR であること。
-----
+
+## テスト コード
+
+```cpp
 // ハンドルが NULL の場合に SAMPLE_ERR を返すことの確認
 TEST_F(sampleCloseTest, handle_null)
 {
@@ -368,14 +394,20 @@ TEST_F(sampleCloseTest, handle_null)
     ...
     EXPECT_EQ(SAMPLE_ERR, actual_ret); // [確認_異常系] - sample_close の戻り値が SAMPLE_ERR であること。
 }
-----
+```
+
+## 実行結果
+
+```text
+./bin/sampleCloseTest --gtest_filter=sampleCloseTest.handle_null
 [ RUN      ] sampleCloseTest.handle_null
 [       OK ] sampleCloseTest.handle_null (0 ms)
 ```
+````
 
 ### タグと出力の対応
 
-| タグ | ブロック 1 への反映 |
+| タグ | テスト項目への反映 |
 |-----|-------------------|
 | `[状態]` | `### 状態` セクションに箇条書きで列挙 |
 | `[状態確認]` | `### 確認内容` セクションの先頭に `- (説明文)` の形式で出現順に列挙 (件数には計上しない) |
@@ -528,10 +560,10 @@ for (int i = 0; i < 3; ++i) {
 
 ### テスト定義ごとにサマリーを一度だけ生成する
 
-C/C++ のパラメーター テストは、テスト定義ごとのサマリーと各レコードの実行結果をまとめた `results/<Suite>.<Test>/results.log` を生成します。  
-各レコードのログには全体件数を重複掲載しません。  
-.NET では従来どおりメソッド単位にまとめます。  
-構造コメントのサイクル番号に従ってサイクル別・カテゴリ別に加算し、複数サイクルがある場合はテスト全体の合計も表示します。
+C/C++ のパラメーター テストは、定義単位の `results/<Suite>.<Test>/results.md` と、レコード単位の `results/<Suite>.<Test>/<Prefix>/<Param>/results.md` を生成します。  
+定義単位のファイルは全レコードの終了後に書き出し、総合判定、判定別の実行レコード数、テスト項目、テスト コード、実行レコードを記載します。総合判定は FAILED、WARNING、PASSED の順に優先します。  
+実行レコードの節には判定、レコードへの相対リンク、実行結果だけを記載します。レコードのテスト項目は定義単位への相対リンクとし、全体件数を重複掲載しません。  
+.NET はメソッド単位にまとめます。構造コメントの番号に従ってサイクル別・カテゴリ別に加算し、複数サイクルがあれば全体合計も表示します。
 
 レコード数は、C/C++ では Google Test の展開済みテスト一覧、.NET では TRX のレコード別結果から取得します。  
 `InlineData` の行数やソースのカンマ数からは推測しません。  
@@ -549,3 +581,18 @@ C/C++ のパラメーター テストは、テスト定義ごとのサマリー�
 省略した 1 回は従来の説明文だけを出力します。  
 解析処理は任意のコードを実行せず、トークン化と再帰下降解析で式全体を検証します。  
 エラーにはテスト識別子と抽出コード内の行番号を添え、サマリー生成失敗を実行スクリプトの失敗として扱います。
+
+## 全体サマリーの確認件数
+
+`results/all_tests/summary.md` は、開始日時、テスト対象ソースの MD5、テスト結果、集計、確認件数、警告とエラー、カバレッジを記載します。  
+MD5 とカバレッジは C/C++ で生成した場合だけ、警告とエラーは該当がある場合だけ記載します。  
+テスト結果と確認件数のテスト ID は、対応する結果ファイルへの相対リンクにします。
+
+確認件数の表は、テスト定義ごとに正常系、異常系、計を記載し、末尾に合計行を設けます。  
+通常テストは 1 テストで 1 行、C/C++ のパラメーター テストは定義単位で 1 行、.NET はメソッド単位で 1 行です。行順はテスト結果で定義が最初に現れる順とします。  
+確認タグがない定義も 0 件の行を記載し、定義がない場合は「なし」とします。  
+回数式とサブ手順の参照回数を反映した、個別結果と同じ集計値を使用します。`[状態確認]` は件数に含めません。
+
+一部レコードだけを実行したパラメーター テストと、テスト項目サマリー生成に失敗したテストは「未評価」とし、合計から除外します。  
+該当がある場合は、表の下に「合計には、未評価のテスト定義 <n> 件を含みません。」と記載します。  
+確認件数は管理目的でファイルに記録し、コンソールには追加しません。

@@ -13,6 +13,7 @@ GoogleTest の出力テキストに ANSI カラーコードを付与します。
 
 import re
 import sys
+from test_summary import text_encoding
 
 
 class AnsiColor:
@@ -111,8 +112,11 @@ def enable_windows_ansi() -> None:
 def main() -> None:
     # 標準入出力を UTF-8 に設定 (Windows 対応)
     try:
-        sys.stdin.reconfigure(encoding='utf-8')
-        sys.stdout.reconfigure(encoding='utf-8')
+        encoding = text_encoding(sys.argv[2]) if len(sys.argv) == 3 and sys.argv[1] == "--encoding" else "utf-8"
+        output_encoding = "utf-8" if encoding == "utf-8-sig" else encoding
+        # 解釈できないバイトもコンソールへそのまま渡し、テストの判定に影響させない。
+        sys.stdin.reconfigure(encoding=encoding, errors="surrogateescape")
+        sys.stdout.reconfigure(encoding=output_encoding, errors="surrogateescape")
         sys.stderr.reconfigure(encoding='utf-8')
     except AttributeError:
         # Python 3.7 未満では reconfigure が存在しない

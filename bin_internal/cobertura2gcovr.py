@@ -212,7 +212,7 @@ def main():
         # Python 3.7 未満では reconfigure が存在しない
         pass
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) not in (2, 3) or (len(sys.argv) == 3 and sys.argv[2] != "--markdown"):
         print("Usage: python cobertura2gcovr.py <cobertura.xml>",
               file=sys.stderr)
         sys.exit(1)
@@ -232,7 +232,11 @@ def main():
         sys.exit(1)
 
     # レポートを出力
-    print_report(coverage_data)
+    if "--markdown" in sys.argv:
+        from results_markdown import coverage_rows
+        print(coverage_rows(coverage_data))
+    else:
+        print_report(coverage_data)
 
 
 if __name__ == '__main__':

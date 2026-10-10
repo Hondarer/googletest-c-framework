@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from test_results_markdown import assert_results
 
 # Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると
 # WSL の bash.exe を選ぶことがある。PATH 上の bash (Git Bash など) を明示して使う。
@@ -142,21 +143,22 @@ public class SubprocedureTests : IDisposable {
             encoding="utf-8", errors="replace", timeout=240,
         )
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/ExampleTests.Pass/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/ExampleTests.Pass/results.md").read_text(encoding="utf-8")
         self.assertIn("// Arrange", log)
         self.assertIn("### 確認内容 (正常系:1)", log)
-        branch = (self.leaf / "results/ExampleTests.Branch/results.log").read_text(encoding="utf-8")
+        branch = (self.leaf / "results/ExampleTests.Branch/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:2, 異常系:1)", branch)
-        uniform = (self.leaf / "results/ExampleTests.Uniform/results.log").read_text(encoding="utf-8")
+        uniform = (self.leaf / "results/ExampleTests.Uniform/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:9)", uniform)
         self.assertIn("PARAM=3", uniform)
-        subprocedure = (self.leaf / "results/SubprocedureTests.Case/results.log").read_text(encoding="utf-8")
+        subprocedure = (self.leaf / "results/SubprocedureTests.Case/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:4)", subprocedure)
         self.assertIn("\nprivate void Check()", subprocedure)
         self.assertEqual(subprocedure.count("// サブ手順: SubprocedureTests.Check\n"), 1)
         self.assertIn("SubprocedureTests.cs:", subprocedure)
-        summary = (self.leaf / "results/all_tests/summary.log").read_text(encoding="utf-8")
-        self.assertIn("ExampleTests.Pass\tPASSED", summary)
+        assert_results(self, self.leaf / "results")
+        summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+        self.assertIn("[`ExampleTests.Pass`](../ExampleTests.Pass/results.md) | PASSED", summary)
         hooks = (self.leaf / "hooks.log").read_text(encoding="utf-8").splitlines()
         self.assertEqual(hooks, ["pre-build", "post-build", "pre-test", "post-test"])
         calls = (self.root / "dotnet calls.log").read_text(encoding="utf-8")
@@ -164,7 +166,7 @@ public class SubprocedureTests : IDisposable {
         self.assertIn("test --list-tests", calls)
         self.assertIn("--results-directory", calls)
         for warning in self.leaf.rglob("*.warn"):
-            self.assertEqual(warning.stat().st_size, 0, warning.read_text(errors="replace"))
+            self.assertEqual(warning.stat().st_size, 0, warning.read_text(encoding="utf-8", errors="replace"))
 
         source = self.leaf / "ExampleTests.cs"
         original = source.read_text(encoding="utf-8")
@@ -177,7 +179,7 @@ public class SubprocedureTests : IDisposable {
                 encoding="utf-8", errors="replace", timeout=60,
             )
             self.assertEqual(failed.returncode, 1, failed.stdout)
-            failed_log = (self.leaf / "results/ExampleTests.Pass/results.log").read_text(encoding="utf-8")
+            failed_log = (self.leaf / "results/ExampleTests.Pass/results.md").read_text(encoding="utf-8")
             self.assertIn("ExampleTests.Pass:抽出コード:", failed_log)
         finally:
             source.write_text(original, encoding="utf-8")

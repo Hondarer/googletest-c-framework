@@ -19,10 +19,11 @@ Output:
 
 import sys
 import re
+from test_summary import text_encoding
 
 
-def extract_output(batch_file, test_id, result):
-    with open(batch_file, 'r', encoding='utf-8', errors='replace') as f:
+def extract_output(batch_file, test_id, result, encoding="utf-8"):
+    with open(batch_file, 'r', encoding=text_encoding(encoding), errors='replace') as f:
         lines = f.readlines()
 
     # test_id からクラス名とメソッド名を分離
@@ -118,7 +119,7 @@ def main():
     except AttributeError:
         pass
 
-    if len(sys.argv) != 4:
+    if len(sys.argv) not in (4, 5):
         print("Usage: extract_dotnet_output.py <batch_output_file> <test_id> <result>",
               file=sys.stderr)
         sys.exit(1)
@@ -127,7 +128,7 @@ def main():
     test_id = sys.argv[2]
     result = sys.argv[3]
 
-    extract_output(batch_file, test_id, result)
+    extract_output(batch_file, test_id, result, sys.argv[4] if len(sys.argv) == 5 else "utf-8")
 
 
 if __name__ == '__main__':

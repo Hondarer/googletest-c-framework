@@ -4,7 +4,8 @@
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 
 # ワークスペースのディレクトリ
-WORKSPACE_DIR=$(cd "$SCRIPT_DIR/../../.." && pwd)
+WORKSPACE_DIR=${WORKSPACE_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}
+FILES_LANG=$(bash "$WORKSPACE_DIR/framework/makefw/bin_internal/get_files_lang.sh" "$WORKSPACE_DIR")
 
 # プロジェクト名 (カレント ディレクトリ名から取得)
 PROJECT_NAME=$(basename "$(pwd)")
@@ -24,6 +25,20 @@ FAILURE_COUNT=0
 
 # テスト結果サマリー (個別テスト用)
 test_summary=""
+REPORT_STATE=$(mktemp -d)
+SUMMARY_JOURNAL="$REPORT_STATE/summary"
+function finish_markdown() {
+    local status=$?
+    if [ -f "$SUMMARY_JOURNAL" ]; then
+        python3 "$SCRIPT_DIR/results_markdown.py" summary --input "$SUMMARY_JOURNAL" \
+            --directory "$PROJECT_NAME" --counts-dir "$REPORT_STATE/counts" \
+            --output "$RESULTS_DIR/all_tests/summary.md" || status=1
+    fi
+    rm -rf "$REPORT_STATE"
+    trap - EXIT
+    exit "$status"
+}
+trap finish_markdown EXIT
 
 # tput を安全に実行するヘルパー関数
 function safe_tput() {
@@ -42,15 +57,15 @@ function list_tests() {
 
 # テストを一括実行して結果をパース
 function run_all_tests_batch() {
-    echo -e "Test start on $(export LANG=C && date)." | tee "$RESULTS_DIR/all_tests/summary.log"
-    echo -e "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    echo -e "Test start on $(export LANG=C && date)." | tee "$SUMMARY_JOURNAL"
+    echo -e "----" | tee -a "$SUMMARY_JOURNAL"
 
     # テスト一覧を取得 (パラメーター付きテストは重複を除去)
     local tests
     tests=$(list_tests)
     local list_exit_code=$?
     if [ "$list_exit_code" -ne 0 ]; then
-        echo "Error: dotnet test --list-tests failed with exit code $list_exit_code." >&2
+        echo "Error: dotnet test --list-tests failed with exit code $list_exit_code." | tee -a "$SUMMARY_JOURNAL" >&2
         return "$list_exit_code"
     fi
     tests=$(printf '%s\n' "$tests" | sed 's/(.*//' | sort -u)
@@ -62,7 +77,7 @@ function run_all_tests_batch() {
 
     local test_count=$(echo "$tests" | wc -l)
     echo "Found $test_count test(s)."
-    #echo "Test results:" | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    #echo "Test results:" | tee -a "$SUMMARY_JOURNAL"
     safe_tput cr
 
     # dotnet test を 1 回だけ一括実行
@@ -81,6 +96,8 @@ function run_all_tests_batch() {
     # バッチ実行時の dotnet test 出力を表示 (失敗時のみ)
     if [ $batch_exit_code -ne 0 ]; then
         cat "$batch_output"
+        printf 'Error: dotnet test failed with exit code %s.\n' "$batch_exit_code" >> "$SUMMARY_JOURNAL"
+        python3 "$SCRIPT_DIR/results_markdown.py" decode --input "$batch_output" --encoding "${FILES_LANG#*.}" >> "$SUMMARY_JOURNAL"
         echo ""
         echo -e "\e[31mError: dotnet test failed with exit code $batch_exit_code.\e[0m" >&2
         rm -f "$batch_output"
@@ -94,7 +111,7 @@ function run_all_tests_batch() {
     # TRX ファイルを検索
     local trx_file=$(find "$trx_dir" -name "results.trx" -type f | head -1)
     if [ -z "$trx_file" ]; then
-        echo -e "\e[31mError: TRX file not found in $trx_dir\e[0m" >&2
+        echo -e "\e[31mError: TRX file not found in $trx_dir\e[0m" | tee -a "$SUMMARY_JOURNAL" >&2
         rm -f "$batch_output"
         rm -rf "$trx_dir"
         echo ""
@@ -105,7 +122,8 @@ function run_all_tests_batch() {
 
     # TRX を解析してテストごとの結果を取得
     local trx_results=$(mktemp)
-    if ! python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" --with-counts > "$trx_results"; then
+    if ! python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" --with-counts > "$trx_results" 2> "$REPORT_STATE/trx_error"; then
+        cat "$REPORT_STATE/trx_error" | tee -a "$SUMMARY_JOURNAL" >&2
         rm -f "$batch_output" "$trx_results"
         rm -rf "$trx_dir"
         return 1
@@ -127,8 +145,11 @@ function run_all_tests_batch() {
 
         local temp_file=$(mktemp)
 
-        echo -e "Running test: $test_id" > "$temp_file"
-        echo -e "----" >> "$temp_file"
+        local evidence_file="$REPORT_STATE/evidence"
+        local evidence_error="$REPORT_STATE/evidence_error"
+        : > "$evidence_file"
+        : > "$evidence_error"
+        printf '@test\t%s\n' "$test_id" >> "$SUMMARY_JOURNAL"
 
         # テスト ファイルを探す
         local test_file=$(find . -name "${class_name}.cs" -type f | head -1)
@@ -138,7 +159,7 @@ function run_all_tests_batch() {
             awk -F '\t' -v id="$test_id" '$1 == id { print; exit }' "$trx_results"
         )
         local evidence_failed=0
-        local -a summary_options=(--test-id "$test_id")
+        local -a summary_options=(--test-id "$test_id" --encoding "${FILES_LANG#*.}" --counts-output "$REPORT_STATE/counts/$test_id.json")
         if [[ "$record_count" =~ ^[1-9][0-9]*$ ]]; then
             summary_options+=(--param-count "$record_count")
         fi
@@ -150,50 +171,59 @@ function run_all_tests_batch() {
             if ! (set -o pipefail
                 python3 "$SCRIPT_DIR/test_subprocedures.py" --language dotnet \
                     --source "$test_file" "${summary_options[@]}"
-            ) >> "$temp_file" 2>&1; then
+            ) > "$evidence_file" 2> "$evidence_error"; then
                 evidence_failed=1
             fi
-            echo -e "----" >> "$temp_file"
+        else
+            # ソース探索と抽出の失敗も、エビデンス生成の失敗として記録する。
+            printf '[  FAILED  ] %s: Test source was not found.\n' "$test_id" > "$evidence_error"
+            evidence_failed=1
         fi
         if [ "$evidence_failed" -ne 0 ]; then
             test_result="Failed"
         elif [ -z "$test_result" ]; then
             test_result="Failed"
-            printf '%s\n' '[  FAILED  ] Test result was not found in TRX.' >> "$temp_file"
+            printf '%s\n' '[  FAILED  ] Test result was not found in TRX.' >> "$evidence_error"
         fi
 
         # バッチ出力から該当テスト分を抽出
-        python3 "$SCRIPT_DIR/extract_dotnet_output.py" "$batch_output" "$test_id" "$test_result" >> "$temp_file"
+        python3 "$SCRIPT_DIR/extract_dotnet_output.py" "$batch_output" "$test_id" "$test_result" "${FILES_LANG#*.}" > "$temp_file"
 
         # 結果を判定
         if [ "$test_result" = "Passed" ]; then
             if grep -qE "\[ *WARNING *\]" "$temp_file"; then
                 test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m")"$'\n'
-                echo -e "$test_id\tWARNING" >> "$RESULTS_DIR/all_tests/summary.log"
+                echo -e "$test_id\tWARNING" >> "$SUMMARY_JOURNAL"
                 WARNING_COUNT=$((WARNING_COUNT + 1))
             else
                 test_summary+="$(echo -e "$test_id\t\e[32mPASSED\e[0m")"$'\n'
-                echo -e "$test_id\tPASSED" >> "$RESULTS_DIR/all_tests/summary.log"
+                echo -e "$test_id\tPASSED" >> "$SUMMARY_JOURNAL"
                 SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
             fi
         else
             test_summary+="$(echo -e "$test_id\t\e[31mFAILED\e[0m")"$'\n'
-            echo -e "$test_id\tFAILED" >> "$RESULTS_DIR/all_tests/summary.log"
+            echo -e "$test_id\tFAILED" >> "$SUMMARY_JOURNAL"
             FAILURE_COUNT=$((FAILURE_COUNT + 1))
             EXIT_CODE=1
         fi
 
-        # コンソールに表示 (色コードあり、末尾の空行を削除、メッセージに着色)
-        cat "$temp_file" | \
-            sed -e 's/^テストの実行に成功しました。$/\x1b[32m&\x1b[0m/' | \
-            sed -e 's/^Test Run Successful\.$/\x1b[32m&\x1b[0m/' | \
-            sed -e 's/^テストの実行に失敗しました。$/\x1b[31m&\x1b[0m/' | \
-            sed -e 's/^Test Run Failed\.$/\x1b[31m&\x1b[0m/' | \
-            sed -e :a -e '/^\s*$/{ $d; N; ba; }'
+        local final_status=FAILED
+        if [ "$test_result" = "Passed" ]; then
+            final_status=PASSED
+            if grep -qE "\[ *WARNING *\]" "$temp_file"; then final_status=WARNING; fi
+        fi
+        local -a markdown_options=(--test-id "$test_id" --status "$final_status"
+            --evidence "$evidence_file" --input "$temp_file" --encoding utf-8)
+        if [ -s "$evidence_error" ]; then markdown_options+=(--error "$evidence_error"); fi
+        # 抽出した実行結果は UTF-8。色付け後に端末の文字コードで表示する。
+        local console_file="$REPORT_STATE/console"
+        python3 "$SCRIPT_DIR/results_markdown.py" individual "${markdown_options[@]}" \
+            --output "$RESULTS_DIR/$test_id/results.md" --console-output "$console_file" \
+            --console-encoding "${FILES_LANG#*.}" --dotnet-color
+        cat "$console_file"
         echo ""
-
-        # results.log に保存 (色コードを除去し、末尾の空行を削除)
-        cat "$temp_file" | sed -r 's/\x1b\[[0-9;]*m//g' | sed -e :a -e '/^\s*$/{ $d; N; ba; }' > "$RESULTS_DIR/$test_id/results.log"
+        grep -E '\[ *WARNING *\]|\[ *FAILED *\]|^Error:' "$temp_file" >> "$SUMMARY_JOURNAL" || true
+        if [ -s "$evidence_error" ]; then cat "$evidence_error" >> "$SUMMARY_JOURNAL"; fi
         rm -f "$temp_file"
     done
 
@@ -201,15 +231,17 @@ function run_all_tests_batch() {
     rm -f "$batch_output" "$trx_results"
     rm -rf "$trx_dir"
 
+    printf '@test\t\n' >> "$SUMMARY_JOURNAL"
+
     # テスト結果サマリーを表示
     echo "----"
     printf "%s" "$test_summary"
     # 集計結果を出力
-    echo "----" | tee -a "$RESULTS_DIR/all_tests/summary.log"
-    printf "Total tests\t%d\n" $((SUCCESS_COUNT + WARNING_COUNT + FAILURE_COUNT)) | tee -a "$RESULTS_DIR/all_tests/summary.log"
-    printf "Passed\t\t%d\n" $SUCCESS_COUNT | tee -a "$RESULTS_DIR/all_tests/summary.log"
-    printf "Warning(s)\t%d\n" $WARNING_COUNT | tee -a "$RESULTS_DIR/all_tests/summary.log"
-    printf "Failed\t\t%d\n" $FAILURE_COUNT | tee -a "$RESULTS_DIR/all_tests/summary.log"
+    echo "----" | tee -a "$SUMMARY_JOURNAL"
+    printf "Total tests\t%d\n" $((SUCCESS_COUNT + WARNING_COUNT + FAILURE_COUNT)) | tee -a "$SUMMARY_JOURNAL"
+    printf "Passed\t\t%d\n" $SUCCESS_COUNT | tee -a "$SUMMARY_JOURNAL"
+    printf "Warning(s)\t%d\n" $WARNING_COUNT | tee -a "$SUMMARY_JOURNAL"
+    printf "Failed\t\t%d\n" $FAILURE_COUNT | tee -a "$SUMMARY_JOURNAL"
     echo ""
 
     # Banner 表示

@@ -7,6 +7,7 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+from test_results_markdown import assert_results
 
 # Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると
 # WSL の bash.exe を選ぶことがある。PATH 上の bash (Git Bash など) を明示して使う。
@@ -166,46 +167,51 @@ int main(int argc, char **argv) {
         )
         if source_path is not None:
             env["TEST_SRCS"] = source_path
-        return subprocess.run(
+        result = subprocess.run(
             [BASH, str(self.script)], cwd=self.leaf, env=env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             encoding="utf-8", errors="replace", timeout=120,
         )
+        if (self.leaf / "results/all_tests/summary.md").exists():
+            assert_results(self, self.leaf / "results")
+        return result
 
     def test_success_without_coverage(self):
         result = self.run_tests("PathSpaces.Pass")
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/PathSpaces.Pass/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/PathSpaces.Pass/results.md").read_text(encoding="utf-8")
         self.assertIn("TEST(PathSpaces, Pass)", log)
         self.assertIn("// Arrange", log)
         self.assertIn("[       OK ] PathSpaces.Pass", log)
         self.assertNotIn("No such file or directory", result.stdout)
         self.assertNotIn("cannot open", result.stdout)
+        self.assertRegex(re.sub(r"\x1b\[[0-9;]*m", "", result.stdout), r"\[  PASSED  \] 1 test\.\n```\n")
+        self.assertNotRegex(re.sub(r"\x1b\[[0-9;]*m", "", result.stdout), r"\[  PASSED  \] 1 test\.\n\n```")
 
     def test_failure_is_reported(self):
         result = self.run_tests("PathSpaces.Fail")
         self.assertEqual(result.returncode, 1, result.stdout)
-        log = (self.leaf / "results/PathSpaces.Fail/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/PathSpaces.Fail/results.md").read_text(encoding="utf-8")
         self.assertIn("[  FAILED  ] PathSpaces.Fail", log)
         self.assertFalse((self.leaf / "test.stamp").exists())
 
     def test_parameter_records_have_one_definition_summary(self):
         result = self.run_tests("*/Repeats.*/*")
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/Repeats.Uniform/results.md").read_text(encoding="utf-8")
         self.assertEqual(log.count("### 確認内容"), 1)
         self.assertIn("### 確認内容 (正常系:9)", log)
         self.assertIn("PARAM=3", log)
         for name in ("Repeats.Uniform/A/0", "Repeats.Uniform/A/1", "Repeats.Uniform/B/0"):
-            record = (self.leaf / "results" / name / "results.log").read_text(encoding="utf-8")
+            record = (self.leaf / "results" / name / "results.md").read_text(encoding="utf-8")
             self.assertNotIn("### 確認内容", record)
-        branch = (self.leaf / "results/Repeats.Branch/results.log").read_text(encoding="utf-8")
+        branch = (self.leaf / "results/Repeats.Branch/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:2, 異常系:1)", branch)
 
     def test_fixture_and_header_subprocedures_are_included(self):
         result = self.run_tests("EvidenceFixture.ReportsSubprocedures")
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/EvidenceFixture.ReportsSubprocedures/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/EvidenceFixture.ReportsSubprocedures/results.md").read_text(encoding="utf-8")
         self.assertIn("確認内容 (正常系:4)", log)
         self.assertEqual(log.count("// サブ手順: EvidenceFixture.Check\n"), 1)
         self.assertIn("subprocedure helper.h:", log)
@@ -214,18 +220,18 @@ int main(int argc, char **argv) {
     def test_parameter_subprocedures_are_aggregated_once(self):
         result = self.run_tests("Records/EvidenceParams.ReportsSubprocedures/*")
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/EvidenceParams.ReportsSubprocedures/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/EvidenceParams.ReportsSubprocedures/results.md").read_text(encoding="utf-8")
         self.assertIn("確認内容 (正常系:8)", log)
         self.assertEqual(log.count("### 確認内容"), 1)
         self.assertEqual(log.count("// サブ手順: EvidenceFixture.Check\n"), 1)
         for n in (0, 1):
-            record = (self.leaf / f"results/EvidenceParams.ReportsSubprocedures/Records/{n}/results.log").read_text(encoding="utf-8")
+            record = (self.leaf / f"results/EvidenceParams.ReportsSubprocedures/Records/{n}/results.md").read_text(encoding="utf-8")
             self.assertNotIn("### 確認内容", record)
 
     def test_partial_parameter_filter_leaves_counts_unevaluated(self):
         result = self.run_tests("A/Repeats.Uniform/0")
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/Repeats.Uniform/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (未評価)", log)
         self.assertNotIn("正常系:9", log)
         self.assertIn("[       OK ] A/Repeats.Uniform/0", log)
@@ -244,13 +250,43 @@ int main(int argc, char **argv) {
             header.write_bytes(original_header.decode("utf-8").encode("cp932"))
             result = self.run_tests("*/Repeats.Uniform/*")
             self.assertEqual(result.returncode, 0, result.stdout)
-            log = (self.leaf / "results/Repeats.Uniform/results.log").read_text(encoding="cp932")
+            log = (self.leaf / "results/Repeats.Uniform/results.md").read_text(encoding="utf-8")
             self.assertIn("### 確認内容 (正常系:9)", log)
             self.assertIn("正の値であること。", log)
         finally:
             source.write_bytes(original)
             header.write_bytes(original_header)
             settings.unlink()
+
+    @unittest.skipIf(os.name == "nt", "[Linux] gcovr の診断は Linux 経路で記録する")
+    def test_shiftjis_journal_preserves_runtime_and_utf8_evidence_errors(self):
+        settings = self.root / ".vscode/settings.json"
+        settings.parent.mkdir(exist_ok=True)
+        paths = [self.leaf / "sampleTest.cc", self.leaf / "subprocedure helper.h"]
+        originals = [p.read_bytes() for p in paths]
+        tools = self.root / "diagnostic tools"
+        tools.mkdir(exist_ok=True)
+        gcovr = tools / "gcovr"
+        gcovr.write_bytes("#!/bin/bash\nprintf 'Error: 日本語のカバレッジエラー\\n' >&2\nexit 1\n".encode("cp932"))
+        gcovr.chmod(0o755)
+        original_path = self.env["PATH"]
+        try:
+            settings.write_text('{"files.encoding": "shiftjis"}', encoding="utf-8")
+            for path, original in zip(paths, originals):
+                path.write_bytes(original.decode("utf-8").encode("cp932"))
+            self.env["PATH"] = str(tools) + os.pathsep + original_path
+            result = self.run_tests("PathSpaces.Pass:InvalidComment.Case", coverage=True)
+            self.assertEqual(result.returncode, 1, result.stdout)
+            summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+            self.assertIn("日本語のカバレッジエラー", summary)
+            self.assertIn("InvalidComment.Case:抽出コード:", summary)
+            self.assertNotIn("\ufffd", summary)
+        finally:
+            self.env["PATH"] = original_path
+            for path, original in zip(paths, originals):
+                path.write_bytes(original)
+            settings.unlink(missing_ok=True)
+            gcovr.unlink()
 
     def test_summary_changes_invalidate_stamp(self):
         source = self.leaf / "sampleTest.cc"
@@ -300,10 +336,23 @@ int main(int argc, char **argv) {
     def test_invalid_comment_fails_runner(self):
         result = self.run_tests("InvalidComment.Case")
         self.assertEqual(result.returncode, 1, result.stdout)
-        log = (self.leaf / "results/InvalidComment.Case/results.log").read_text(encoding="utf-8")
+        log = (self.leaf / "results/InvalidComment.Case/results.md").read_text(encoding="utf-8")
         self.assertIn("InvalidComment.Case:抽出コード:", log)
         self.assertNotIn("[       OK ] InvalidComment.Case", log)
         self.assertFalse((self.leaf / "test.stamp").exists())
+
+    def test_missing_binary_writes_summary_before_test(self):
+        binary = self.leaf / "bin" / self.leaf.name
+        backup = binary.with_suffix(".backup")
+        binary.rename(backup)
+        try:
+            result = self.run_tests("PathSpaces.Pass")
+            self.assertEqual(result.returncode, 1, result.stdout)
+            summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+            self.assertIn("Error: Test binary not found", summary)
+            self.assertIn("> [!CAUTION]", summary)
+        finally:
+            backup.rename(binary)
 
     def test_coverage_is_saved(self):
         result = self.run_tests("PathSpaces.Pass", coverage=True)
@@ -311,9 +360,11 @@ int main(int argc, char **argv) {
         output = self.leaf / "results/all_tests/coverage.xml"
         self.assertTrue(output.exists(), result.stdout)
         self.assertIn("sample.c", output.read_text(encoding="utf-8"))
-        self.assertTrue((self.leaf / "results/PathSpaces.Pass/sample.c.gcov.txt").exists(), result.stdout)
+        self.assertTrue((self.leaf / "results/PathSpaces.Pass/sample.c.gcov.md").exists(), result.stdout)
         self.assertNotIn("No such file or directory", result.stdout)
         self.assertNotIn("cannot open", result.stdout)
+        self.assertRegex(re.sub(r"\x1b\[[0-9;]*m", "", result.stdout), r"\[  PASSED  \] 1 test\.\n```\n")
+        self.assertNotRegex(re.sub(r"\x1b\[[0-9;]*m", "", result.stdout), r"\[  PASSED  \] 1 test\.\n\n```")
 
     def test_absolute_source_with_spaces(self):
         result = self.run_tests(

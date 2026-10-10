@@ -61,28 +61,33 @@ def extract_code(name, source, is_windows, encoding):
 def prepare(full, selected, manifest, is_windows, encoding):
     groups = group_tests(test_names(full), test_names(selected))
     index = SourceIndex.from_paths(discover("c_cpp"), is_windows=is_windows == "1", encoding=encoding) if groups else None
-    outputs = []
     for key, group in groups.items():
         partial = set(group["all"]) != set(group["selected"])
         prefixes = {name.split("/", 1)[0] for name in group["all"]}
-        report = index.report(key, True, len(group["all"]), partial, prefixes=prefixes)
-        outputs.append((key, f"Running test definition: {key}\n----\n{report}----\n"))
-    # 全定義の解析が成功してから成果物を作る。
-    for key, content in outputs:
-        path = Path("results") / key / "results.log"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding=encoding)
-    Path(manifest).write_text(json.dumps(groups), encoding="utf-8")
+        counts = {}
+        group["evidence"] = index.report(key, True, len(group["all"]), partial, prefixes=prefixes, counts=counts)
+        group["counts"] = None if partial else counts
+    # 全定義の解析が成功してから、一時記録だけを作る。
+    Path(manifest).write_text(json.dumps(groups, ensure_ascii=False), encoding="utf-8")
 
 
-def finish(manifest, encoding):
+def finish(manifest, encoding, counts_dir=None):
+    from results_markdown import definition, execution_output, write
     groups = json.loads(Path(manifest).read_text(encoding="utf-8"))
     for key, group in groups.items():
-        with (Path("results") / key / "results.log").open("a", encoding=encoding) as output:
-            for name in group["selected"]:
-                record = Path("results") / record_path(name) / "results.log"
-                output.write(f"\n## 実行レコード {name}\n\n")
-                output.write(record.read_text(encoding=encoding))
+        records = []
+        for name in group["selected"]:
+            record = Path("results") / record_path(name) / "results.md"
+            content = record.read_text(encoding="utf-8")
+            status = next(line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 判定: "))
+            output = execution_output(content)
+            records.append({"name": name, "status": status,
+                            "path": record_path(name)[len(key) + 1:] + "/results.md", "output": output})
+        write(Path("results") / key / "results.md", definition(key, group["evidence"], records, len(group["all"])))
+        if counts_dir:
+            path = Path(counts_dir) / (key + ".json")
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(group["counts"], ensure_ascii=False), encoding="utf-8")
 
 
 def main():
@@ -93,20 +98,19 @@ def main():
     parser.add_argument("--selected-list")
     parser.add_argument("--is-windows", choices=["0", "1"], default="0")
     parser.add_argument("--encoding", default="utf-8")
+    parser.add_argument("--counts-dir")
     args = parser.parse_args()
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
         sys.stderr.reconfigure(encoding="utf-8")
     try:
         encoding = text_encoding(args.encoding)
-        if encoding == "utf-8-sig":
-            encoding = "utf-8"
         if args.mode == "prepare":
-            prepare(Path(args.full_list).read_text(encoding="utf-8"),
-                    Path(args.selected_list).read_text(encoding="utf-8"),
+            prepare(Path(args.full_list).read_text(encoding=encoding, errors="replace"),
+                    Path(args.selected_list).read_text(encoding=encoding, errors="replace"),
                     args.manifest, args.is_windows, encoding)
         else:
-            finish(args.manifest, encoding)
+            finish(args.manifest, encoding, args.counts_dir)
     except (SummaryError, OSError, ValueError, LookupError) as error:
         print(f"[  FAILED  ] {error}", file=sys.stderr)
         return 1

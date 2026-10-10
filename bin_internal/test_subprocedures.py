@@ -1,6 +1,7 @@
 """名前付きサブ手順を解決し、テスト概要と元ソースの抜粋を生成する。"""
 
 import argparse
+import json
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -370,7 +371,7 @@ class SourceIndex:
                     output.append(f"// [{tag.group(1)}] {text} {label}")
         return "\n".join(output) + "\n"
 
-    def report(self, test_id, parameterized=False, param_count=None, partial=False, code_only=False, prefixes=None):
+    def report(self, test_id, parameterized=False, param_count=None, partial=False, code_only=False, prefixes=None, counts=None):
         suite, method = test_id.split(".", 1)
         key = f"{suite.rsplit('/', 1)[-1]}.{method.split('/', 1)[0]}"
         fragments = self.tests.get(key, [])
@@ -379,7 +380,7 @@ class SourceIndex:
         reached = []
         expanded = "\n".join(self.expand(f, [], "1", reached) for f in fragments)
         try:
-            summary = "" if code_only else render_summary(expanded, parameterized or any(f.parameterized for f in fragments), param_count, partial, test_id)
+            summary = "" if code_only else render_summary(expanded, parameterized or any(f.parameterized for f in fragments), param_count, partial, test_id, counts)
         except SummaryError as error:
             raise SummaryError(f"{error}\nテスト定義元: {fragments[0].location}") from error
         code = "\n".join(dedent_source(f.source, f.indent) for f in fragments)
@@ -389,7 +390,8 @@ class SourceIndex:
         for name in ([] if code_only else reached):
             definition = self.definitions[name]
             code += f"\n// サブ手順: {name}\n// 定義元: {definition.location}\n" + dedent_source(definition.source, definition.indent)
-        return summary + code
+        from results_markdown import fence
+        return (summary or ("" if code_only else "## テスト項目\n\nなし\n")) + "\n## テスト コード\n\n" + fence(code, "cpp" if self.language == "c_cpp" else "csharp") + "\n"
 
 
 def discover(language, root="."):
@@ -409,12 +411,18 @@ def main():
     parser.add_argument("--param-count", type=int)
     parser.add_argument("--partial", action="store_true")
     parser.add_argument("--code-only", action="store_true")
+    parser.add_argument("--counts-output")
+    parser.add_argument("--console-prefix-output")
+    parser.add_argument("--display-id")
+    parser.add_argument("--binary", default="")
+    parser.add_argument("--comment", default="")
+    parser.add_argument("--definition", default="")
     args = parser.parse_args()
     try:
         encoding = text_encoding(args.encoding)
         if hasattr(sys.stdout, "reconfigure"):
             # Windows でも LF で出力し、bash 側で行末の \r が残らないようにする
-            sys.stdout.reconfigure(encoding="utf-8" if encoding == "utf-8-sig" else encoding, newline="\n")
+            sys.stdout.reconfigure(encoding="utf-8", newline="\n")
             sys.stderr.reconfigure(encoding="utf-8")
         paths = list(discover(args.language)) + [Path(p) for p in args.source]
         index = SourceIndex.from_paths(paths, args.language, None if args.is_windows is None else args.is_windows == "1", encoding)
@@ -423,10 +431,23 @@ def main():
         else:
             if not args.test_id:
                 parser.error("--test-id が必要です")
-            report = index.report(args.test_id, args.parameterized, args.param_count, args.partial, args.code_only)
+            counts = {}
+            report = index.report(args.test_id, args.parameterized, args.param_count, args.partial, args.code_only, counts=counts)
+            if args.counts_output:
+                path = Path(args.counts_output)
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps(None if args.partial else counts, ensure_ascii=False), encoding="utf-8")
     except (SummaryError, OSError, ValueError, LookupError) as error:
         print(f"[  FAILED  ] {error}", file=sys.stderr)
         return 1
+    if args.console_prefix_output:
+        from results_markdown import individual
+        import os
+        comment = os.fsencode(args.comment).decode(encoding, errors="replace") if encoding not in ("utf-8", "utf-8-sig") else args.comment
+        console = individual(args.display_id or args.test_id, "PASSED", report, "", args.binary,
+                             comment, args.definition, console=True)
+        console = console.split("## 実行結果\n", 1)[0] + "## 実行結果\n\n```text\n"
+        Path(args.console_prefix_output).write_text(console, encoding="utf-8" if encoding == "utf-8-sig" else encoding, newline="\n")
     sys.stdout.write(report)
     return 0
 

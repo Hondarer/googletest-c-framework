@@ -2,6 +2,8 @@
 
 import argparse
 import codecs
+import json
+from pathlib import Path
 from dataclasses import dataclass, field
 import re
 import sys
@@ -181,7 +183,7 @@ class Cycle:
     counts: dict = field(default_factory=lambda: {"正常系": 0, "異常系": 0})
 
 
-def render_summary(source, parameterized=False, param_count=None, partial=False, test_id="<stdin>"):
+def render_summary(source, parameterized=False, param_count=None, partial=False, test_id="<stdin>", counts=None):
     parsed = list(source_lines(source))
     code = "\n".join(line for line, _ in parsed)
     parameterized = parameterized or bool(re.search(r"\bTEST_P\s*\(|\[Theory\b", code))
@@ -254,6 +256,9 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
                         cycle.pre_step.append(text)
         except (SummaryError, ValueError) as error:
             raise SummaryError(f"{test_id}:抽出コード:{number}: {error}") from error
+    totals = {category: sum(c.counts[category] for c in cycles.values()) for category in ("正常系", "異常系")}
+    if counts is not None:
+        counts.update({category: None if partial else value for category, value in totals.items()})
     if not desc and not any(c.state or c.state_check or c.act or c.pre_step or c.pre_check or c.check for c in cycles.values()):
         return ""
     out = ["## テスト項目\n"]
@@ -264,17 +269,16 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
     for number in range(1, current + 1):
         cycle = cycles.get(number, Cycle())
         suffix = f"_{number}" if multi else ""
-        out.append(f"\n### 状態{suffix}\n\n" + "\n".join(cycle.state) + "\n")
-        out.append(f"\n### 手順{suffix}\n\n" + "\n".join(cycle.act + cycle.pre_step) + "\n")
+        out.append(f"\n### 状態{suffix}\n\n" + ("\n".join(cycle.state) or "なし") + "\n")
+        out.append(f"\n### 手順{suffix}\n\n" + ("\n".join(cycle.act + cycle.pre_step) or "なし") + "\n")
         for category in totals:
             totals[category] += cycle.counts[category]
         header = "未評価" if partial else ", ".join(f"{k}:{v}" for k, v in cycle.counts.items() if v) or "0"
         out.append(f"\n### 確認内容{suffix} ({header})\n\n")
-        out.append("\n".join(cycle.state_check + cycle.pre_check + cycle.check) + "\n")
+        out.append(("\n".join(cycle.state_check + cycle.pre_check + cycle.check) or "なし") + "\n")
     if multi:
         header = "未評価" if partial else ", ".join(f"{k}:{v}" for k, v in totals.items() if v) or "0"
         out.append(f"\n### 確認件数合計 ({header})\n")
-    out.append("----\n")
     return "".join(out)
 
 
@@ -285,6 +289,7 @@ def main(language):
     parser.add_argument("--partial", action="store_true")
     parser.add_argument("--test-id", default="<stdin>")
     parser.add_argument("--encoding", default="utf-8")
+    parser.add_argument("--counts-output")
     output = parser.add_mutually_exclusive_group()
     output.add_argument("--summary-only", action="store_true")
     output.add_argument("--code-only", action="store_true")
@@ -300,8 +305,11 @@ def main(language):
         sys.stderr.reconfigure(encoding="utf-8")
     source = sys.stdin.read()
     try:
+        counts = {}
         summary = "" if args.code_only else render_summary(
-            source, args.parameterized, args.param_count, args.partial, args.test_id)
+            source, args.parameterized, args.param_count, args.partial, args.test_id, counts)
+        if args.counts_output:
+            Path(args.counts_output).write_text(json.dumps(None if args.partial else counts, ensure_ascii=False), encoding="utf-8")
     except SummaryError as error:
         print(f"[  FAILED  ] {error}", file=sys.stderr)
         return 1

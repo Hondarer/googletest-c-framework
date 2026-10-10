@@ -70,6 +70,34 @@ FAILURE_COUNT=0
 
 # 最終結果用文字列 (テスト中は積み上げて、最後に一括出力)
 test_summary=""
+# ファイル用の記録は results/ の外へ置き、最後に一括で Markdown 化する。
+REPORT_STATE=$(mktemp -d)
+SUMMARY_JOURNAL="$REPORT_STATE/summary"
+COVERAGE_MARKDOWN="$REPORT_STATE/coverage.md"
+function finish_markdown() {
+    local status=$?
+    if [ -f "$SUMMARY_JOURNAL" ]; then
+        local -a options=()
+        if [[ "${GTEST_FILTER+x}" ]]; then
+            options+=(--filter "$GTEST_FILTER")
+        fi
+        python3 "$SCRIPT_DIR/results_markdown.py" summary --input "$SUMMARY_JOURNAL" \
+            --directory "${PWD##*/}" --counts-dir "$REPORT_STATE/counts" \
+            --coverage "$COVERAGE_MARKDOWN" --encoding "${FILES_LANG#*.}" \
+            --output results/all_tests/summary.md "${options[@]}" || status=1
+    fi
+    rm -rf "$REPORT_STATE"
+    trap - EXIT
+    exit "$status"
+}
+trap finish_markdown EXIT
+# Python の UTF-8 診断は別ファイルを参照し、ジャーナルの文字コードを保つ。
+function record_utf8_file() {
+    local diagnostic
+    diagnostic=$(mktemp "$REPORT_STATE/diagnostic.XXXXXX")
+    cp "$1" "$diagnostic"
+    printf '@utf8\t%s\n' "${diagnostic##*/}" >> "$SUMMARY_JOURNAL"
+}
 
 # tput を安全に実行するヘルパー関数
 function safe_tput() {
@@ -196,7 +224,7 @@ function compute_test_signature() {
 
     # 集計処理を変更した場合も古いエビデンスを再利用しない。
     for src in exec_test_c_cpp.sh get_test_code_c_cpp.awk insert_summary_c_cpp.py \
-        test_summary.py test_subprocedures.py gtest_summary_groups.py; do
+        test_summary.py test_subprocedures.py gtest_summary_groups.py results_markdown.py; do
         sig_srcs+=("$SCRIPT_DIR/$src")
     done
 
@@ -233,42 +261,54 @@ function execute_test_case() {
     local exit_code
 
     export LANG="$FILES_LANG"
-    printf '%s\n' '----'
+    : > "$REPORT_STATE/runtime"
+    local evidence_file="$REPORT_STATE/evidence"
+    local evidence_error="$REPORT_STATE/evidence_error"
     local -a summary_options=(--test-id "$test_name" --encoding "${FILES_LANG#*.}")
-    # パラメーター テストの全体サマリーは定義単位で生成済み。
+    local -a markdown_options=(--test-id "$ACTIVE_TEST_ID" --binary "$TEST_BINARY" --comment "$ACTIVE_COMMENT"
+        --evidence "$evidence_file" --encoding "${FILES_LANG#*.}")
     if [[ "${test_name#*.}" == */* ]]; then
-        summary_options+=(--code-only)
+        summary_options+=(--code-only --definition auto)
+        markdown_options+=(--definition auto)
+    else
+        summary_options+=(--counts-output "$REPORT_STATE/counts/$ACTIVE_TEST_ID.json")
     fi
-    local -a evidence_status
-    python3 "$SCRIPT_DIR/test_subprocedures.py" --language c_cpp \
-        --is-windows "$IS_WINDOWS" "${summary_options[@]}"
-    evidence_status=("${PIPESTATUS[@]}")
-    if [[ " ${evidence_status[*]} " =~ [[:space:]][1-9][0-9]*[[:space:]] ]]; then
-        printf '%s\n' '[  FAILED  ] Test evidence generation failed.'
+    if ! python3 "$SCRIPT_DIR/test_subprocedures.py" --language c_cpp \
+        --is-windows "$IS_WINDOWS" "${summary_options[@]}" \
+        --console-prefix-output "$REPORT_STATE/console_prefix" --display-id "$ACTIVE_TEST_ID" \
+        --binary "$TEST_BINARY" --comment "$ACTIVE_COMMENT" > "$evidence_file" 2> "$evidence_error"; then
+        markdown_options+=(--error "$evidence_error")
+        python3 "$SCRIPT_DIR/results_markdown.py" individual "${markdown_options[@]}" --console
+        printf '%s\n' '[  FAILED  ] Test evidence generation failed.' >> "$evidence_error"
         printf '%s\n' 1 > "$exit_file"
         return 1
     fi
-    printf '%s\n' '----'
-    printf './%s --gtest_filter=%s\n' "$TEST_BINARY" "$test_name"
+    cat "$REPORT_STATE/console_prefix"
+    printf './%s --gtest_filter=%s\n' "$TEST_BINARY" "$test_name" | tee "$REPORT_STATE/runtime"
     if [ "$IS_WINDOWS" -eq 1 ] && [ -n "$TEST_SRCS" ]; then
         command=(OpenCppCoverage.exe "${SOURCES_OPTS[@]}" --quiet
             --export_type cobertura:coverage/coverage.xml -- "${command[@]}")
     fi
-    "${command[@]}" 2>&1 | grep -v 'Note: Google Test filter' | grep -v 'Your program stop with error code:'
+    "${command[@]}" 2>&1 | grep -v 'Note: Google Test filter' | grep -v 'Your program stop with error code:' | tee -a "$REPORT_STATE/runtime"
     exit_code=${PIPESTATUS[0]}
     if [ "$IS_WINDOWS" -ne 1 ] && [ "$exit_code" -ge 128 ]; then
         local signal=$((exit_code - 128))
-        printf '\n\e[31m[  FAILED  ]\e[0m Terminated by signal %s, ' "$signal"
+        { printf '\n\e[31m[  FAILED  ]\e[0m Terminated by signal %s, ' "$signal"
         case "$signal" in
             6) echo 'SIGABRT: abort.' ;;
             11) echo 'SIGSEGV: segmentation fault.' ;;
             8) echo 'SIGFPE: floating-point exception.' ;;
             4) echo 'SIGILL: illegal instruction.' ;;
             *) echo 'Abnormal termination by other signal.' ;;
-        esac
+        esac; } | tee -a "$REPORT_STATE/runtime"
     elif [ "$IS_WINDOWS" -eq 1 ] && [ "$exit_code" -ne 0 ]; then
-        printf '\n\e[31m[  FAILED  ]\e[0m Exit code: %s\n' "$exit_code"
+        printf '\n\e[31m[  FAILED  ]\e[0m Exit code: %s\n' "$exit_code" | tee -a "$REPORT_STATE/runtime"
     fi
+    # 末尾に改行がない出力でも、閉じフェンスは独立した行にする。
+    if [ -s "$REPORT_STATE/runtime" ] && [ -n "$(tail -c 1 "$REPORT_STATE/runtime")" ]; then
+        printf '\n'
+    fi
+    printf '```\n'
     printf '%s\n' "$exit_code" > "$exit_file"
 }
 
@@ -304,9 +344,11 @@ function run_test() {
     local temp_file=$(mktemp)
     local temp_exit_code=$(mktemp)
 
-    echo -e "\nRunning test: $test_id$test_comment_delim$test_comment on $TEST_BINARY"
-    safe_tput cr
-    echo -e "Running test: $test_id$test_comment_delim$test_comment on $TEST_BINARY" > "$temp_file"
+    ACTIVE_TEST_ID="$test_id"
+    ACTIVE_COMMENT="$test_comment"
+    printf '@test\t%s\n' "$test_id" >> "$SUMMARY_JOURNAL"
+    : > "$temp_file"
+    echo ""
 
     if [ $IS_WINDOWS -ne 1 ]; then
         # Linux
@@ -335,15 +377,16 @@ function run_test() {
                 --exclude-unreachable-branches \
                 --exclude-throw-branches --json --output coverage/coverage.raw.json 2>&1 1> /dev/null)
             if [ ! -f coverage/coverage.raw.json ]; then
-                echo -e "\e[33m[ WARNING ]\e[0m Coverage data could not be read:" | tee -a results/all_tests/summary.log
-                echo "$gcovr_error" | tee -a results/all_tests/summary.log
+                echo -e "\e[33m[ WARNING ]\e[0m Coverage data could not be read:" | tee -a "$SUMMARY_JOURNAL"
+                echo "$gcovr_error"
+                printf '%s\n' "$gcovr_error" >> "$SUMMARY_JOURNAL"
             fi
             if [ -f coverage/coverage.raw.json ]; then
                 # 大域の IFS の状態に依存せず、TEST_SRCS を空白区切りで分割する
                 local -a test_src_list=("${TEST_SOURCE_FILES[@]}")
                 if ! python "$SCRIPT_DIR/gcovr_json_normalize.py" \
                     coverage/coverage.raw.json coverage/coverage.json "$WORKSPACE_DIR" "${test_src_list[@]}"; then
-                    echo -e "\e[31m[  FAILED  ]\e[0m gcovr_json_normalize.py rejected coverage data." | tee -a results/all_tests/summary.log
+                    echo -e "\e[31m[  FAILED  ]\e[0m gcovr_json_normalize.py rejected coverage data." | tee -a "$SUMMARY_JOURNAL"
                     echo 1 > "$temp_exit_code"
                 else
                     gcovr --root "$WORKSPACE_DIR" --add-tracefile coverage/coverage.json \
@@ -354,7 +397,7 @@ function run_test() {
     else
         # Windows
         execute_test_case "$test_name" "$temp_exit_code" 2>&1 |
-            tee -a "$temp_file" | python "$SCRIPT_DIR/add_gtest_color.py"
+            tee -a "$temp_file" | python "$SCRIPT_DIR/add_gtest_color.py" --encoding "${FILES_LANG#*.}"
         if [ -n "$TEST_SRCS" ]; then
             rm -f LastCoverageResults.log 1> /dev/null 2>&1
         fi
@@ -367,21 +410,35 @@ function run_test() {
         if grep -qE "\[ *WARNING *\]" "$temp_file"; then
             #                echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment"
             test_summary+="$(echo -e "$test_id\t\e[33mWARNING\e[0m\t$test_comment")"$'\n'
-            echo -e "$test_id\tWARNING\t$test_comment" >> results/all_tests/summary.log
+            echo -e "$test_id\tWARNING\t$test_comment" >> "$SUMMARY_JOURNAL"
             WARNING_COUNT=$((WARNING_COUNT + 1))
         else
             #                echo -e "$test_id\t\e[32mPASSED\e[0m\t$test_comment"
             test_summary+="$(echo -e "$test_id\t\e[32mPASSED\e[0m\t$test_comment")"$'\n'
-            echo -e "$test_id\tPASSED\t$test_comment" >> results/all_tests/summary.log
+            echo -e "$test_id\tPASSED\t$test_comment" >> "$SUMMARY_JOURNAL"
             SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
         fi
     else
         #                echo -e "$test_id\t\e[31mFAILED\e[0m\t$test_comment"
         test_summary+="$(echo -e "$test_id\t\e[31mFAILED\e[0m\t$test_comment")"$'\n'
-        echo -e "$test_id\tFAILED\t$test_comment" >> results/all_tests/summary.log
+        echo -e "$test_id\tFAILED\t$test_comment" >> "$SUMMARY_JOURNAL"
         FAILURE_COUNT=$((FAILURE_COUNT + 1))
     fi
-    cat "$temp_file" | sed -r 's/\x1b\[[0-9;]*m//g' > "results/$test_id/results.log"
+    local final_status=FAILED
+    if [ "$result" -eq 0 ]; then
+        final_status=PASSED
+        if grep -qE "\[ *WARNING *\]" "$temp_file"; then final_status=WARNING; fi
+    fi
+    local runtime_file="$REPORT_STATE/runtime"
+    # 実行結果は端末の文字コードのまま記録し、ファイル出力時に変換する。
+    local -a markdown_options=(--test-id "$test_id" --status "$final_status" --binary "$TEST_BINARY"
+        --comment "$test_comment" --evidence "$REPORT_STATE/evidence" --input "$runtime_file"
+        --encoding "${FILES_LANG#*.}" --output "results/$test_id/results.md")
+    if [ -s "$REPORT_STATE/evidence_error" ]; then markdown_options+=(--error "$REPORT_STATE/evidence_error"); fi
+    if [[ "${test_name#*.}" == */* ]]; then markdown_options+=(--definition auto); fi
+    python3 "$SCRIPT_DIR/results_markdown.py" individual "${markdown_options[@]}"
+    grep -E '\[ *WARNING *\]|\[ *FAILED *\]|^Error:' "$REPORT_STATE/runtime" >> "$SUMMARY_JOURNAL" || true
+    if [ -s "$REPORT_STATE/evidence_error" ]; then record_utf8_file "$REPORT_STATE/evidence_error"; fi
     rm -f "$temp_file"
 
     # gcov で生成したファイルを削除する
@@ -432,14 +489,13 @@ function run_test() {
         else
             # Windows
             if [ -f coverage/coverage.xml ]; then
-                python "$SCRIPT_DIR/cobertura2gcov.py" coverage/coverage.xml gcov/ 1> /dev/null 2>&1
+                python "$SCRIPT_DIR/cobertura2gcov.py" coverage/coverage.xml gcov/ --encoding "${FILES_LANG#*.}" 1> /dev/null 2>&1
             fi
         fi
 
         if ls gcov/*.gcov 1> /dev/null 2>&1; then
-            for file in gcov/*.gcov; do
-                cp -p "$file" "results/$test_id/${file##*/}.txt"
-            done
+            python3 "$SCRIPT_DIR/results_markdown.py" gcov --input gcov --encoding "${FILES_LANG#*.}" \
+                --workspace "$WORKSPACE_DIR" --output "results/$test_id"
         fi
 
         # 各回のテスト結果を積み上げ
@@ -456,7 +512,7 @@ function run_test() {
         elif [ -f coverage/coverage.xml ]; then
             python "$SCRIPT_DIR/cobertura_accumulate.py" coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
         else
-            echo -e "\e[33m[ WARNING ]\e[0m Coverage file was not generated: coverage/coverage.xml" | tee -a results/all_tests/summary.log
+            echo -e "\e[33m[ WARNING ]\e[0m Coverage file was not generated: coverage/coverage.xml" | tee -a "$SUMMARY_JOURNAL"
         fi
     fi
 
@@ -578,15 +634,15 @@ function main() {
     fi
 
     # テスト対象ソースの md5 を取得
-    echo -e "Test start on $(export LANG=C && date)." | tee -a results/all_tests/summary.log
-    echo -e "----" | tee -a results/all_tests/summary.log
+    echo -e "Test start on $(export LANG=C && date)." | tee -a "$SUMMARY_JOURNAL"
+    echo -e "----" | tee -a "$SUMMARY_JOURNAL"
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
         # (Windows での _MD5_CACHE 一括取得は、再テスト スキップ判定のシグネチャ計算時に
         #  ADD_SRCS・ローカル makefile も含めてすでに実施済み)
 
         safe_tput cr
-        echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a results/all_tests/summary.log
+        echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a "$SUMMARY_JOURNAL"
         safe_tput cr
         for src in "${TEST_SOURCE_FILES[@]}"; do
             local checksum
@@ -594,23 +650,23 @@ function main() {
 
             checksum=$(get_md5_checksum "$src")
             if [ -z "$checksum" ]; then
-                echo -e "\e[31mError: Failed to calculate MD5: $src\e[0m" | tee -a results/all_tests/summary.log
+                echo -e "\e[31mError: Failed to calculate MD5: $src\e[0m" | tee -a "$SUMMARY_JOURNAL"
                 bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
                 rm -f "$test_stamp_file" "$test_signature_file"
                 return 1
             fi
 
             display_src=$(format_src_path_for_display "$src")
-            printf '%s  %s\n' "$checksum" "$display_src" | tee -a results/all_tests/summary.log
+            printf '%s  %s\n' "$checksum" "$display_src" | tee -a "$SUMMARY_JOURNAL"
             safe_tput cr
         done
-        echo "----" | tee -a results/all_tests/summary.log
+        echo "----" | tee -a "$SUMMARY_JOURNAL"
         safe_tput cr
     fi
 
     # TEST_BINARY の存在チェック
     if [ ! -f "$TEST_BINARY" ]; then
-        echo -e "\e[31mError: Test binary not found: $TEST_BINARY\e[0m" | tee -a results/all_tests/summary.log
+        echo -e "\e[31mError: Test binary not found: $TEST_BINARY\e[0m" | tee -a "$SUMMARY_JOURNAL"
         bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
         rm -f "$test_stamp_file" "$test_signature_file"
         return 1
@@ -620,7 +676,7 @@ function main() {
     local list_exit_code=$?
     #tests=$(echo "$tests" | sort)
     if [ $list_exit_code -ne 0 ]; then
-        echo -e "\e[31mError: Failed to execute test binary: $TEST_BINARY (exit code: $list_exit_code)\e[0m" | tee -a results/all_tests/summary.log
+        echo -e "\e[31mError: Failed to execute test binary: $TEST_BINARY (exit code: $list_exit_code)\e[0m" | tee -a "$SUMMARY_JOURNAL"
         bash "$SCRIPT_DIR/banner.sh" FAILED "\e[31m"
         echo ""
         rm -f "$test_stamp_file" "$test_signature_file"
@@ -640,14 +696,15 @@ function main() {
     # 複数ソースを指定したテストのカバレッジ集計が空になる。
     # テスト名の行分割は read の一時的な IFS で行い、大域の IFS は既定のままにする。
     if [[ "${GTEST_FILTER+x}" ]]; then
-        echo -e "Note: GTEST_FILTER = $GTEST_FILTER\n" >> results/all_tests/summary.log
+        echo -e "Note: GTEST_FILTER = $GTEST_FILTER\n" >> "$SUMMARY_JOURNAL"
     fi
-    #echo "Test results:" >> results/all_tests/summary.log
+    #echo "Test results:" >> "$SUMMARY_JOURNAL"
 
     # フィルター適用前の一覧で PARAM を確定し、全体件数を重複掲載しない。
     local all_tests full_test_list selected_test_list group_manifest
     all_tests=$(list_tests all)
     if [ $? -ne 0 ]; then
+        echo "Error: Failed to get full test list: $TEST_BINARY" | tee -a "$SUMMARY_JOURNAL"
         rm -f "$test_stamp_file" "$test_signature_file"
         return 1
     fi
@@ -658,7 +715,9 @@ function main() {
     printf '%s\n' "$tests" > "$selected_test_list"
     if ! python3 "$SCRIPT_DIR/gtest_summary_groups.py" prepare "$group_manifest" \
         --full-list "$full_test_list" --selected-list "$selected_test_list" \
-        --is-windows "$IS_WINDOWS" --encoding "${FILES_LANG#*.}"; then
+        --is-windows "$IS_WINDOWS" --encoding "${FILES_LANG#*.}" 2> "$REPORT_STATE/group_error"; then
+        cat "$REPORT_STATE/group_error" >&2
+        record_utf8_file "$REPORT_STATE/group_error"
         rm -f "$full_test_list" "$selected_test_list" "$group_manifest" "$test_stamp_file" "$test_signature_file"
         return 1
     fi
@@ -678,10 +737,12 @@ function main() {
         #fi
     done 3<<< "$tests"
 
-    if ! python3 "$SCRIPT_DIR/gtest_summary_groups.py" finish "$group_manifest" --encoding "${FILES_LANG#*.}"; then
+    if ! python3 "$SCRIPT_DIR/gtest_summary_groups.py" finish "$group_manifest" --counts-dir "$REPORT_STATE/counts" --encoding "${FILES_LANG#*.}"; then
         FAILURE_COUNT=$((FAILURE_COUNT + 1))
     fi
     rm -f "$group_manifest"
+
+    printf '@test\t\n' >> "$SUMMARY_JOURNAL"
 
     # 全体結果を出力
     printf '\n----\n%s' "$test_summary"
@@ -692,7 +753,7 @@ function main() {
     fi
 
     echo -e "----\nTotal tests\t$test_count\e[33m$filtered\e[0m\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT"
-    echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> results/all_tests/summary.log
+    echo -e "----\nTotal tests\t$test_count$filtered\nPassed\t\t$SUCCESS_COUNT\nWarning(s)\t$WARNING_COUNT\nFailed\t\t$FAILURE_COUNT" >> "$SUMMARY_JOURNAL"
 
     # 再テスト スキップ判定用スタンプの更新
     # GTEST_FILTER によるフィルター実行ではなく、かつ全件失敗なし (クリーン) の場合のみ
@@ -715,12 +776,11 @@ function main() {
         # 全体版 gcov の生成 (Linux でも cobertura2gcov.py を使用して出力)
         # 個別テストの gcov を残したままにせず、累積 XML から生成したファイルだけをコピーする
         rm -rf gcov/*
-        python "$SCRIPT_DIR/cobertura2gcov.py" coverage/accumulated_coverage.xml gcov/ 1> /dev/null 2>&1
+        python "$SCRIPT_DIR/cobertura2gcov.py" coverage/accumulated_coverage.xml gcov/ --encoding "${FILES_LANG#*.}" 1> /dev/null 2>&1
 
         if ls gcov/*.gcov 1> /dev/null 2>&1; then
-            for file in gcov/*.gcov; do
-                cp -p "$file" "results/all_tests/${file##*/}.txt"
-            done
+            python3 "$SCRIPT_DIR/results_markdown.py" gcov --input gcov --encoding "${FILES_LANG#*.}" \
+                --workspace "$WORKSPACE_DIR" --output "results/all_tests"
         fi
 
         if [ $IS_WINDOWS -ne 1 ]; then
@@ -760,10 +820,12 @@ function main() {
             fi
         fi
 
-        echo "" | tee -a results/all_tests/summary.log
+        echo "" | tee -a "$SUMMARY_JOURNAL"
 
         # Code Coverage Report
-        python "$SCRIPT_DIR/cobertura2gcovr.py" coverage/accumulated_coverage.xml 2>&1 | tee -a results/all_tests/summary.log
+        python "$SCRIPT_DIR/cobertura2gcovr.py" coverage/accumulated_coverage.xml
+
+        python3 "$SCRIPT_DIR/cobertura2gcovr.py" coverage/accumulated_coverage.xml --markdown > "$COVERAGE_MARKDOWN"
 
         # 全体カバレッジ計測用に、カバレッジ xml を保持
         cp -p coverage/accumulated_coverage.xml results/all_tests/coverage.xml
@@ -771,7 +833,7 @@ function main() {
             cp -p coverage/accumulated_coverage.json results/all_tests/coverage.json
         fi
     elif [ -n "$TEST_SRCS" ] && [ "$test_count" -gt 0 ]; then
-        echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a results/all_tests/summary.log
+        echo -e "\e[33m[ WARNING ]\e[0m Accumulated coverage file was not generated: coverage/accumulated_coverage.xml" | tee -a "$SUMMARY_JOURNAL"
     fi
 
     # Clean (サブディレクトリを含めて gcda ファイルをクリア)

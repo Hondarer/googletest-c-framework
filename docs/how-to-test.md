@@ -226,3 +226,18 @@ app 単位のスキップは、途中で 1 つでもテストが失敗すると 
 ファイルに書いたコミット ハッシュが HEAD と一致し、追加・削除・変更がないとき、app 直下の `make` / `make test` は `test/src` のコンパイルとテスト実行を行わず、製品とモックだけをコンパイルします。  
 `test/src` 配下での直接 `make test` は妨げません。  
 詳細は [ビルド構成](../../makefw/docs/build-configurations.md#assuredstamp-による保証済み-app-の扱い) を参照してください。
+
+## 結果ファイル
+
+`make test` は `results/` 配下へ、人が読む結果を Markdown で出力します。
+
+- 個別結果: `<TestId>/results.md`
+- C/C++ のパラメーター テスト定義: `<Suite>.<Test>/results.md`
+- C/C++ のパラメーター テストのレコード: `<Suite>.<Test>/<Prefix>/<Param>/results.md`
+- 全体サマリー: `all_tests/summary.md`
+- C/C++ のカバレッジ詳細: `<TestId>/<src>.gcov.md`、`all_tests/<src>.gcov.md`
+
+個別結果は、判定、テスト項目、テスト コード、実行結果を記録します。  
+全体サマリーには結果ファイルへの相対リンクと、定義ごと・分類ごとの確認件数を記載します。  
+構成と集計の規則は [テスト エビデンス](about-test-phase.md#テスト-エビデンス-resultsmd) を参照してください。  
+旧名の `results.log`、`summary.log`、`*.gcov.txt` は出力しません。`coverage.xml`、`coverage.json`、`lcov/` は従来の形式です。
