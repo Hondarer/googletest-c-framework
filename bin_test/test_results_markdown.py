@@ -89,7 +89,15 @@ class ResultsMarkdownTest(unittest.TestCase):
     def test_inline_cells_and_links(self):
         self.assertEqual(md.inline('a``b'), '``` a``b ```')
         self.assertEqual(md.cell('a|b'), r'a\|b')
+        self.assertEqual(md.table(['項目'], [['値']], '表題'), '| 項目 |\n| --- |\n| 値 |\n\nTable: 表題')
         self.assertEqual(md.link('結果', '../a b/#x?%/results.md'), '[結果](../a%20b/%23x%3F%25/results.md)')
+
+    def test_names_are_plain_text_with_markdown_escapes(self):
+        # 単語内の _ はそのまま残し、記法として解釈される文字だけをエスケープする。
+        self.assertEqual(md.plain('test_static_access.test'), 'test_static_access.test')
+        self.assertEqual(md.plain('Multi/Param.Test/0'), 'Multi/Param.Test/0')
+        self.assertEqual(md.plain('_a*b[c]<d>`e`\\'), r'\_a\*b\[c\]\<d\>\`e\`\\')
+        self.assertEqual(md.cell(md.plain('p|q')), r'p\|q')
 
     def test_summary_counts_are_returned_from_same_analysis(self):
         counts = {}
@@ -133,8 +141,8 @@ class ResultsMarkdownTest(unittest.TestCase):
     def test_gcov_body_and_path_are_preserved(self):
         body = '        -:    0:Source:/workspace/app/a b.c\n        1:    1:```\n'
         result = md.gcov(body, '/workspace')
-        self.assertIn('# `a b.c` のカバレッジ', result)
-        self.assertIn('- ソース: `app/a b.c`', result)
+        self.assertIn('# a b.c のカバレッジ', result)
+        self.assertIn('- ソース: app/a b.c', result)
         self.assertIn('````text\n' + body + '````', result)
 
     def test_group_cli_reads_shiftjis_list_and_writes_after_records(self):
@@ -162,7 +170,7 @@ class ResultsMarkdownTest(unittest.TestCase):
             result = md.summary('leaf', journal, root, filter_value='P.*')
             self.assertIn('| 合計 | 7 | 2 | 9 |', result)
             self.assertIn('未評価のテスト定義 1 件', result)
-            self.assertEqual(result.count('[`S.T`](../S.T/results.md) | 7'), 1)
+            self.assertEqual(result.count('[S.T](../S.T/results.md) | 7'), 1)
             self.assertIn(r'`# a\|b`', result)
             self.assertIn('> [!WARNING]', result)
             self.assertIn('> [!CAUTION]', result)

@@ -158,7 +158,7 @@ public class SubprocedureTests : IDisposable {
         self.assertIn("SubprocedureTests.cs:", subprocedure)
         assert_results(self, self.leaf / "results")
         summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
-        self.assertIn("[`ExampleTests.Pass`](../ExampleTests.Pass/results.md) | PASSED", summary)
+        self.assertIn("[ExampleTests.Pass](../ExampleTests.Pass/results.md) | PASSED", summary)
         hooks = (self.leaf / "hooks.log").read_text(encoding="utf-8").splitlines()
         self.assertEqual(hooks, ["pre-build", "post-build", "pre-test", "post-test"])
         calls = (self.root / "dotnet calls.log").read_text(encoding="utf-8")

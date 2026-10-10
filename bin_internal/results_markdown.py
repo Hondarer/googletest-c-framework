@@ -38,6 +38,15 @@ def inline(text):
     return marker + pad + text + pad + marker
 
 
+def plain(text):
+    """テスト名やファイル名を、インライン コードにせず Markdown の記法として解釈されない文字列にする。"""
+    # | は表のセルでだけ意味を持つため、cell でエスケープする。
+    text = re.sub(r"([\\`*\[\]<>&~])", r"\\\1", str(text).replace("\n", " "))
+    # 単語内の _ は強調にならないため、単語の境界にある _ だけをエスケープする。
+    # see: https://spec.commonmark.org/0.31.2/#emphasis-and-strong-emphasis
+    return re.sub(r"(?<![0-9A-Za-z])_|_(?![0-9A-Za-z])", r"\\_", text)
+
+
 def cell(text):
     return str(text).replace("|", r"\|").replace("\n", " ")
 
@@ -46,9 +55,11 @@ def link(label, path):
     return f"[{label}]({quote(str(path).replace(chr(92), '/'), safe='/')})"
 
 
-def table(headers, rows, numeric=False):
+def table(headers, rows, caption, numeric=False):
     separator = ["---"] + (["---:"] * (len(headers) - 1) if numeric else ["---"] * (len(headers) - 1))
-    return "\n".join("| " + " | ".join(cell(v) for v in row) + " |" for row in [headers, separator, *rows])
+    lines = "\n".join("| " + " | ".join(cell(v) for v in row) + " |" for row in [headers, separator, *rows])
+    # 表のキャプションは、表の直後に空行を挟んだ Table: 行で指定する。
+    return lines + "\n\nTable: " + caption
 
 
 def admonition(kind, message):
@@ -67,10 +78,10 @@ def write(path, text):
 
 
 def individual(test_id, status, evidence, output, binary="", comment="", definition="", error="", console=False):
-    parts = ["# " + inline(test_id)]
+    parts = ["# " + plain(test_id)]
     metadata = [] if console else [f"- 判定: {status}"]
     if binary:
-        metadata.append("- テスト バイナリ: " + inline(binary))
+        metadata.append("- テスト バイナリ: " + plain(binary))
     if comment:
         metadata.append("- 備考: " + inline(comment))
     if metadata:
@@ -113,9 +124,9 @@ def definition(test_id, evidence, records, total):
     status = "FAILED" if counts["FAILED"] else "WARNING" if counts["WARNING"] else "PASSED"
     n = str(len(records)) + (f" / {total}" if len(records) != total else "")
     distribution = ", ".join(f"{key}: {value}" for key, value in counts.items() if value)
-    parts = ["# " + inline(test_id), f"- 総合判定: {status}\n- 実行レコード数: {n} ({distribution})", evidence.strip(), "## 実行レコード"]
+    parts = ["# " + plain(test_id), f"- 総合判定: {status}\n- 実行レコード数: {n} ({distribution})", evidence.strip(), "## 実行レコード"]
     for record in records:
-        parts += ["### " + inline(record["name"]), f'- 判定: {record["status"]}\n- 詳細: ' + link("results.md", record["path"]), fence(record["output"])]
+        parts += ["### " + plain(record["name"]), f'- 判定: {record["status"]}\n- 詳細: ' + link("results.md", record["path"]), fence(record["output"])]
     return "\n\n".join(parts) + "\n"
 
 
@@ -124,13 +135,14 @@ def coverage_rows(data):
     rows = []
     for name, lines, executed, missing, branches, covered in data:
         name = name[:29] + "..." if len(name) > 32 else name
-        rows.append([name, lines, executed, format_rate(executed, lines), branches or "-", format_rate(covered, branches) if branches else "-", format_missing(missing)])
+        rows.append([plain(name), lines, executed, format_rate(executed, lines), branches or "-", format_rate(covered, branches) if branches else "-", format_missing(missing)])
     lines = sum(d[1] for d in data)
     executed = sum(d[2] for d in data)
     branches = sum(d[4] for d in data)
     covered = sum(d[5] for d in data)
     rows.append(["TOTAL", lines, executed, format_rate(executed, lines), branches or "-", format_rate(covered, branches) if branches else "-", ""])
-    return table(["File", "Lines", "Exec", "Cover", "Branch", "BrCov", "Missing"], rows)
+    return table(["File", "Lines", "Exec", "Cover", "Branch", "BrCov", "Missing"], rows,
+                 "ソース ファイル別の行とブランチのカバレッジ")
 
 
 def summary(directory, journal, counts_dir, coverage="", filter_value=None, journal_dir="."):
@@ -140,14 +152,15 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
                         for line in journal.splitlines())
     text = clean(journal)
     start = re.search(r"^Test start on (.*)\.$", text, re.M)
-    parts = ["# " + inline(directory) + " のテスト結果サマリー"]
+    parts = ["# " + plain(directory) + " のテスト結果サマリー"]
     if start:
         parts.append("- 開始日時: " + start[1])
     if filter_value is not None:
         parts.append(admonition("NOTE", "GTEST_FILTER = " + inline(filter_value)))
     md5 = re.findall(r"^([0-9a-f]{32})  (.+)$", text, re.M)
     if md5:
-        parts.append("## テスト対象ソースの MD5\n\n" + table(["MD5", "ファイル"], [(h, inline(p)) for h, p in md5]))
+        rows = [(h, plain(p)) for h, p in md5]
+        parts.append("## テスト対象ソースの MD5\n\n" + table(["MD5", "ファイル"], rows, "テスト対象ソースのファイル別の MD5 チェックサム"))
     results = []
     definitions = []
     from gtest_summary_groups import definition_id
@@ -155,16 +168,16 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
         columns = line.split("\t")
         if len(columns) >= 2 and columns[1] in {"PASSED", "WARNING", "FAILED"}:
             name, status = columns[:2]
-            results.append([link(inline(name), "../" + name + "/results.md"), status, inline(columns[2]) if len(columns) > 2 and columns[2] else ""])
+            results.append([link(plain(name), "../" + name + "/results.md"), status, inline(columns[2]) if len(columns) > 2 and columns[2] else ""])
             key = definition_id(name)
             if key not in definitions:
                 definitions.append(key)
-    parts.append("## テスト結果\n\n" + (table(["テスト ID", "結果", "備考"], results) if results else "なし"))
+    parts.append("## テスト結果\n\n" + (table(["テスト ID", "結果", "備考"], results, "テスト ID 別の判定と備考") if results else "なし"))
     aggregation = []
     for label in ("Total tests", "Passed", "Warning(s)", "Failed"):
         match = re.search(r"^" + re.escape(label) + r"\t+(.*)$", text, re.M)
         aggregation.append([label, match[1] if match else str(len(results)) if label == "Total tests" else "0"])
-    parts.append("## 集計\n\n" + table(["項目", "件数"], aggregation))
+    parts.append("## 集計\n\n" + table(["項目", "件数"], aggregation, "判定別のテスト件数"))
     rows, normal, abnormal, unknown = [], 0, 0, 0
     for key in definitions:
         path = Path(counts_dir) / (key + ".json")
@@ -177,10 +190,10 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
             normal += a
             abnormal += b
             values = [a, b, a + b]
-        rows.append([link(inline(key), "../" + key + "/results.md"), *values])
+        rows.append([link(plain(key), "../" + key + "/results.md"), *values])
     if rows:
         rows.append(["合計", normal, abnormal, normal + abnormal])
-    checks = table(["テスト定義", "正常系", "異常系", "計"], rows, True) if rows else "なし"
+    checks = table(["テスト定義", "正常系", "異常系", "計"], rows, "テスト定義別の正常系と異常系の確認件数", True) if rows else "なし"
     if unknown:
         checks += f"\n\n合計には、未評価のテスト定義 {unknown} 件を含みません。"
     parts.append("## 確認件数\n\n" + checks)
@@ -193,7 +206,7 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
         if line.startswith("@test\t"):
             context = line.split("\t", 1)[1]
         if re.search(r"\[ *WARNING *\]|\[ *FAILED *\]|^Error:", line):
-            message = (inline(context) + ": " if context else "") + line
+            message = (plain(context) + ": " if context else "") + line
             details = []
             i += 1
             while i < len(lines) and lines[i] and not re.search(r"\t|^----|^@|\[ *WARNING *\]|\[ *FAILED *\]|^Error:", lines[i]):
@@ -227,7 +240,7 @@ def gcov(body, workspace):
         except ValueError:
             pass
     name = normalized.rsplit("/", 1)[-1]
-    return "# " + inline(name) + " のカバレッジ\n\n- ソース: " + inline(source) + "\n\n" + fence(body) + "\n"
+    return "# " + plain(name) + " のカバレッジ\n\n- ソース: " + plain(source) + "\n\n" + fence(body) + "\n"
 
 
 def main():
