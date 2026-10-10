@@ -342,7 +342,7 @@ int main(int argc, char **argv) {
         self.assertFalse((self.leaf / "test.stamp").exists())
 
     def test_missing_binary_writes_summary_before_test(self):
-        binary = self.leaf / "bin" / self.leaf.name
+        binary = self.leaf / "bin" / (self.leaf.name + (".exe" if os.name == "nt" else ""))
         backup = binary.with_suffix(".backup")
         binary.rename(backup)
         try:

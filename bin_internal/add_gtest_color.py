@@ -116,7 +116,8 @@ def main() -> None:
         output_encoding = "utf-8" if encoding == "utf-8-sig" else encoding
         # 解釈できないバイトもコンソールへそのまま渡し、テストの判定に影響させない。
         sys.stdin.reconfigure(encoding=encoding, errors="surrogateescape")
-        sys.stdout.reconfigure(encoding=output_encoding, errors="surrogateescape")
+        # Windows でも入力の LF を CRLF へ変換せず、そのまま出力する。
+        sys.stdout.reconfigure(encoding=output_encoding, errors="surrogateescape", newline="\n")
         sys.stderr.reconfigure(encoding='utf-8')
     except AttributeError:
         # Python 3.7 未満では reconfigure が存在しない
