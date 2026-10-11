@@ -90,14 +90,14 @@ def individual(test_id, status, evidence, output, binary="", comment="", definit
         parts.append("\n".join(metadata))
     if error:
         _, _, code = evidence.partition("## テスト コード\n")
-        evidence = "## テスト項目\n\n" + admonition("CAUTION", error) + "\n\n## テスト コード\n" + (code or "\nなし")
+        evidence = "## テスト項目の詳細\n\n" + admonition("CAUTION", error) + "\n\n## テスト コード\n" + (code or "\nなし")
     if definition and not error:
         if definition == "auto":
             from gtest_summary_groups import definition_id
             definition = os.path.relpath(Path(definition_id(test_id)) / "results.md", Path(test_id)).replace("\\", "/")
         _, _, code = evidence.partition("## テスト コード\n")
-        evidence = "## テスト項目\n\nテスト項目は " + link("テスト定義の結果", definition) + " を参照してください。\n\n## テスト コード\n" + (code or "\nなし")
-    parts.append(evidence.strip() or "## テスト項目\n\nなし\n\n## テスト コード\n\nなし")
+        evidence = "## テスト項目の詳細\n\nテスト項目は " + link("テスト定義の結果", definition) + " を参照してください。\n\n## テスト コード\n" + (code or "\nなし")
+    parts.append(evidence.strip() or "## テスト項目の詳細\n\nなし\n\n## テスト コード\n\nなし")
     parts.append("## 実行結果\n\n" + fence(output if console else clean(output), fixed=console))
     return "\n\n".join(parts) + "\n"
 

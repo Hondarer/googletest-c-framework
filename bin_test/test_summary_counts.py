@@ -56,8 +56,14 @@ EXPECT_FALSE(error); // [確認_異常系 回数=0] - エラーがないこと�
 }
 '''
         result = render_summary(source)
-        self.assertIn("### 確認内容 (正常系:15, 異常系:1)", result)
+        self.assertIn("### 確認 (正常系:15, 異常系:1)", result)
         self.assertIn("- (準備できること。)", result)
+        self.assertIn("- 【正常系】3 回呼ばれること。", result)
+        self.assertIn("- 【異常系】呼ばれないこと。", result)
+        self.assertIn("- 【正常系】値 [0] が一致すること。〔14 回〕", result)
+        self.assertIn("- 【異常系】エラーがないこと。〔0 回〕", result)
+        self.assertNotIn("【正常系】(", result)
+        self.assertNotIn("【異常系】(", result)
         self.assertIn("値 [0] が一致すること。〔14 回〕", result)
 
     def test_param_is_explicit_and_not_a_global_multiplier(self):
@@ -72,7 +78,7 @@ public void Test(int value) {
 }
 '''
         result = render_summary(source, param_count=4)
-        self.assertIn("### 確認内容 (正常系:22, 異常系:3)", result)
+        self.assertIn("### 確認 (正常系:22, 異常系:3)", result)
         self.assertIn("〔20 回: PARAM*(2+3)、PARAM=4〕", result)
 
     def test_no_source_based_param_inference(self):
@@ -90,13 +96,13 @@ public void Test(int value) {
 // [確認_正常系] - 一致すること。
 // Cleanup
 ''')
-        self.assertIn("確認内容_1 (正常系:2)", result)
-        self.assertIn("確認内容_2 (正常系:1, 異常系:3)", result)
+        self.assertIn("### 確認_1 (正常系:2)\n\n- 【正常系】一致すること。〔2 回〕", result)
+        self.assertIn("### 確認_2 (正常系:1, 異常系:3)\n\n- 【異常系】失敗すること。〔3 回〕\n- 【正常系】一致すること。", result)
         self.assertIn("確認件数合計 (正常系:3, 異常系:3)", result)
 
     def test_partial_execution_does_not_publish_full_counts(self):
         result = render_summary('// [確認_正常系 回数=PARAM*2+1] - 一致すること。', True, 5, True)
-        self.assertIn("確認内容 (未評価)", result)
+        self.assertIn("確認 (未評価)", result)
         self.assertIn("〔未評価: PARAM*2+1〕", result)
         self.assertNotIn("正常系:11", result)
         with self.assertRaises(SummaryError):
@@ -112,7 +118,7 @@ const char *r = R"tag(// [確認_正常系 回数=500] - 偽。
 EXPECT_EQ(1, 1); // [確認_正常系] - 一致すること。
 }
 '''
-        self.assertIn("確認内容 (正常系:1)", render_summary(source))
+        self.assertIn("確認 (正常系:1)", render_summary(source))
         source = '''[Fact]
 public void Test() {
 var s = @"// [確認_正常系 回数=500] - 偽。";
@@ -122,13 +128,13 @@ var r = """
 Assert.True(true); // [確認_正常系] - 一致すること。
 }
 '''
-        self.assertIn("確認内容 (正常系:1)", render_summary(source))
+        self.assertIn("確認 (正常系:1)", render_summary(source))
 
     def test_multiple_state_tags(self):
         result = render_summary('// [状態] - 準備する。[状態確認] - 準備できること。')
         self.assertIn("- 準備する。", result)
         self.assertIn("- (準備できること。)", result)
-        self.assertIn("確認内容 (0)", result)
+        self.assertIn("確認 (0)", result)
 
     def test_bad_tags_fail_with_location(self):
         for tag in ["[確認]", "[Pre-Assert確認]", "[確認_未知]", "[確認_正常系 回数=]",

@@ -304,6 +304,7 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
                     item = LIST.fullmatch(text)
                     if not item:
                         raise SummaryError("確認タグには箇条書きの説明文が必要です")
+                    text = text[:item.start(1)] + f"【{match.group(2)}】" + item.group(1)
                     expression = match.group(3)
                     count = CountExpression(expression if expression is not None else "1")
                     if count.uses_param and not parameterized:
@@ -351,7 +352,7 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
         counts.update({category: None if partial else value for category, value in totals.items()})
     if not desc and not after and not any(c.entries for c in cycles.values()):
         return ""
-    out = ["## テスト項目\n"]
+    out = ["## テスト項目の詳細\n"]
     if desc:
         out.append("\n" + "\n".join(desc) + "\n")
     multi = current > 1
@@ -366,7 +367,7 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
         for category in totals:
             totals[category] += cycle.counts[category]
         header = "未評価" if partial else ", ".join(f"{k}:{v}" for k, v in cycle.counts.items() if v) or "0"
-        out.append(f"\n### 確認内容{suffix} ({header})\n\n")
+        out.append(f"\n### 確認{suffix} ({header})\n\n")
         out.append(("\n".join(render_entries(entries, "check")) or "なし") + "\n")
     if multi:
         header = "未評価" if partial else ", ".join(f"{k}:{v}" for k, v in totals.items() if v) or "0"

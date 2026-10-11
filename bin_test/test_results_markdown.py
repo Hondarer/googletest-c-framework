@@ -67,7 +67,7 @@ def assert_results(case, root):
             continue
         headings = re.findall(r'^### 確認件数合計 \((.*?)\)$', result, re.M)
         if not headings:
-            headings = re.findall(r'^### 確認内容(?:_\d+)? \((.*?)\)$', result, re.M)
+            headings = re.findall(r'^### 確認(?:_\d+)? \((.*?)\)$', result, re.M)
         expected = [sum(int(v) for h in headings for v in re.findall(category + r':(\d+)', h)) for category in ['正常系', '異常系']]
         case.assertEqual([int(a), int(b)], expected, target)
         case.assertEqual(int(total), int(a) + int(b))
@@ -80,6 +80,55 @@ def assert_results(case, root):
 
 
 class ResultsMarkdownTest(unittest.TestCase):
+    def test_help_result_matches_approved_example(self):
+        source = """// help オプションで必須位置引数なしでも正常終了することの確認
+TEST_F(addTest, help) {
+// Arrange
+// [状態] - help オプションを指定する。
+// Act
+// [手順] - help オプションで main() を呼び出す。
+// Assert
+// [確認_正常系] - 必須位置引数なしでも正常終了すること。
+}
+"""
+        evidence = SourceIndex({'sample.cc': source}).report('addTest.help')
+        expected = """## テスト項目の詳細
+
+help オプションで必須位置引数なしでも正常終了することの確認
+
+### 状態
+
+- help オプションを指定する。
+
+### 手順
+
+- help オプションで main() を呼び出す。
+
+### 確認 (正常系:1)
+
+- 【正常系】必須位置引数なしでも正常終了すること。
+"""
+        self.assertEqual(evidence.split('\n## テスト コード', 1)[0], expected)
+        for console in (False, True):
+            result = md.individual('addTest.help', 'PASSED', evidence, 'OK', console=console)
+            self.assertIn(expected, result)
+            self.assertEqual(md.execution_output(result), 'OK')
+
+    def test_detail_heading_for_empty_failed_and_parameter_record(self):
+        empty = SourceIndex({'sample.cc': 'TEST(S, T) {}'}).report('S.T')
+        cases = [
+            (md.individual('S.T', 'PASSED', '', 'OK'), 'なし'),
+            (md.individual('S.T', 'PASSED', empty, 'OK'), 'なし'),
+            (md.individual('S.T', 'FAILED', empty, 'OK', error='生成失敗'), '> [!CAUTION]'),
+            (md.individual('S.T/P/0', 'PASSED', empty, 'OK', definition='../../results.md'),
+             'テスト項目は [テスト定義の結果](../../results.md) を参照してください。'),
+        ]
+        for result, body in cases:
+            with self.subTest(body=body):
+                self.assertIn('## テスト項目の詳細\n\n' + body, result)
+                self.assertNotIn('## テスト項目\n', result)
+                self.assertEqual(md.execution_output(result), 'OK')
+
     def test_fence_is_longer_than_any_run_and_empty_is_none(self):
         self.assertEqual(md.fence(''), 'なし')
         self.assertEqual(md.fence(' \n\n'), 'なし')
@@ -127,7 +176,7 @@ class ResultsMarkdownTest(unittest.TestCase):
     def test_definitions_and_record_links(self):
         records = [{'name': 'P/S.T/0', 'status': 'WARNING', 'path': 'P/0/results.md', 'output': '```\nOK'},
                    {'name': 'P/S.T/1', 'status': 'FAILED', 'path': 'P/1/results.md', 'output': ''}]
-        result = md.definition('S.T', '## テスト項目\n\nなし\n\n## テスト コード\n\nなし', records, 3)
+        result = md.definition('S.T', '## テスト項目の詳細\n\nなし\n\n## テスト コード\n\nなし', records, 3)
         self.assertIn('- 総合判定: FAILED', result)
         self.assertIn('- 実行レコード数: 2 / 3 (WARNING: 1, FAILED: 1)', result)
         self.assertEqual(result.count('## テスト コード'), 1)
@@ -158,7 +207,11 @@ class ResultsMarkdownTest(unittest.TestCase):
             state = json.loads(manifest.read_text(encoding="utf-8"))
             md.write(root / "results/S.T/P/0/results.md", md.individual("S.T/P/0", "PASSED", state["S.T"]["evidence"], "OK", definition="auto"))
             subprocess.run([sys.executable, str(script), "finish", str(manifest), "--counts-dir", str(root / "counts"), "--encoding", "shiftjis"], cwd=root, check=True, capture_output=True)
-            self.assertIn("日本語", (root / "results/S.T/results.md").read_text(encoding="utf-8"))
+            definition = (root / "results/S.T/results.md").read_text(encoding="utf-8")
+            self.assertIn("## テスト項目の詳細", definition)
+            self.assertIn("- 【正常系】日本語の確認。", definition)
+            self.assertIn("### P/S.T/0", definition)
+            self.assertIn("```text\nOK\n```", definition)
             self.assertEqual(json.loads((root / "counts/S.T.json").read_text(encoding="utf-8")), {"正常系": 1, "異常系": 0})
             assert_structure(self, root / "results/S.T/results.md")
 
@@ -187,7 +240,7 @@ class ResultsMarkdownTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             evidence = root / 'evidence'
-            evidence.write_text('## テスト項目\n\nなし\n\n## テスト コード\n\nなし', encoding='utf-8')
+            evidence.write_text('## テスト項目の詳細\n\nなし\n\n## テスト コード\n\nなし', encoding='utf-8')
             for encoding, body in [('shiftjis', '日本語```'.encode('cp932') + b'\x81'), ('utf8bom', b'\xef\xbb\xbf' + '日本語'.encode('utf-8') + b'\xff')]:
                 runtime = root / 'runtime'
                 runtime.write_bytes(body)

@@ -30,18 +30,18 @@ class SubprocedureTest(unittest.TestCase):
         source = test(definition("Region", 'EXPECT_TRUE(ok); // [確認_正常系] - 結果が真であること。')
                       + '// [サブ手順参照 名前=Region 回数=3]')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容 (正常系:3)", report)
+        self.assertIn("確認 (正常系:3)", report)
 
     def test_transitive_counts_and_source_once_per_definition(self):
         source = definition("B", 'void b() {\nEXPECT_TRUE(ok); // [確認_正常系 回数=2] - B が一致すること。\n}')
         source += definition("A", 'void a() {\nb(); // [サブ手順参照 名前=B 回数=3]\n}')
         source += test('a(); // [サブ手順参照 名前=A 回数=4]\na(); // [サブ手順参照 名前=A]\n')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容 (正常系:30)", report)
+        self.assertIn("確認 (正常系:30)", report)
         self.assertEqual(report.count("// サブ手順: A\n"), 1)
         self.assertEqual(report.count("// サブ手順: B\n"), 1)
         # 経路は入れ子の階層で示し、回数は参照ごとの値を各階層に付ける。
-        self.assertIn("- サブ手順 A にて以下を確認する。〔4 回〕\n    - サブ手順 B にて以下を確認する。〔3 回〕\n        - B が一致すること。〔2 回〕\n"
+        self.assertIn("- サブ手順 A にて以下を確認する。〔4 回〕\n    - サブ手順 B にて以下を確認する。〔3 回〕\n        - 【正常系】B が一致すること。〔2 回〕\n"
                       "- サブ手順 A にて以下を確認する。\n    - サブ手順 B にて以下を確認する。〔3 回〕\n", report)
         self.assertNotIn("参照回数", report)
         self.assertLess(report.index("// サブ手順: A\n"), report.index("// サブ手順: B\n"))
@@ -51,25 +51,25 @@ class SubprocedureTest(unittest.TestCase):
         source += test('// Assert_2\nEXPECT_TRUE(ok); // [確認_正常系] - 本体。',
                        before='// [サブ手順参照 名前=Before]\n', after='// [サブ手順参照 名前=After]\n')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容_1 (正常系:1)", report)
-        self.assertIn("確認内容_2 (正常系:2)", report)
-        self.assertLess(report.index("- Before。"), report.index("- 本体。"))
-        self.assertLess(report.index("- 本体。"), report.index("- After。"))
+        self.assertIn("確認_1 (正常系:1)", report)
+        self.assertIn("確認_2 (正常系:2)", report)
+        self.assertLess(report.index("- 【正常系】Before。"), report.index("- 【正常系】本体。"))
+        self.assertLess(report.index("- 【正常系】本体。"), report.index("- 【正常系】After。"))
 
     def test_internal_cycles_do_not_change_parent_cycles(self):
         source = definition("A", 'void a() {\n// Assert_3\nEXPECT_TRUE(ok); // [確認_正常系] - A。\n}')
         source += test('a(); // [サブ手順参照 名前=A]\n// Assert_2\nEXPECT_TRUE(ok); // [確認_異常系] - 本体。')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容_1 (正常系:1)", report)
-        self.assertNotIn("確認内容_3", report)
+        self.assertIn("確認_1 (正常系:1)", report)
+        self.assertNotIn("確認_3", report)
 
     def test_explicit_param_total_and_partial(self):
         source = definition("A", 'void a() {\nEXPECT_TRUE(ok); // [確認_正常系] - A。\n}')
         source += test('a(); // [サブ手順参照 回数=PARAM * (2+3) 名前=A]', macro="TEST_P")
         index = SourceIndex({"sample.cc": source})
-        self.assertIn("確認内容 (正常系:20)", index.report("Suite.Case", param_count=4))
-        self.assertIn("- サブ手順 A にて以下を確認する。〔20 回: PARAM*(2+3)、PARAM=4〕\n    - A。\n", index.report("Suite.Case", param_count=4))
-        self.assertIn("確認内容 (未評価)", index.report("Suite.Case", param_count=4, partial=True))
+        self.assertIn("確認 (正常系:20)", index.report("Suite.Case", param_count=4))
+        self.assertIn("- サブ手順 A にて以下を確認する。〔20 回: PARAM*(2+3)、PARAM=4〕\n    - 【正常系】A。\n", index.report("Suite.Case", param_count=4))
+        self.assertIn("確認 (未評価)", index.report("Suite.Case", param_count=4, partial=True))
         self.assertIn("- サブ手順 A にて以下を確認する。〔未評価: PARAM*(2+3)〕", index.report("Suite.Case", param_count=4, partial=True))
         self.assertIn("// サブ手順: A", index.report("Suite.Case", param_count=4, partial=True))
         self.assertNotIn("## テスト項目", index.report("Suite.Case", code_only=True))
@@ -79,8 +79,13 @@ class SubprocedureTest(unittest.TestCase):
         source += definition("A", '// [サブ手順参照 名前=B]\n// [サブ手順参照 名前=B 区分=正常系]')
         source += test('// [サブ手順参照 名前=A 回数=3 区分=異常系]')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容 (正常系:3, 異常系:3)", report)
-        self.assertIn("準備。", report)
+        self.assertIn("確認 (正常系:3, 異常系:3)", report)
+        summary = report.split("## テスト コード", 1)[0]
+        self.assertIn("        - 【異常系】B。\n", summary)
+        self.assertIn("        - 【正常系】B。\n", summary)
+        self.assertEqual(summary.count("- (準備。)"), 2)
+        self.assertNotIn("【正常系】サブ手順", summary)
+        self.assertNotIn("【異常系】サブ手順", summary)
         with self.assertRaisesRegex(SummaryError, "区分"):
             SourceIndex({"sample.cc": definition("B", '') + test('// [サブ手順参照 名前=B 区分=未知]')})
 
@@ -89,7 +94,7 @@ class SubprocedureTest(unittest.TestCase):
         source += test(before='// [サブ手順参照 名前=Fixture.SetUp]\n')
         linux = SourceIndex({"sample.cc": source}, is_windows=False).report("Suite.Case")
         windows = SourceIndex({"sample.cc": source}, is_windows=True).report("Suite.Case")
-        self.assertIn("確認内容 (0)", linux)
+        self.assertIn("確認 (0)", linux)
         self.assertIn("正常系:1", windows)
         self.assertNotIn("Windows。", linux)
 
@@ -100,8 +105,8 @@ class SubprocedureTest(unittest.TestCase):
     def test_zero_count_still_has_excerpt(self):
         source = definition("A", 'void a() {\nEXPECT_TRUE(ok); // [確認_正常系] - A。\n}') + test('a(); // [サブ手順参照 名前=A 回数=0]')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容 (0)", report)
-        self.assertIn("- サブ手順 A にて以下を確認する。〔0 回〕\n    - A。\n", report)
+        self.assertIn("確認 (0)", report)
+        self.assertIn("- サブ手順 A にて以下を確認する。〔0 回〕\n    - 【正常系】A。\n", report)
         self.assertIn("// サブ手順: A", report)
 
     def test_nested_items_follow_phase_order_and_home_sections(self):
@@ -131,18 +136,18 @@ class SubprocedureTest(unittest.TestCase):
 - サブ手順 Down を実施する。
     - 解放する。
 
-### 確認内容 (正常系:7)
+### 確認 (正常系:7)
 
 - サブ手順 Setup にて以下を確認する。
     - (資源があること。)
 - サブ手順 Mock にて以下を確認する。
-    - 呼ばれること。
+    - 【正常系】呼ばれること。
     - サブ手順 Inner にて以下を確認する。
         - (長さが範囲内であること。)
-    - 引数が一致すること。〔2 回〕
-- 成功すること。
+    - 【正常系】引数が一致すること。〔2 回〕
+- 【正常系】成功すること。
 - サブ手順 Check にて以下を確認する。〔3 回〕
-    - 一致すること。
+    - 【正常系】一致すること。
 """, report)
 
     def test_parent_without_children_and_cycles_of_before_and_after(self):
@@ -151,10 +156,10 @@ class SubprocedureTest(unittest.TestCase):
                        before='// [サブ手順参照 名前=Setup]\n', after='// [サブ手順参照 名前=Down]\n')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
         self.assertIn("### 状態_1\n\n- サブ手順 Setup を実施する。\n", report)
-        self.assertIn("### 確認内容_1 (0)\n\n- サブ手順 Setup にて以下を確認する。\n    - (資源があること。)\n", report)
+        self.assertIn("### 確認_1 (0)\n\n- サブ手順 Setup にて以下を確認する。\n    - (資源があること。)\n", report)
         self.assertIn("### 状態_2\n\n特記すべき状態なし\n", report)
         self.assertIn("### 手順_2\n\n- 再度操作する。\n- サブ手順 Down を実施する。\n", report)
-        self.assertIn("### 確認内容_2 (0)\n\n- サブ手順 Down にて以下を確認する。\n    - (解放したこと。)\n", report)
+        self.assertIn("### 確認_2 (0)\n\n- サブ手順 Down にて以下を確認する。\n    - (解放したこと。)\n", report)
         self.assertEqual(report.count("サブ手順 Down"), 2)
 
     def test_code_blank_lines_are_squeezed(self):
@@ -167,13 +172,13 @@ class SubprocedureTest(unittest.TestCase):
     def test_state_step_and_state_check_are_included_without_count(self):
         source = definition("A", '// [状態] - 初期値。\n// [手順] - 準備する。\n// [状態確認] - 資源を確保したこと。') + test('a(); // [サブ手順参照 名前=A 回数=3]')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        for text in ["初期値。", "準備する。", "資源を確保したこと。", "確認内容 (0)"]:
+        for text in ["初期値。", "準備する。", "資源を確保したこと。", "確認 (0)"]:
             self.assertIn(text, report)
 
     def test_strings_are_not_markers_and_braces_in_strings_do_not_end_test(self):
         source = test('const char *raw = R"x(}\n// [サブ手順 名前=Fake]\n)x";\nEXPECT_TRUE(ok); // [確認_正常系] - 値 [0]。')
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
-        self.assertIn("確認内容 (正常系:1)", report)
+        self.assertIn("確認 (正常系:1)", report)
         self.assertIn("値 [0]", report)
 
     def test_internal_description_keeps_brackets(self):

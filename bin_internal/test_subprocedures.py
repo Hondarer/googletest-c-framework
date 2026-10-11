@@ -406,7 +406,7 @@ class SourceIndex:
             code += f"\n// サブ手順: {name}\n// 定義元: {definition.location}\n" + dedent_source(definition.source, definition.indent)
         code = squeeze_blank_lines(code)
         from results_markdown import fence
-        return (summary or ("" if code_only else "## テスト項目\n\nなし\n")) + "\n## テスト コード\n\n" + fence(code, "cpp" if self.language == "c_cpp" else "csharp") + "\n"
+        return (summary or ("" if code_only else "## テスト項目の詳細\n\nなし\n")) + "\n## テスト コード\n\n" + fence(code, "cpp" if self.language == "c_cpp" else "csharp") + "\n"
 
 
 def discover(language, root="."):

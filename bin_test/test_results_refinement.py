@@ -53,7 +53,7 @@ TEST_F(Fixture, Example) {
             report = render_summary('// 説明\nTEST(S, T) {\n' + body + '}')
             self.assertIn(f'### 状態{suffix}\n\n特記すべき状態なし', report)
             self.assertIn(f'### 手順{suffix}\n\nなし', report)
-            self.assertIn(f'### 確認内容{suffix} (0)\n\nなし', report)
+            self.assertIn(f'### 確認{suffix} (0)\n\nなし', report)
             if suffix:
                 self.assertIn('### 状態_2\n\n特記すべき状態なし', report)
         self.assertEqual(render_summary('TEST(S, T) {}'), '')
