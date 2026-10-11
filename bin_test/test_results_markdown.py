@@ -104,7 +104,7 @@ class ResultsMarkdownTest(unittest.TestCase):
         summary = render_summary('// [確認_正常系 回数=2*3] - 一致すること。\n// Act_2\n// [確認_異常系] - 失敗すること。', counts=counts)
         self.assertEqual(counts, {'正常系': 6, '異常系': 1})
         self.assertIn('確認件数合計 (正常系:6, 異常系:1)', summary)
-        self.assertIn('### 状態_1\n\nなし', summary)
+        self.assertIn('### 状態_1\n\n特記すべき状態なし', summary)
         self.assertNotIn('----', summary)
         self.assertNotIn('確認件数合計 (正常系:6, 異常系:1)\n\nなし', summary)
         counts = {}
@@ -328,14 +328,14 @@ else:
     directory = Path(sys.argv[sys.argv.index('--results-directory') + 1])
     directory.mkdir(parents=True, exist_ok=True)
     outcome = 'NotExecuted' if os.environ.get('PARTIAL') else 'Passed'
-    xml = f'<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><TestDefinitions><UnitTest id="x"><TestMethod className="ExampleTests" name="Case" /></UnitTest><UnitTest id="y"><TestMethod className="ExampleTests" name="Plain" /></UnitTest></TestDefinitions><Results><UnitTestResult testId="x" executionId="a" testName="Case(value: 1)" outcome="Passed" /><UnitTestResult testId="x" executionId="b" testName="Case(value: 2)" outcome="{outcome}" /><UnitTestResult testId="y" executionId="c" testName="Plain" outcome="Passed" /></Results></TestRun>'
+    xml = f'<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010"><TestDefinitions><UnitTest id="x"><TestMethod className="ExampleTests" name="Case" /></UnitTest><UnitTest id="y"><TestMethod className="ExampleTests" name="Plain" /></UnitTest></TestDefinitions><Results><UnitTestResult testId="x" executionId="a" testName="Case(value: 1)" outcome="Passed" startTime="2026-10-11T10:00:00.900+09:00" /><UnitTestResult testId="x" executionId="b" testName="Case(value: 2)" outcome="{outcome}" startTime="2026-10-11T00:59:59.100Z" /><UnitTestResult testId="y" executionId="c" testName="Plain" outcome="Passed" /></Results></TestRun>'
     (directory / 'results.trx').write_text(xml, encoding='utf-8')
     encoding = 'cp932' if os.environ.get('ENCODING') == 'shiftjis' else 'utf-8'
     body = '  Passed ExampleTests.Case(value: 1) 日本語```\\n  Passed ExampleTests.Plain\\n'
     sys.stdout.buffer.write(body.encode(encoding) + (b'\\x81' if encoding == 'cp932' else b'\\xff') + b'\\n')
 ''', encoding='utf-8')
         fake.chmod(0o755)
-        env = dict(os.environ, DOTNET=str(fake), CONFIG='Debug', ENCODING=encoding)
+        env = dict(os.environ, DOTNET=str(fake), CONFIG='Debug', ENCODING=encoding, TZ='Asia/Tokyo')
         # make test から起動すると実ワークスペースの WORKSPACE_DIR を引き継ぎ、
         # 一時ワークスペースの settings.json ではなく実ワークスペースの文字コードを使ってしまう。
         env.pop('WORKSPACE_DIR', None)
@@ -352,6 +352,11 @@ else:
         assert_results(self, root)
         self.assertIn('| 合計 | 6 | 1 | 7 |', (root / 'all_tests/summary.md').read_text(encoding='utf-8'))
         individual = (root / 'ExampleTests.Case/results.md').read_text(encoding='utf-8')
+        self.assertIn('- 判定: PASSED\n- 実施日時: 2026-10-11 09:59:59 JST', individual)
+        plain = (root / 'ExampleTests.Plain/results.md').read_text(encoding='utf-8')
+        self.assertRegex(plain, r'- 判定: PASSED\n- 実施日時: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} JST')
+        self.assertNotIn('実施日時:', result.stdout)
+        self.assertIn('Test start on ', result.stdout)
         self.assertIn('日本語', individual)
         self.assertIn('````text', individual)
         self.assertNotIn('- 判定:', result.stdout)

@@ -80,9 +80,10 @@ def finish(manifest, encoding, counts_dir=None):
             record = Path("results") / record_path(name) / "results.md"
             content = record.read_text(encoding="utf-8")
             status = next(line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 判定: "))
+            executed_at = next(line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 実施日時: "))
             output = execution_output(content)
             records.append({"name": name, "status": status,
-                            "path": record_path(name)[len(key) + 1:] + "/results.md", "output": output})
+                            "executed_at": executed_at, "path": record_path(name)[len(key) + 1:] + "/results.md", "output": output})
         write(Path("results") / key / "results.md", definition(key, group["evidence"], records, len(group["all"])))
         if counts_dir:
             path = Path(counts_dir) / (key + ".json")

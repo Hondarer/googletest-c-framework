@@ -152,7 +152,7 @@ class SubprocedureTest(unittest.TestCase):
         report = SourceIndex({"sample.cc": source}).report("Suite.Case")
         self.assertIn("### 状態_1\n\n- サブ手順 Setup を実施する。\n", report)
         self.assertIn("### 確認内容_1 (0)\n\n- サブ手順 Setup にて以下を確認する。\n    - (資源があること。)\n", report)
-        self.assertIn("### 状態_2\n\nなし\n", report)
+        self.assertIn("### 状態_2\n\n特記すべき状態なし\n", report)
         self.assertIn("### 手順_2\n\n- 再度操作する。\n- サブ手順 Down を実施する。\n", report)
         self.assertIn("### 確認内容_2 (0)\n\n- サブ手順 Down にて以下を確認する。\n    - (解放したこと。)\n", report)
         self.assertEqual(report.count("サブ手順 Down"), 2)

@@ -152,9 +152,27 @@ in_multiline_comment {
     }
 }
 
+# 対象マクロの単独判定を評価する。未知条件は -1 を返す。
+function platform_condition(line,    expr, negate, macro) {
+    if (!filter_platform) return -1;
+    expr = line;
+    sub(/^[[:space:]]*#[[:space:]]*/, "", expr);
+    negate = (expr ~ /^ifndef[[:space:]]/);
+    if (expr ~ /^(ifdef|ifndef)[[:space:]]+(PLATFORM_WINDOWS|PLATFORM_LINUX|_WIN32|__linux__)[[:space:]]*$/) {
+        sub(/^(ifdef|ifndef)[[:space:]]+/, "", expr);
+    } else if (expr ~ /^(if|elif)[[:space:]]+(![[:space:]]*)?defined[[:space:]]*\([[:space:]]*(PLATFORM_WINDOWS|PLATFORM_LINUX|_WIN32|__linux__)[[:space:]]*\)[[:space:]]*$/) {
+        sub(/^(if|elif)[[:space:]]+/, "", expr);
+        negate = (expr ~ /^!/);
+        sub(/^(![[:space:]]*)?defined[[:space:]]*\([[:space:]]*/, "", expr);
+        sub(/[[:space:]]*\)[[:space:]]*$/, "", expr);
+    } else return -1;
+    sub(/[[:space:]]*$/, "", expr);
+    macro = (expr == "PLATFORM_WINDOWS" || expr == "_WIN32") ? platform_windows : platform_linux;
+    return negate ? !macro : macro;
+}
+
 # テストケース本体の中の #if/#elif/#else/#endif を評価する。
-# PLATFORM_WINDOWS / PLATFORM_LINUX 単独の defined() 判定のみを対象とし、
-# 複合条件や #ifdef/#ifndef 等の未知条件はこれまでどおり素通しする (フィルタしない)。
+# 対象マクロの単独判定だけを評価し、未知条件は素通しする。
 extracting && /^[[:space:]]*#/ {
     # gawk の \b は単語境界ではなくバックスペース文字を指すため、
     # ディレクティブ種別の判定には [[:space:]] または行末 ($) を用いる
@@ -168,13 +186,10 @@ extracting && /^[[:space:]]*#/ {
         depth++;
         stk_parent[depth] = parent_active;
 
-        if (filter_platform && $0 ~ /^[[:space:]]*#[[:space:]]*if[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_WINDOWS[[:space:]]*\)[[:space:]]*$/) {
+        cond = platform_condition($0);
+        if (cond != -1) {
             stk_known[depth] = 1;
-            stk_active[depth] = parent_active && platform_windows;
-            stk_taken[depth] = stk_active[depth];
-        } else if (filter_platform && $0 ~ /^[[:space:]]*#[[:space:]]*if[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_LINUX[[:space:]]*\)[[:space:]]*$/) {
-            stk_known[depth] = 1;
-            stk_active[depth] = parent_active && platform_linux;
+            stk_active[depth] = parent_active && cond;
             stk_taken[depth] = stk_active[depth];
         } else {
             # 未知条件: フィルタせず、現在の有効状態をそのまま引き継ぐ
@@ -196,11 +211,8 @@ extracting && /^[[:space:]]*#/ {
 
     if (is_elif) {
         if (stk_known[depth]) {
-            if ($0 ~ /^[[:space:]]*#[[:space:]]*elif[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_WINDOWS[[:space:]]*\)[[:space:]]*$/) {
-                cond = platform_windows;
-            } else if ($0 ~ /^[[:space:]]*#[[:space:]]*elif[[:space:]]+defined[[:space:]]*\([[:space:]]*PLATFORM_LINUX[[:space:]]*\)[[:space:]]*$/) {
-                cond = platform_linux;
-            } else {
+            cond = platform_condition($0);
+            if (cond == -1) {
                 # 認識できない #elif: この分岐グループ全体を未知条件へ切り替える
                 stk_known[depth] = 0;
                 stk_active[depth] = stk_parent[depth];

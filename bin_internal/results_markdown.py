@@ -77,10 +77,12 @@ def write(path, text):
     Path(path).write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
 
 
-def individual(test_id, status, evidence, output, binary="", comment="", definition="", error="", console=False):
+def individual(test_id, status, evidence, output, binary="", comment="", definition="", error="", console=False, executed_at=""):
     parts = ["# " + plain(test_id)]
     metadata = [] if console else [f"- 判定: {status}"]
-    if binary:
+    if not console:
+        metadata.append("- 実施日時: " + executed_at)
+    if binary and console:
         metadata.append("- テスト バイナリ: " + plain(binary))
     if comment:
         metadata.append("- 備考: " + inline(comment))
@@ -126,7 +128,7 @@ def definition(test_id, evidence, records, total):
     distribution = ", ".join(f"{key}: {value}" for key, value in counts.items() if value)
     parts = ["# " + plain(test_id), f"- 総合判定: {status}\n- 実行レコード数: {n} ({distribution})", evidence.strip(), "## 実行レコード"]
     for record in records:
-        parts += ["### " + plain(record["name"]), f'- 判定: {record["status"]}\n- 詳細: ' + link("results.md", record["path"]), fence(record["output"])]
+        parts += ["### " + plain(record["name"]), f'- 判定: {record["status"]}\n- 実施日時: {record.get("executed_at", "")}\n- 詳細: ' + link("results.md", record["path"]), fence(record["output"])]
     return "\n\n".join(parts) + "\n"
 
 
@@ -151,10 +153,10 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
                         if line.startswith("@utf8\t") else line
                         for line in journal.splitlines())
     text = clean(journal)
-    start = re.search(r"^Test start on (.*)\.$", text, re.M)
+    start = re.search(r"^@executed_at\t(.*)$", text, re.M)
     parts = ["# " + plain(directory) + " のテスト結果サマリー"]
     if start:
-        parts.append("- 開始日時: " + start[1])
+        parts.append("- 実施日時: " + start[1])
     if filter_value is not None:
         parts.append(admonition("NOTE", "GTEST_FILTER = " + inline(filter_value)))
     md5 = re.findall(r"^([0-9a-f]{32})  (.+)$", text, re.M)
@@ -254,6 +256,7 @@ def main():
     parser.add_argument("--test-id", default="")
     parser.add_argument("--status", default="PASSED")
     parser.add_argument("--binary", default="")
+    parser.add_argument("--executed-at", default="")
     parser.add_argument("--comment", default="")
     parser.add_argument("--evidence")
     parser.add_argument("--error")
@@ -278,7 +281,7 @@ def main():
         error = read(args.error) if args.error else ""
         output = read(args.input, encoding, True) if args.input else ""
         comment = os.fsencode(args.comment).decode(encoding, errors="replace") if encoding not in ("utf-8", "utf-8-sig") else args.comment
-        content = individual(args.test_id, args.status, evidence, output, args.binary, comment, args.definition, error, args.console)
+        content = individual(args.test_id, args.status, evidence, output, args.binary, comment, args.definition, error, args.console, args.executed_at)
         if args.console_output:
             console = individual(args.test_id, args.status, evidence, output, args.binary, comment, args.definition, error, True)
             if args.dotnet_color:

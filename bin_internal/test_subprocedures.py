@@ -65,7 +65,7 @@ def controls(code, comment, location):
 
 
 def platform_lines(source, is_windows=None):
-    """既存の PLATFORM_* 単独判定だけを評価し、元の行番号を保持する。"""
+    """対象プラットフォーム マクロの単独判定だけを評価し、元の行番号を保持する。"""
     lines = source.splitlines(keepends=True)
     if is_windows is None:
         return lines
@@ -74,17 +74,25 @@ def platform_lines(source, is_windows=None):
     active = True
     output = []
     for line, (code, _) in zip(lines, parsed):
-        directive = re.match(r"\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b(.*)", code)
-        if not directive:
+        directive = re.match(r"\s*#\s*(if|ifdef|ifndef|elif|else|endif)\b(.*)", line.rstrip("\r\n"))
+        if not directive or not re.match(r"\s*#", code):
             output.append(line if active else "\n")
             continue
         kind, expr = directive.groups()
         directive_active = active
         evaluated = stack[-1][1] if stack else False
-        known = re.fullmatch(r"\s*defined\s*\(\s*PLATFORM_(WINDOWS|LINUX)\s*\)\s*", expr)
+        macros = r"(PLATFORM_WINDOWS|PLATFORM_LINUX|_WIN32|__linux__)"
+        if kind in {"ifdef", "ifndef"}:
+            known = re.fullmatch(r"\s*" + macros + r"\s*", expr)
+            negate = kind == "ifndef"
+            macro = known[1] if known else ""
+        else:
+            known = re.fullmatch(r"\s*(!\s*)?defined\s*\(\s*" + macros + r"\s*\)\s*", expr)
+            negate = bool(known and known[1])
+            macro = known[2] if known else ""
+        enabled = ((macro in {"PLATFORM_WINDOWS", "_WIN32"}) == bool(is_windows)) != negate
         if kind in {"if", "ifdef", "ifndef"}:
-            enabled = bool(known) and ((known.group(1) == "WINDOWS") == bool(is_windows))
-            stack.append([active, bool(known) and kind == "if", enabled])
+            stack.append([active, bool(known), enabled])
             evaluated = stack[-1][1]
             active = active and (enabled if stack[-1][1] else True)
         elif stack:
@@ -97,7 +105,6 @@ def platform_lines(source, is_windows=None):
                 stack[-1][2] = True
             elif kind == "elif":
                 if evaluated and known:
-                    enabled = (known.group(1) == "WINDOWS") == bool(is_windows)
                     active = parent and not taken and enabled
                     stack[-1][2] = taken or enabled
                 else:

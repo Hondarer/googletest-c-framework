@@ -252,6 +252,8 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
             if TEST.search(line):
                 found_test = True
                 phase = "Arrange"
+            elif stack or re.search(r"\[サブ手順(?:参照|展開)\b", comment):
+                pass
             elif original.lstrip().startswith("//") and not TAG_START.search(comment):
                 text = comment.lstrip("/ ").rstrip()
                 if text:
@@ -359,7 +361,7 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
         # 同じフェーズの中はテスト コード上の順を保つ。
         entries = sorted(cycle.entries + (after if number == current else []), key=lambda e: PHASE_ORDER[e.phase])
         suffix = f"_{number}" if multi else ""
-        out.append(f"\n### 状態{suffix}\n\n" + ("\n".join(render_entries(entries, "state")) or "なし") + "\n")
+        out.append(f"\n### 状態{suffix}\n\n" + ("\n".join(render_entries(entries, "state")) or "特記すべき状態なし") + "\n")
         out.append(f"\n### 手順{suffix}\n\n" + ("\n".join(render_entries(entries, "act")) or "なし") + "\n")
         for category in totals:
             totals[category] += cycle.counts[category]

@@ -58,6 +58,7 @@ function list_tests() {
 # テストを一括実行して結果をパース
 function run_all_tests_batch() {
     echo -e "Test start on $(export LANG=C && date)." | tee "$SUMMARY_JOURNAL"
+    printf '@executed_at\t%s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" >> "$SUMMARY_JOURNAL"
     echo -e "----" | tee -a "$SUMMARY_JOURNAL"
 
     # テスト一覧を取得 (パラメーター付きテストは重複を除去)
@@ -93,6 +94,7 @@ function run_all_tests_batch() {
     local batch_exit_code=0
 
     echo "Running all tests in batch mode..." > "$batch_output"
+    local batch_started_at=$(date '+%Y-%m-%d %H:%M:%S %Z')
     "$DOTNET_CMD" test \
         --no-build -c "$CONFIG" -o "$OUTPUT_DIR" \
         --verbosity normal \
@@ -129,7 +131,7 @@ function run_all_tests_batch() {
 
     # TRX を解析してテストごとの結果を取得
     local trx_results=$(mktemp)
-    if ! python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" --with-counts > "$trx_results" 2> "$REPORT_STATE/trx_error"; then
+    if ! python3 "$SCRIPT_DIR/parse_trx_results.py" "$trx_file" --with-counts --with-start-time --fallback-start-time "$batch_started_at" > "$trx_results" 2> "$REPORT_STATE/trx_error"; then
         cat "$REPORT_STATE/trx_error" | tee -a "$SUMMARY_JOURNAL" >&2
         rm -f "$batch_output" "$trx_results"
         rm -rf "$trx_dir"
@@ -161,8 +163,8 @@ function run_all_tests_batch() {
         # テスト ファイルを探す
         local test_file=$(find . -name "${class_name}.cs" -type f | head -1)
 
-        local test_result record_count record_status
-        IFS=$'\t' read -r _ test_result record_count record_status < <(
+        local test_result record_count record_status executed_at
+        IFS=$'\t' read -r _ test_result record_count record_status executed_at < <(
             awk -F '\t' -v id="$test_id" '$1 == id { print; exit }' "$trx_results"
         )
         local evidence_failed=0
@@ -220,7 +222,7 @@ function run_all_tests_batch() {
             if grep -qE "\[ *WARNING *\]" "$temp_file"; then final_status=WARNING; fi
         fi
         local -a markdown_options=(--test-id "$test_id" --status "$final_status"
-            --evidence "$evidence_file" --input "$temp_file" --encoding utf-8)
+            --executed-at "${executed_at:-$batch_started_at}" --evidence "$evidence_file" --input "$temp_file" --encoding utf-8)
         if [ -s "$evidence_error" ]; then markdown_options+=(--error "$evidence_error"); fi
         # 抽出した実行結果は UTF-8。色付け後に端末の文字コードで表示する。
         local console_file="$REPORT_STATE/console"

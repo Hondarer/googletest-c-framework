@@ -277,6 +277,7 @@ function execute_test_case() {
         --is-windows "$IS_WINDOWS" "${summary_options[@]}" \
         --console-prefix-output "$REPORT_STATE/console_prefix" --display-id "$ACTIVE_TEST_ID" \
         --binary "$TEST_BINARY" --comment "$ACTIVE_COMMENT" > "$evidence_file" 2> "$evidence_error"; then
+        date '+%Y-%m-%d %H:%M:%S %Z' > "$REPORT_STATE/executed_at"
         markdown_options+=(--error "$evidence_error")
         python3 "$SCRIPT_DIR/results_markdown.py" individual "${markdown_options[@]}" --console
         printf '%s\n' '[  FAILED  ] Test evidence generation failed.' >> "$evidence_error"
@@ -289,6 +290,7 @@ function execute_test_case() {
         command=(OpenCppCoverage.exe "${SOURCES_OPTS[@]}" --quiet
             --export_type cobertura:coverage/coverage.xml -- "${command[@]}")
     fi
+    date '+%Y-%m-%d %H:%M:%S %Z' > "$REPORT_STATE/executed_at"
     "${command[@]}" 2>&1 | grep -v 'Note: Google Test filter' | grep -v 'Your program stop with error code:' | tee -a "$REPORT_STATE/runtime"
     exit_code=${PIPESTATUS[0]}
     if [ "$IS_WINDOWS" -ne 1 ] && [ "$exit_code" -ge 128 ]; then
@@ -432,7 +434,7 @@ function run_test() {
     local runtime_file="$REPORT_STATE/runtime"
     # 実行結果は端末の文字コードのまま記録し、ファイル出力時に変換する。
     local -a markdown_options=(--test-id "$test_id" --status "$final_status" --binary "$TEST_BINARY"
-        --comment "$test_comment" --evidence "$REPORT_STATE/evidence" --input "$runtime_file"
+        --executed-at "$(<"$REPORT_STATE/executed_at")" --comment "$test_comment" --evidence "$REPORT_STATE/evidence" --input "$runtime_file"
         --encoding "${FILES_LANG#*.}" --output "results/$test_id/results.md")
     if [ -s "$REPORT_STATE/evidence_error" ]; then markdown_options+=(--error "$REPORT_STATE/evidence_error"); fi
     if [[ "${test_name#*.}" == */* ]]; then markdown_options+=(--definition auto); fi
@@ -634,6 +636,7 @@ function main() {
     fi
 
     # テスト対象ソースの md5 を取得
+    printf '@executed_at\t%s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" >> "$SUMMARY_JOURNAL"
     echo -e "Test start on $(export LANG=C && date)." | tee -a "$SUMMARY_JOURNAL"
     echo -e "----" | tee -a "$SUMMARY_JOURNAL"
     if [ -n "$TEST_SRCS" ]; then
