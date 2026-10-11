@@ -120,7 +120,9 @@ TEST_F(Fixture, Example) {
 <UnitTestResult testId="a" executionId="a2" testName="Theory(2)" outcome="Passed" startTime="2026-10-11T00:59:59.100Z" />
 <UnitTestResult testId="a" executionId="a3" testName="Theory(3)" outcome="Passed" />
 <UnitTestResult testId="b" executionId="b1" outcome="Passed" /></Results></TestRun>'''
-        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, TZ='Asia/Tokyo'):
+        # Git for Windows の date は tz データベースを同梱せず、'Asia/Tokyo' を UTC として扱う。
+        # 双方の date が解釈できる POSIX 形式で JST を指定する。
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ, TZ='JST-9'):
             path = Path(directory) / 'results.trx'
             path.write_text(xml, encoding='utf-8')
             output = io.StringIO()

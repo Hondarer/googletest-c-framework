@@ -388,7 +388,9 @@ else:
     sys.stdout.buffer.write(body.encode(encoding) + (b'\\x81' if encoding == 'cp932' else b'\\xff') + b'\\n')
 ''', encoding='utf-8')
         fake.chmod(0o755)
-        env = dict(os.environ, DOTNET=str(fake), CONFIG='Debug', ENCODING=encoding, TZ='Asia/Tokyo')
+        # Git for Windows の date は tz データベースを同梱せず、'Asia/Tokyo' を UTC として扱う。
+        # 双方の date が解釈できる POSIX 形式で JST を指定する。
+        env = dict(os.environ, DOTNET=str(fake), CONFIG='Debug', ENCODING=encoding, TZ='JST-9')
         # make test から起動すると実ワークスペースの WORKSPACE_DIR を引き継ぎ、
         # 一時ワークスペースの settings.json ではなく実ワークスペースの文字コードを使ってしまう。
         env.pop('WORKSPACE_DIR', None)
