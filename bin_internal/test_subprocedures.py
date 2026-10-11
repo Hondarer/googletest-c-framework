@@ -172,6 +172,16 @@ def dedent_source(source, indent):
     return "".join(output)
 
 
+def squeeze_blank_lines(text):
+    """連続する空行を 1 行にまとめる。プラットフォーム分岐を除いた空行も元の空行も区別しない。"""
+    output = []
+    for line in text.splitlines(keepends=True):
+        if not line.strip() and output and not output[-1].strip():
+            continue
+        output.append(line)
+    return "".join(output)
+
+
 class SourceIndex:
     def __init__(self, sources, language="c_cpp", is_windows=None):
         self.language = language
@@ -326,9 +336,8 @@ class SourceIndex:
                     if item and item[0] == "サブ手順参照" and item[1]["名前"] not in self.definitions:
                         raise SummaryError(f"{fragment.path}:{i}: 未定義のサブ手順: {item[1]['名前']}")
 
-    def expand(self, fragment, route, multiplier, reached, root=True, category=None):
+    def expand(self, fragment, reached, root=True, category=None):
         output = []
-        local_cycle = 1
         in_definition = False
         for i, (original, (code, comment)) in enumerate(zip(fragment.source.splitlines(), source_lines(fragment.source)), fragment.start + 1):
             item = controls(code, comment, f"{fragment.path}:{i}")
@@ -344,31 +353,29 @@ class SourceIndex:
                 name = item[1]["名前"]
                 if name not in reached:
                     reached.append(name)
-                factor = item[1].get("回数", "1")
-                product = factor if multiplier == "1" else f"({multiplier})*({factor})"
-                output.append(f"// [手順] - サブ手順 {name} を実施する。〔参照回数={product}〕")
-                output.append(self.expand(self.definitions[name], route + [name], product, reached, False, item[1].get("区分", category)))
+                # テスト本体の終了を括弧で判定するため、参照行のコードは残す。
+                if root and code.strip():
+                    output.append(code.rstrip("\r\n"))
+                # 参照の範囲を render_summary へ渡し、入れ子の親項目と回数の積を組み立てさせる。
+                output.append(f"// [サブ手順展開 名前={name} 回数={item[1].get('回数', '1')}]")
+                output.append(self.expand(self.definitions[name], reached, False, item[1].get("区分", category)))
+                output.append("// [サブ手順展開終了]")
                 continue
             if root:
                 output.append(original)
                 continue
-            # サブ手順内部のサイクル番号は参照元を変更しない。
-            phase = re.fullmatch(r"\s*(?:Arrange|Pre-Assert|Act|Assert)(?:_(\d+))?\s*", comment)
-            if phase:
-                local_cycle = max(local_cycle, int(phase.group(1) or 1))
-            if phase or not comment:
+            # サブ手順内部のフェーズ コメントは、参照元のサイクルとフェーズを変更しない。
+            if re.fullmatch(r"\s*(?:Arrange|Pre-Assert|Act|Assert)(?:_\d+)?\s*", comment) or not comment:
                 continue
             tags = [t for t in TAG.finditer(comment) if t.group(1).startswith(("確認", "Pre-Assert確認")) or t.group(1) in {"状態", "状態確認", "手順", "Pre-Assert手順"}]
             for n, tag in enumerate(tags):
                 text = comment[tag.end():tags[n + 1].start() if n + 1 < len(tags) else len(comment)].strip()
                 check = CHECK.fullmatch(tag.group(1))
-                label = f"〔サブ手順 {' → '.join(route)}、内部サイクル={local_cycle}、参照回数={multiplier}〕"
                 if check:
-                    count = check.group(3) or "1"
-                    expression = count if multiplier == "1" else f"({multiplier})*({count})"
-                    output.append(f"// [{check.group(1)}_{category or check.group(2)} 回数={expression}] {text} {label}")
+                    count = f" 回数={check.group(3)}" if check.group(3) is not None else ""
+                    output.append(f"// [{check.group(1)}_{category or check.group(2)}{count}] {text}")
                 elif tag.group(1) in {"状態", "状態確認", "手順", "Pre-Assert手順"}:
-                    output.append(f"// [{tag.group(1)}] {text} {label}")
+                    output.append(f"// [{tag.group(1)}] {text}")
         return "\n".join(output) + "\n"
 
     def report(self, test_id, parameterized=False, param_count=None, partial=False, code_only=False, prefixes=None, counts=None):
@@ -378,7 +385,7 @@ class SourceIndex:
         if not fragments:
             raise SummaryError(f"{test_id}: テストコードを抽出できません")
         reached = []
-        expanded = "\n".join(self.expand(f, [], "1", reached) for f in fragments)
+        expanded = "\n".join(self.expand(f, reached) for f in fragments)
         try:
             summary = "" if code_only else render_summary(expanded, parameterized or any(f.parameterized for f in fragments), param_count, partial, test_id, counts)
         except SummaryError as error:
@@ -390,6 +397,7 @@ class SourceIndex:
         for name in ([] if code_only else reached):
             definition = self.definitions[name]
             code += f"\n// サブ手順: {name}\n// 定義元: {definition.location}\n" + dedent_source(definition.source, definition.indent)
+        code = squeeze_blank_lines(code)
         from results_markdown import fence
         return (summary or ("" if code_only else "## テスト項目\n\nなし\n")) + "\n## テスト コード\n\n" + fence(code, "cpp" if self.language == "c_cpp" else "csharp") + "\n"
 

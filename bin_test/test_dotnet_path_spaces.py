@@ -153,6 +153,8 @@ public class SubprocedureTests : IDisposable {
         self.assertIn("PARAM=3", uniform)
         subprocedure = (self.leaf / "results/SubprocedureTests.Case/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認内容 (正常系:4)", subprocedure)
+        self.assertIn("- サブ手順 SubprocedureTests.Check にて以下を確認する。〔2 回〕\n    - 加算の結果が 2 であること。\n", subprocedure)
+        self.assertIn("### 状態\n\n- サブ手順 SubprocedureTests.Constructor を実施する。\n", subprocedure)
         self.assertIn("\nprivate void Check()", subprocedure)
         self.assertEqual(subprocedure.count("// サブ手順: SubprocedureTests.Check\n"), 1)
         self.assertIn("SubprocedureTests.cs:", subprocedure)
