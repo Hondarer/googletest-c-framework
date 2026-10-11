@@ -4,6 +4,7 @@ import contextlib
 import io
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -13,7 +14,7 @@ from unittest.mock import patch
 HERE = Path(__file__).resolve().parents[1] / 'bin_internal'
 sys.path.insert(0, str(HERE))
 import results_markdown as md
-from parse_trx_results import parse_trx
+from parse_trx_results import format_local_time, parse_trx
 from test_subprocedures import SourceIndex, platform_lines
 from test_summary import render_summary
 
@@ -130,6 +131,23 @@ TEST_F(Fixture, Example) {
                 parse_trx(path, True, True, '2026-10-11 09:00:00 JST')
             self.assertIn('Tests.Theory\tPassed\t3\tComplete\t2026-10-11 09:59:59 JST', output.getvalue())
             self.assertIn('Tests.Fact\tPassed\t-\tComplete\t2026-10-11 09:00:00 JST', output.getvalue())
+
+    def test_local_time_uses_offset_when_zone_abbreviation_is_blank(self):
+        # 日本語の Windows で TZ が未設定のとき、Cygwin 系の date は %Z を空白だけで出力する。
+        def fake_date(command, **kwargs):
+            if command[-1] == '+%Z':
+                return '   \n'
+            return '2026-10-11 09:59:59 +0900\n' if command[-1].endswith('%z') else 'unexpected\n'
+        with patch('parse_trx_results.subprocess.check_output', side_effect=fake_date):
+            self.assertEqual(format_local_time('2026-10-11T00:59:59Z'), '2026-10-11 09:59:59 +0900')
+        with tempfile.TemporaryDirectory() as directory:
+            fake = Path(directory) / 'date'
+            fake.write_text('#!/bin/bash\ncase "${!#}" in\n  +%Z) echo "   " ;;\n  *%z) echo "2026-10-11 09:59:59 +0900" ;;\n  *) echo unexpected ;;\nesac\n', encoding='utf-8', newline='\n')
+            fake.chmod(0o755)
+            # Windows の bash へは cygpath で変換した一時ディレクトリを PATH の先頭に渡す。
+            command = 'PATH="$(cygpath -u "$1" 2>/dev/null || printf %s "$1"):$PATH" bash "$2"'
+            output = subprocess.check_output([shutil.which('bash') or 'bash', '-c', command, 'bash', directory, str(HERE / 'local_time.sh')], text=True, encoding='utf-8')
+            self.assertEqual(output, '2026-10-11 09:59:59 +0900\n')
 
 
 if __name__ == '__main__':

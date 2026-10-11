@@ -193,7 +193,11 @@ class SubprocedureTest(unittest.TestCase):
             cpp = root / "test.cc"
             cpp.write_text('#include "helper.h"\n' + test('a(); // [サブ手順参照 名前=A]'), encoding="utf-8")
             alias = root / "alias.cc"
-            alias.symlink_to(cpp)
+            try:
+                alias.symlink_to(cpp)
+            except OSError as error:
+                # Windows では開発者モードか管理者権限がないとシンボリック リンクを作れない。
+                self.skipTest(f"シンボリック リンクを作成できない: {error}")
             index = SourceIndex.from_paths([cpp, alias])
             self.assertEqual(len(index.tests["Suite.Case"]), 1)
             self.assertIn("正常系:1", index.report("Suite.Case"))

@@ -32,6 +32,18 @@ def ns(tag):
     return f"{{{TRX_NS}}}{tag}"
 
 
+def format_local_time(value):
+    """value のローカル日時を local_time.sh と同じ形式で返す。
+
+    Windows の System32 にある bash.exe (WSL) を起動しないよう、bash を経由せず date を直接呼ぶ。
+    %Z が空白だけになる場合の扱いは local_time.sh の説明を参照。
+    """
+    zone = subprocess.check_output(["date", "-d", value, "+%Z"], text=True, encoding="utf-8")
+    field = "%Z" if zone.strip() else "%z"
+    return subprocess.check_output(
+        ["date", "-d", value, f"+%Y-%m-%d %H:%M:%S {field}"], text=True, encoding="utf-8").strip()
+
+
 def parse_trx(trx_path, with_counts=False, with_start_time=False, fallback_start_time=""):
     tree = ET.parse(trx_path)
     root = tree.getroot()
@@ -112,9 +124,7 @@ def parse_trx(trx_path, with_counts=False, with_start_time=False, fallback_start
         timestamp = ""
         if with_start_time:
             values = method_starts.get(method_key, [])
-            formatted = (subprocess.check_output(
-                ["date", "-d", min(values)[1], "+%Y-%m-%d %H:%M:%S %Z"],
-                text=True, encoding="utf-8").strip() if values else fallback_start_time)
+            formatted = format_local_time(min(values)[1]) if values else fallback_start_time
             timestamp = "\t" + formatted
         if with_counts:
             # 未実行や集約された Theory の結果ではレコード数を推測しない。

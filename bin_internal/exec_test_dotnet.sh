@@ -58,7 +58,7 @@ function list_tests() {
 # テストを一括実行して結果をパース
 function run_all_tests_batch() {
     echo -e "Test start on $(export LANG=C && date)." | tee "$SUMMARY_JOURNAL"
-    printf '@executed_at\t%s\n' "$(date '+%Y-%m-%d %H:%M:%S %Z')" >> "$SUMMARY_JOURNAL"
+    printf '@executed_at\t%s\n' "$(bash "$SCRIPT_DIR/local_time.sh")" >> "$SUMMARY_JOURNAL"
     echo -e "----" | tee -a "$SUMMARY_JOURNAL"
 
     # テスト一覧を取得 (パラメーター付きテストは重複を除去)
@@ -94,7 +94,7 @@ function run_all_tests_batch() {
     local batch_exit_code=0
 
     echo "Running all tests in batch mode..." > "$batch_output"
-    local batch_started_at=$(date '+%Y-%m-%d %H:%M:%S %Z')
+    local batch_started_at=$(bash "$SCRIPT_DIR/local_time.sh")
     "$DOTNET_CMD" test \
         --no-build -c "$CONFIG" -o "$OUTPUT_DIR" \
         --verbosity normal \

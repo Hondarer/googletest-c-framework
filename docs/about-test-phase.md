@@ -291,8 +291,10 @@ app/sample/test/src/libsampleTest/sampleCloseTest/results/sampleCloseTest.handle
 #### 実施日時はローカル時刻で記載する
 
 日時の形式は `YYYY-MM-DD HH:MM:SS <時刻帯>` です。時刻帯は `date '+%Z'` の値を使います。  
-C/C++ の個別結果は、そのテストのバイナリを起動する直前に `date '+%Y-%m-%d %H:%M:%S %Z'` で取得します。エビデンス生成に失敗したテストにも実施日時を記載します。  
-.NET の個別結果は TRX の `startTime` を `date -d '<startTime>' '+%Y-%m-%d %H:%M:%S %Z'` で変換します。Theory は属性を持つレコードの最も早い時刻を使い、どのレコードにも属性がない場合は一括実行を開始した時刻を使います。  
+日本語の Windows で `TZ` が未設定の場合、Git for Windows などの `date` は `%Z` を空白だけで出力します。このときは UTC からの差 (`%z`、例: `+0900`) を時刻帯として記載します。  
+この判定は `bin_internal/local_time.sh` と、.NET 向けの `parse_trx_results.py` が行います。  
+C/C++ の個別結果は、そのテストのバイナリを起動する直前に `local_time.sh` で取得します。エビデンス生成に失敗したテストにも実施日時を記載します。  
+.NET の個別結果は TRX の `startTime` を `date -d '<startTime>'` で同じ形式に変換します。Theory は属性を持つレコードの最も早い時刻を使い、どのレコードにも属性がない場合は一括実行を開始した時刻を使います。  
 個別結果とパラメーター テストの各レコードでは判定の直後に実施日時を置きます。定義単位ファイルの先頭のメタデータは変更せず、実行レコード節に各レコードの実施日時を記載します。  
 全体サマリーの実施日時は全テストの開始時刻です。コンソールの `Test start on <date>.` の表示は変えません。
 
