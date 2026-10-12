@@ -19,7 +19,7 @@ TEST(exportCheckTest, reports_unexpected_symbol)
     EXPECT_NONFATAL_FAILURE(
         // [サブ手順参照 名前=testing.expectExportNamesMatch]
         testing::expectExportNamesMatch(expected, actual),
-        "unexpected_api"); // [確認_異常系] - unexpected_api が想定外のエクスポートとして報告されること。
+        "unexpected_api"); // [確認_異常系] - testing::expectExportNamesMatch() が "unexpected_api" を含む非致命的な失敗を報告すること。
 }
 
 // Linux のリンカー合成シンボルだけを検査対象から除外することの確認
@@ -40,7 +40,8 @@ TEST(exportCheckTest, handles_linker_synthetic_symbol_by_platform)
                                     actual); // Linux ではリンカー合成シンボルが除外されること。
 #elif defined(PLATFORM_WINDOWS)
     // [サブ手順参照 名前=testing.expectExportNamesMatch]
-    EXPECT_NONFATAL_FAILURE(testing::expectExportNamesMatch(expected, actual),
-                            "__bss_start"); // [確認_異常系] - Windows では同名シンボルが想定外として報告されること。
+    EXPECT_NONFATAL_FAILURE(
+        testing::expectExportNamesMatch(expected, actual),
+        "__bss_start"); // [確認_異常系] - Windows で testing::expectExportNamesMatch() が "__bss_start" を含む非致命的な失敗を報告すること。
 #endif
 }

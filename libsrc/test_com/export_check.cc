@@ -209,7 +209,7 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
         }
     }
     EXPECT_TRUE(missing.empty()) << "不足しているエクスポート: " << joinNames(missing);
-    // [確認_正常系] - `missing.empty()` が true であること。
+    // [確認_正常系] - missing.empty() の戻り値が true であること。
 
     // Windows (明示 dllexport) と Linux (-fvisibility=hidden + 公開印 default) の双方で、
     // 期待テーブルとの過不足なし完全一致を要求する。
@@ -223,7 +223,7 @@ void expectExportNamesMatch(const set<string> &expected, const set<string> &actu
         }
     }
     EXPECT_TRUE(extra.empty()) << "想定外のエクスポート: " << joinNames(extra);
-    // [確認_正常系] - `extra.empty()` が true であること。
+    // [確認_正常系] - extra.empty() の戻り値が true であること。
 }
 // [サブ手順終了]
 

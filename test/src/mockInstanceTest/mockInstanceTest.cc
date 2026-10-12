@@ -32,17 +32,19 @@ TEST(mockInstanceTest, rejects_multiple_instances)
     // Pre-Assert
 
     // Act
+
+    // Assert
     EXPECT_NONFATAL_FAILURE(
         {
             Mock_testfw duplicate_mock_testfw;
             (void)duplicate_mock_testfw;
         },
         "Only one mock instance may exist for s_mock_testfw at a time."); // [手順] - 2 個目の Mock_testfw を生成する。
-    // [確認_異常系] - EXPECT_NONFATAL_FAILURE({ Mock_testfw duplicate_mock_testfw; (void)duplicate_mock_testfw; }, "Only one mock instance may exist for s_mock_testfw at a time.") の期待が成立すること。
+    // [確認_異常系] - 2 個目の Mock_testfw の生成が "Only one mock instance may exist for s_mock_testfw at a time." を含む非致命的な失敗を報告すること。
 
-    // Assert
-    EXPECT_EQ(&mock_testfw,
-              s_mock_testfw); // [確認_異常系] - 多重生成を検出した後も最初の Mock_testfw が注入されていること。
+    EXPECT_EQ(
+        &mock_testfw,
+        s_mock_testfw); // [確認_異常系] - s_mock_testfw が &mock_testfw と一致すること。(多重生成を検出した後も最初の注入が維持されることの確認)
 }
 
 // 先に生成した mock の破棄後は同じクラスの mock を再生成できることの確認
@@ -61,7 +63,8 @@ TEST(mockInstanceTest, allows_sequential_instances)
     Mock_testfw second_mock_testfw; // [手順] - 1 個目の破棄後に 2 個目の Mock_testfw を生成する。
 
     // Assert
-    EXPECT_TRUE(first_instance_registered); // [確認_正常系] - 1 個目の Mock_testfw が生成中に注入されていたこと。
+    EXPECT_TRUE(
+        first_instance_registered); // [確認_正常系] - first_instance_registered が true であること。(1 個目の Mock_testfw が生成中に注入されていたことの確認)
     EXPECT_EQ(&second_mock_testfw,
-              s_mock_testfw); // [確認_正常系] - 1 個目の破棄後は 2 個目の Mock_testfw が注入されること。
+              s_mock_testfw); // [確認_正常系] - s_mock_testfw が &second_mock_testfw と一致すること。
 }
