@@ -13,8 +13,8 @@ class SampleTest : public testing::Test
     // [サブ手順 名前=SampleTest.CheckResult]
     void CheckResult(const Result& result)
     {
-        EXPECT_EQ(CPLAT_OK, result.code); // [確認_正常系] - 結果コードが CPLAT_OK であること。
-        EXPECT_TRUE(result.error.empty()); // [確認_異常系] - エラー情報が空であること。
+        EXPECT_EQ(CPLAT_OK, result.code); // [確認_正常系] - result.code が CPLAT_OK であること。
+        EXPECT_TRUE(result.error.empty()); // [確認_異常系] - result.error.empty() の戻り値が true であること。
     }
     // [サブ手順終了]
 };

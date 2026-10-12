@@ -242,4 +242,5 @@ app 単位のスキップは、途中で 1 つでもテストが失敗すると 
 
 全体サマリーには結果ファイルへの相対リンクと、定義ごと・分類ごとの確認件数を記載します。  
 構成と集計の規則は [テスト エビデンス](about-test-phase.md#テスト-エビデンス-resultsmd) を参照してください。  
+スクリプト (Python、JavaScript、PowerShell、シェル) のテストは各テスト ランナーの集計を使い、testfw の専用コメントによる確認件数の集計には含めません。  
 旧名の `results.log`、`summary.log`、`*.gcov.txt` は出力しません。`coverage.xml`、`coverage.json`、`lcov/` は従来の形式です。

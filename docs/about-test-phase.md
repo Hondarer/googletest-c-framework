@@ -9,7 +9,7 @@
 - `TEST`、`TEST_F`、`TEST_P` などのテスト本体では、`{` の次の非空行を `// Arrange` とします。
 - ローカル変数の宣言、モック オブジェクトの生成、テスト データや設定の準備は、すべて `// Arrange` より後に記載します。
 - `[状態]` タグは、Arrange フェーズの内容をテスト エビデンスへ出力する場合に使用します。
-- `[状態確認]` タグは、Arrange フェーズで確保した資源やオブジェクトが期待どおりであることを ASSERT/EXPECT で確認する場合に使用します。Act フェーズの実行結果を検証する `[確認_*]` とは区別します。
+- `[状態確認]` タグは、テスト対象の振る舞いの確認に直接寄与しない確認 (準備した資源の確認、結果を取り出す補助の関数の成否など) に使用します。被テスト関数の振る舞いを判定する `[確認_*]` とは区別します。
 - `[状態]` タグを付けない場合も `// Arrange` は省略しません。
 
 ## Arrange フェーズ [状態] [状態確認]
@@ -48,26 +48,30 @@ ON_CALL(mockDependency, SomeMethod()).WillByDefault(Return(false)); // [状態] 
 
 ### 資源確認 [状態確認]
 
-Arrange フェーズで確保した資源やオブジェクトが期待どおりであることを、Act フェーズを実施する前に ASSERT/EXPECT で確認する場合に `[状態確認]` タグを使用します。
+テスト対象の振る舞いの確認に直接寄与しない確認には、`[状態確認]` タグを使用します。
 
-- `[状態確認]` は Arrange フェーズ専用のタグであり、Pre-Assert フェーズや Assert フェーズでは使用しません。
+- 被テスト関数は、テスト名とテスト関数の前の「〜ことの確認」が示す関数です。テスト内のヘルパー関数を通して呼ぶ場合も含みます。
+- 被テスト関数の戻り値、出力、呼び出しによる状態の変化の判定は `[確認_*]` とします。
+- それ以外の関数 (準備や結果の取り出しに使う補助の関数、ファイル操作、テスト用ヘルパー) の成否や、準備した資源の判定は `[状態確認]` とします。
+- `[状態確認]` は Arrange フェーズと Act フェーズで使用し、Pre-Assert フェーズや Assert フェーズでは使用しません。Assert フェーズには被テスト関数の判定だけを置きます。
 - `_正常系`/`_異常系` のサフィックスは付けません。
 - `### 確認` セクションの先頭に、出現順に `- (説明文)` の形式 (括弧で囲む) で出力されます。Act の実行結果を検証する `[確認_*]` とは異なり、確認件数 (`正常系:n1, 異常系:n2` など) には計上されません。
-- 説明文の文体は `[確認_*]` と同じく「〜であること。」で終えます。
+- 説明文は `[確認_*]` と同じく、マクロが行う判定を書きます ([確認コメントの書き方](#確認コメントの書き方))。
+- 総合期待は書きません。`### 確認` セクションでは説明文全体が括弧で囲まれるため、総合期待の括弧が入れ子になります。準備した内容は `[状態]` に書きます。
 
 準備の呼び出しと成否確認が別行なら、行ごとにタグを分けます。
 
 ```cpp
 // Arrange
 char *buffer = (char *)malloc(16); // [状態] - 16 バイトのバッファーを確保する。
-ASSERT_NE(nullptr, buffer); // [状態確認] - malloc が非 NULL のポインターを返すこと。
+ASSERT_NE(nullptr, buffer); // [状態確認] - buffer が nullptr 以外であること。
 ```
 
 1 行の `ASSERT_*` / `EXPECT_*` が準備と確認を兼ねるときは、`EXPECT_CALL` に `[Pre-Assert確認_*]` と `[Pre-Assert手順]` を並べるのと同じく、`[状態]` と `[状態確認]` の両方を付けます。`[状態確認]` だけでは、何を用意したかが `### 状態` に残りません。
 
 ```cpp
 ASSERT_EQ(0, pipe(pipe_fds)); // [状態] - pipe を生成する。
-                              // [状態確認] - pipe の生成が成功すること。
+                              // [状態確認] - pipe() の戻り値が 0 であること。
 ```
 
 ## Pre-Assert フェーズ [Pre-Assert確認_*] [Pre-Assert手順]
@@ -95,13 +99,47 @@ Table: Pre-Assert フェーズの検証タグ一覧
 
 - 呼び出されること、呼び出されないこと、呼び出される回数、引数の内容の検証は `[Pre-Assert確認_正常系]` / `[Pre-Assert確認_異常系]` に記載します。
 - 呼び出された場合に戻り値を返す、出力引数や変数を操作する動作 (`WillOnce` / `WillRepeatedly` の中身) は `[Pre-Assert手順]` に記載します。
+- 1 つの `EXPECT_CALL` に付ける説明は、`[Pre-Assert確認_*]` を先に、`[Pre-Assert手順]` を後に書きます。`### 確認` と `### 手順` は別のセクションに出力されるため順序は出力に影響しませんが、テスト コード上で「〜が呼び出されることを確認し、〜を返す」と読めるようにするためです。
+
+- モックのコールバック内に置く `ASSERT_*` / `EXPECT_*` にも、`[Pre-Assert確認_*]` を付けます。
+- `[Pre-Assert確認_*]` が `WillOnce` の動作 (手順) を説明している場合は、確認を呼び出し回数の判定に直し、動作の説明を `[Pre-Assert手順]` として記載します。
+
+`[Pre-Assert確認_*]` の説明文には、[確認コメントの書き方](#確認コメントの書き方) に従い、呼び出しの回数と引数の条件を判定として書きます。
+
+| 指定 | 判定の書き方 |
+| --- | --- |
+| `.Times(0)` | f() が呼び出されないこと。 |
+| `.Times(n)`、または `WillOnce` が n 個で `WillRepeatedly` なし | f() が n 回呼び出されること。 |
+| `.Times(AtLeast(n))`、または `WillOnce` が n 個で `WillRepeatedly` あり | f() が n 回以上呼び出されること。 |
+| `.Times(AnyNumber())`、または `WillRepeatedly` だけ | f() が任意の回数呼び出されること。 |
+
+Table: 呼び出し回数の書き方
+
+`_` (任意の値) 以外の引数条件は、「X を指定して」の形で列挙します。GoogleMock のマッチャーで指定した引数は、意味を日本語で書きます。
+
+| マッチャー | 日本語 |
+| --- | --- |
+| `StrEq(x)` | x と等しい文字列 |
+| `HasSubstr(x)` | x を含む文字列 |
+| `NotNull()` | NULL 以外 |
+| `Pointee(x)` | 指す先が x であるポインター |
+
+Table: マッチャーの言い換え
+
+表にないマッチャーも、同じ考え方で判定の意味を日本語で書きます。
+
+```cpp
+EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq(path), StrEq("rb"), nullptr))
+    .WillOnce(Return(file_)); // [Pre-Assert確認_正常系] - cplat_fopen() が path と等しい文字列、"rb" と等しい文字列、nullptr を指定して 1 回呼び出されること。
+                              // [Pre-Assert手順] - 設定ファイルを開くハンドルを返す。
+```
 
 ### 例
 
 ```cpp
 // モック メソッドが呼び出されたとき true を返すことを期待
 EXPECT_CALL(mockDependency, SomeMethod())
-    .WillOnce(Return(true)); // [Pre-Assert確認_正常系] - SomeMethod が 1 回呼び出されること。
+    .WillOnce(Return(true)); // [Pre-Assert確認_正常系] - SomeMethod() が 1 回呼び出されること。
                              // [Pre-Assert手順] - SomeMethod にて true を返却する。
 ```
 
@@ -122,6 +160,30 @@ EXPECT_CALL(mockDependency, SomeMethod())
 ```cpp
 // テスト対象のメソッドを呼び出す
 bool result = myObject.TestedMethod(); // [手順] - TestedMethod を呼び出す。
+```
+
+### Act の中の判定
+
+Act フェーズの中に `EXPECT_*` は置きません。Assert フェーズへ移し、関数呼び出しを直接判定している場合は戻り値を変数で受けます。ループの中の判定は、反復ごとの値を配列などに残して Assert で確かめます。
+
+Act フェーズの中の `ASSERT_*` は、判定の種類と後続の手順で扱いを分けます。
+
+| 判定 | 後続 | 扱い |
+| --- | --- | --- |
+| 直接寄与しない確認 (`[状態確認]`) | 問わない | Act に残し、呼び出し (`[手順]`) と判定を別の文に分ける |
+| 被テスト関数の判定 (`[確認_*]`) | 有意な手順がある | Act に残し、呼び出しと判定を別の文に分ける |
+| 被テスト関数の判定 (`[確認_*]`) | 有意な手順がない | Assert へ移す |
+| ループの中の判定 | 問わない | Act に残し、呼び出しと判定を別の文に分ける |
+
+Table: Act フェーズの中の ASSERT の扱い
+
+有意な手順は、判定した呼び出しの結果 (戻り値、出力引数、状態) に依存する関数の呼び出しです。値を変数へ退避する文や後始末は含みません。`ASSERT_*` は失敗すると以降の処理を実行しないため、後続の手順の前提を守る判定は Act に残します。
+
+```cpp
+// Act
+FILE *out = cplat_fopen(path.c_str(), "wb", NULL);   // [手順] - 書き出し先を開く。
+ASSERT_NE(nullptr, out);                             // [状態確認] - cplat_fopen() の戻り値が nullptr 以外であること。
+size_t wrote_mgmt = fwrite(mgmt, 1, mgmt_size, out); // [手順] - 管理領域を書き出す。
 ```
 
 ## Assert フェーズ [確認_*]
@@ -145,21 +207,78 @@ bool result = myObject.TestedMethod(); // [手順] - TestedMethod を呼び出�
 Table: Assert フェーズの検証タグ一覧
 
 Assert フェーズの各 `ASSERT_*` / `EXPECT_*` マクロには、検証内容と一対一に対応する `[確認_正常系]` または `[確認_異常系]` のコメントを付与します。  
-後続の検証を継続できるか確認するための `ASSERT_*` マクロも、テスト結果の確認であるため省略しません。
+後続の検証を継続できるか確認するための `ASSERT_*` マクロも、テスト結果の確認であるため省略しません。  
+クラッシュしないことを示す場合は、コメントだけで済ませず `SUCCEED()` を記載して確認タグを付けます。
 
 ### 例
 
 ```cpp
 // 戻り値が期待どおりであることを確認
-ASSERT_TRUE(result); // [確認_正常系] - TestedMethod の戻り値が true であること。
+ASSERT_TRUE(result); // [確認_正常系] - TestedMethod() の戻り値が true であること。
 
 // オブジェクトの状態を確認
-EXPECT_EQ(myObject.GetState(), ExpectedState); // [確認_正常系] - 状態が ExpectedState であること。
+EXPECT_EQ(ExpectedState, state); // [確認_正常系] - state が ExpectedState であること。
 ```
 
-- 関数の戻り値を確認するコメントでは、Act フェーズで呼び出した関数名を主語として記載します。
-- 「戻り値が true であること。」だけでは、テスト エビデンス上でどの手順の戻り値かを判別できません。
-- 同じ関数を複数回呼び出す場合は、引数、条件、呼び出し順のいずれかも記載し、対象の呼び出しを区別します。
+### 確認コメントの書き方
+
+確認タグ (`[確認_*]`、`[Pre-Assert確認_*]`、`[状態確認]`) の説明文には、マクロが行う判定をそのまま書きます。  
+テストの手順と確認の説明は、製品コードのコメントと異なり、コードが何をしているかの直接的な説明を主体にします。  
+`results.md` では説明文とテスト コードが並んで載るため、判定をそのまま書くと、読み手が説明文とマクロを突き合わせやすくなります。
+
+説明文は、判定 (1 文目) と、必要な場合の総合期待で構成します。
+
+```text
+// [確認_正常系] - <判定>。(<総合期待>ことの確認)
+```
+
+- 判定は「〜であること。」などの形で書き、句点で終えます。
+- 総合期待は、判定だけでは意図が読み取れない場合に書きます。判定の句点の直後に空白を入れずに半角の括弧で囲み、「〜ことの確認」で終えます。括弧の後に句点は付けません。
+- 総合期待を書くのは、0 や 0 以外などの値の意味、期待値の数値の由来、比較の理由などを補う場合です。判定から自明な言い換え (戻り値が成功を表す値であることに対する「成功したことの確認」など) は書きません。
+
+判定は、確認すべき値を主語にし、期待値とどのような関係かを簡潔に表します。主語は次のように書きます。
+
+- 関数の戻り値は「f() の戻り値」と書きます (f は関数名)。戻り値を変数で受けてから判定する場合も、マクロの引数に関数呼び出しを直接書く場合も同じです。両辺が関数の戻り値の場合は、両辺とも「f() の戻り値」と書きます。「戻り値が true であること。」だけでは、テスト エビデンス上でどの手順の戻り値かを判別できません。
+- メソッドの戻り値は、オブジェクト名を含めて書きます (例: 「results.size() の戻り値」)。
+- テスト内のヘルパー関数を通して呼ぶ場合は、テストが呼ぶヘルパー関数の名前を書きます。
+- 関数の戻り値以外 (出力引数、ループで作った変数、構造体のメンバーなど) は、変数名や式をそのまま書きます。
+- 同じ関数を時点や入力を変えて呼び分けている場合は、その条件を主語の前に置きます (例: 「追加後の …」「NULL の空入力に対する …」)。判定の対象を特定する引数 (探す文字列など) も、主語の前に置きます (例: 「"キューの長さは 7 です。" を探した captured.find() の戻り値が …」)。
+- 関数名の後には `()` を付け、引数は書きません。
+- 識別子と値はバッククォートで囲みません。
+- 期待値の文字列リテラルは全文書きます。
+
+マクロごとの判定の書き方は次のとおりです。`ASSERT_*` は対応する `EXPECT_*` と同じです。
+
+| マクロ | 判定の書き方 |
+| --- | --- |
+| `EXPECT_EQ(A, B)`、`EXPECT_DOUBLE_EQ(A, B)` | A が値 (リテラル、定数) なら「B が A であること。」、A が変数や式なら「B が A と一致すること。」 |
+| `EXPECT_NE(A, B)` | B が A 以外であること。 |
+| `EXPECT_LT(A, B)` / `EXPECT_LE(A, B)` | A が B より小さいこと。/ A が B 以下であること。A が期待値 (リテラル、定数) なら、B を主語にして「B が A より大きいこと。」/「B が A 以上であること。」 |
+| `EXPECT_GT(A, B)` / `EXPECT_GE(A, B)` | A が B より大きいこと。/ A が B 以上であること。A が期待値なら、B を主語にして「B が A より小さいこと。」/「B が A 以下であること。」 |
+| `EXPECT_TRUE(X)` / `EXPECT_FALSE(X)` | X が true であること。/ X が false であること。 |
+| `EXPECT_STREQ(A, B)` / `EXPECT_STRNE(A, B)` | B が A であること。/ B が A 以外であること。 |
+| `EXPECT_THAT(V, M)` | V が <M の意味> であること。(M は Pre-Assert フェーズの「マッチャーの言い換え」に従う) |
+| `ASSERT_NO_THROW(S)` | S が例外を送出しないこと。(S が関数呼び出しなら「f() が例外を送出しないこと。」) |
+| `ASSERT_NO_FATAL_FAILURE(f())` | f() の中で致命的な失敗が起きないこと。 |
+| `EXPECT_NONFATAL_FAILURE(S, T)` | <S の内容> が T を含む非致命的な失敗を報告すること。 |
+| `EXPECT_DEATH(S, R)` / `EXPECT_EXIT(S, P, R)` | f() がプロセスを終了させ、出力が R に一致すること。(`EXPECT_EXIT` は終了条件 P も書く) |
+| `SUCCEED()` | SUCCEED() に到達すること。(直前の処理の意味は総合期待に書く) |
+| `EXPECT_FILE_EXISTS(F)` | F のファイルが存在すること。 |
+| `EXPECT_FILE_CONTAINS(F, T)` | F のファイルが T を含むこと。 |
+| `Assert.Equal(A, B)` (.NET) | `EXPECT_EQ(A, B)` と同じ |
+| `Assert.True(X)` / `Assert.False(X)` (.NET) | `EXPECT_TRUE(X)` / `EXPECT_FALSE(X)` と同じ |
+| `Assert.Contains(A, B)` (.NET) | B が A を含むこと。 |
+| `Assert.Throws<E>(S)` (.NET) | S が E を送出すること。 |
+| `Assert.Null(X)` / `Assert.Same(A, B)` / `Assert.IsType<T>(X)` (.NET) | X が null であること。/ B が A と同じインスタンスであること。/ X の型が T であること。 |
+
+Table: マクロごとの判定の書き方
+
+```cpp
+EXPECT_EQ(CPLAT_OK, actual_ret_added_table); // [確認_正常系] - 追加後の cplat_hashtable_get_table_generation() の戻り値が CPLAT_OK であること。
+EXPECT_EQ(1u, added_table);                  // [確認_正常系] - added_table が 1 であること。(追加でテーブル世代が 0 から 1 増えたことの確認)
+EXPECT_NE(0, actual_after_release);          // [確認_正常系] - actual_after_release が 0 以外であること。(解放後の出力で条件を取り込んだことの確認)
+EXPECT_STREQ("a", buf);                      // [確認_正常系] - buf が "a" であること。(上矢印が無視されたことの確認)
+```
 
 ## Cleanup フェーズ
 
@@ -184,7 +303,7 @@ EXPECT_EQ(myObject.GetState(), ExpectedState); // [確認_正常系] - 状態が
 
 ```cpp
 // Assert
-EXPECT_TRUE(result); // [確認_正常系] - TestedMethod の戻り値が true であること。
+EXPECT_TRUE(result); // [確認_正常系] - TestedMethod() の戻り値が true であること。
 
 // Cleanup
 remove(outputPath);
@@ -404,8 +523,8 @@ Linux では `PLATFORM_LINUX` と `__linux__`、Windows では `PLATFORM_WINDOWS
 
 ### 確認 (異常系:2)
 
-- 【異常系】ERROR ログに "handle is NULL" が含まれること。
-- 【異常系】sample_close の戻り値が SAMPLE_ERR であること。
+- 【異常系】sample_log_error() が "handle is NULL" を含む文字列を指定して 1 回呼び出されること。
+- 【異常系】sample_close() の戻り値が SAMPLE_ERR であること。
 
 ## テスト コード
 
@@ -414,9 +533,10 @@ Linux では `PLATFORM_LINUX` と `__linux__`、Windows では `PLATFORM_WINDOWS
 TEST_F(sampleCloseTest, handle_null)
 {
     ...
-    .Times(1); // [Pre-Assert確認_異常系] - ERROR ログに "handle is NULL" が含まれること。
+    EXPECT_CALL(mock_log, sample_log_error(HasSubstr("handle is NULL")))
+        .Times(1); // [Pre-Assert確認_異常系] - sample_log_error() が "handle is NULL" を含む文字列を指定して 1 回呼び出されること。
     ...
-    EXPECT_EQ(SAMPLE_ERR, actual_ret); // [確認_異常系] - sample_close の戻り値が SAMPLE_ERR であること。
+    EXPECT_EQ(SAMPLE_ERR, actual_ret); // [確認_異常系] - sample_close() の戻り値が SAMPLE_ERR であること。
 }
 ```
 
@@ -455,7 +575,7 @@ Table: テスト タグとサマリー出力セクションの対応
 ```cpp
 // Arrange
 char *buffer = (char *)malloc(16); // [状態] - 16 バイトのバッファーを確保する。
-ASSERT_NE(nullptr, buffer); // [状態確認] - malloc が非 NULL のポインターを返すこと。
+ASSERT_NE(nullptr, buffer); // [状態確認] - buffer が nullptr 以外であること。
 
 // Pre-Assert
 
@@ -463,7 +583,7 @@ ASSERT_NE(nullptr, buffer); // [状態確認] - malloc が非 NULL のポイン�
 int actual_ret = sample_func(buffer); // [手順] - sample_func にバッファーを渡して呼び出す。
 
 // Assert
-EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func の戻り値が SAMPLE_OK であること。
+EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func() の戻り値が SAMPLE_OK であること。
 ```
 
 ```text
@@ -477,8 +597,8 @@ EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func の戻り�
 
 ### 確認 (正常系:1)
 
-- (malloc が非 NULL のポインターを返すこと。)
-- 【正常系】sample_func の戻り値が SAMPLE_OK であること。
+- (buffer が nullptr 以外であること。)
+- 【正常系】sample_func() の戻り値が SAMPLE_OK であること。
 ```
 
 `[状態確認]` の 1 件は見出しの `(正常系:1)` に含まれず、`[確認_正常系]` の 1 件だけがカウントされます。
@@ -536,6 +656,10 @@ Table: テスト検証カテゴリの判断基準
 ループで独立した呼び出し期待を 3 個登録する場合は 3 件になります。  
 `[状態確認]` は集計対象外です。
 
+確認タグの「個数」はソース上の記載箇所の数で、「確認件数」は各確認タグの回数式を評価した合計です。両者は区別します。  
+実行環境によって個数が変わる確認 (errno の一覧など) は、期待する一覧と実際の一覧を 1 回で照合するなど、実行環境によらず確認回数が一定になる形にします。  
+ループ全体の説明と、ループ内の各判定の説明が重複する場合、全体の説明はタグを付けない通常のコメントにします。
+
 作成者は、アルゴリズムとテスト データから、各確認の実施回数を決定して記載します。  
 集計処理は `for` や `if` の実行回数を推測しません。  
 テスト本体外の確認を含める場合は、[サブ手順](test-subprocedures.md) として定義し、テストから参照します。  
@@ -545,11 +669,11 @@ Assert の失敗、例外、途中の `return` などによる実測回数の変
 ### 回数は確認タグの内側に記載する
 
 ```cpp
-// [確認_正常系] - 値が期待値と一致すること。
-// [確認_正常系 回数=1] - 値が期待値と一致すること。
-// [確認_正常系 回数=2+3] - 値が期待値と一致すること。
-// [確認_異常系 回数=PARAM*(2+3)] - エラーが通知されること。
-// [Pre-Assert確認_正常系 回数=PARAM*2*3] - 通知が期待どおりに行われること。
+// [確認_正常系] - actual が expected と一致すること。
+// [確認_正常系 回数=1] - actual が expected と一致すること。
+// [確認_正常系 回数=2+3] - actual が expected と一致すること。
+// [確認_異常系 回数=PARAM*(2+3)] - func() の戻り値が ERR であること。
+// [Pre-Assert確認_正常系 回数=PARAM*2*3] - notify() が 1 回呼び出されること。
 ```
 
 回数 1 回だけは `回数=1` を省略できます。  
@@ -586,7 +710,7 @@ Assert の失敗、例外、途中の `return` などによる実測回数の変
 
 ```cpp
 for (int i = 0; i < 3; ++i) {
-    EXPECT_EQ(expected[i], actual[i]); // [確認_正常系 回数=3] - 値が一致すること。
+    EXPECT_EQ(expected[i], actual[i]); // [確認_正常系 回数=3] - actual[i] が expected[i] と一致すること。
 }
 ```
 
