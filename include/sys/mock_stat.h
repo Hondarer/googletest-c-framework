@@ -78,7 +78,7 @@ class Mock_sys_stat
     #endif
 
     Mock_sys_stat();
-    ~Mock_sys_stat();
+    virtual ~Mock_sys_stat();
 };
 
 extern Mock_sys_stat *_mock_sys_stat;

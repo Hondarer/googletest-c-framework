@@ -60,7 +60,7 @@ class Mock_sys_mman
     MOCK_METHOD(int, munlockall, (const char *, const int, const char *));
 
     Mock_sys_mman();
-    ~Mock_sys_mman();
+    virtual ~Mock_sys_mman();
 };
 
 extern Mock_sys_mman *_mock_sys_mman;

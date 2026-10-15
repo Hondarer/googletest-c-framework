@@ -48,7 +48,7 @@ class Mock_netdb
     MOCK_METHOD(const char *, gai_strerror, (const char *, const int, const char *, int));
 
     Mock_netdb();
-    ~Mock_netdb();
+    virtual ~Mock_netdb();
 };
 
 extern Mock_netdb *_mock_netdb;

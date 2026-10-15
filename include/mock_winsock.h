@@ -141,7 +141,7 @@ class Mock_winsock
     MOCK_METHOD(void, freeaddrinfo, (const char *, const int, const char *, PADDRINFOA));
 
     Mock_winsock();
-    ~Mock_winsock();
+    virtual ~Mock_winsock();
 };
 
 extern Mock_winsock *_mock_winsock;

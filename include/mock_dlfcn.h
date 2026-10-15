@@ -47,7 +47,7 @@ class Mock_dlfcn
     MOCK_METHOD(int, dladdr, (const char *, const int, const char *, const void *, void *));
 
     Mock_dlfcn();
-    ~Mock_dlfcn();
+    virtual ~Mock_dlfcn();
 };
 
 extern Mock_dlfcn *_mock_dlfcn;

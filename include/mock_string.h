@@ -76,7 +76,7 @@ class Mock_string
     #endif // _WIN32
 
     Mock_string();
-    ~Mock_string();
+    virtual ~Mock_string();
 };
 
 extern Mock_string *_mock_string;

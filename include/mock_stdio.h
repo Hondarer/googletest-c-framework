@@ -198,7 +198,7 @@ class Mock_stdio
     void switch_to_mock_fileio();
 
     Mock_stdio();
-    ~Mock_stdio();
+    virtual ~Mock_stdio();
 };
 
 extern Mock_stdio *_mock_stdio;

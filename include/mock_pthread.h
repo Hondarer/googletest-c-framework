@@ -139,7 +139,7 @@ class Mock_pthread
     MOCK_METHOD(pthread_t, pthread_self, (const char *, const int, const char *));
 
     Mock_pthread();
-    ~Mock_pthread();
+    virtual ~Mock_pthread();
 };
 
 extern Mock_pthread *_mock_pthread;

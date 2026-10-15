@@ -35,7 +35,7 @@ class Mock_sys_select
                 (const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *, struct timeval *));
 
     Mock_sys_select();
-    ~Mock_sys_select();
+    virtual ~Mock_sys_select();
 };
 
 extern Mock_sys_select *_mock_sys_select;

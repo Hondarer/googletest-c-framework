@@ -116,7 +116,7 @@ class Mock_openssl
     MOCK_METHOD(int, RAND_bytes, (const char *, const int, const char *, unsigned char *, int));
 
     Mock_openssl();
-    ~Mock_openssl();
+    virtual ~Mock_openssl();
 };
 
 extern Mock_openssl *_mock_openssl;

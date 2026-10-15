@@ -225,7 +225,7 @@ class Mock_windows
     void switch_to_mock_time();
 
     Mock_windows();
-    ~Mock_windows();
+    virtual ~Mock_windows();
 };
 
 extern Mock_windows *_mock_windows;

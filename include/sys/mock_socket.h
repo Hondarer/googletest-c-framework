@@ -90,7 +90,7 @@ class Mock_sys_socket
                 (const char *, const int, const char *, int, void *, size_t, int, struct sockaddr *, socklen_t *));
 
     Mock_sys_socket();
-    ~Mock_sys_socket();
+    virtual ~Mock_sys_socket();
 };
 
 extern Mock_sys_socket *_mock_sys_socket;

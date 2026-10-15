@@ -50,7 +50,7 @@ class Mock_fcntl
     MOCK_METHOD(int, fcntl, (const char *, const int, const char *, int, int, intptr_t));
 
     Mock_fcntl();
-    ~Mock_fcntl();
+    virtual ~Mock_fcntl();
 };
 
 extern Mock_fcntl *_mock_fcntl;

@@ -35,7 +35,7 @@ class Mock_poll
     MOCK_METHOD(int, poll, (const char *, const int, const char *, struct pollfd *, nfds_t, int));
 
     Mock_poll();
-    ~Mock_poll();
+    virtual ~Mock_poll();
 };
 
 extern Mock_poll *_mock_poll;

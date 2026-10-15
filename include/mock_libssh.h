@@ -592,7 +592,7 @@ class Mock_libssh
     void switch_to_mock_libssh();
 
     Mock_libssh();
-    ~Mock_libssh();
+    virtual ~Mock_libssh();
 };
 
 extern Mock_libssh *_mock_libssh;

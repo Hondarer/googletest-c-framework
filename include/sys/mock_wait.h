@@ -33,7 +33,7 @@ class Mock_sys_wait
     MOCK_METHOD(pid_t, waitpid, (const char *, const int, const char *, pid_t, int *, int));
 
     Mock_sys_wait();
-    ~Mock_sys_wait();
+    virtual ~Mock_sys_wait();
 };
 
 extern Mock_sys_wait *_mock_sys_wait;

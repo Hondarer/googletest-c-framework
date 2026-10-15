@@ -37,7 +37,7 @@ class Mock_termios
     MOCK_METHOD(int, tcsetattr, (const char *, const int, const char *, int, int, const struct termios *));
 
     Mock_termios();
-    ~Mock_termios();
+    virtual ~Mock_termios();
 };
 
 extern Mock_termios *_mock_termios;

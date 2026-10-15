@@ -116,6 +116,25 @@ MOCK_METHOD(int, sample_func, (int, const char *));
 - 引数なし関数は空の `()` を使います。
 - 可変長引数は、Mock クラスで直接扱える形へ変換して宣言します。
 
+ヘッダーで定義する Mock クラスは、デストラクターを `virtual` で宣言し、`mock_<lib>.cc` だけで定義します。
+
+```cpp
+class Mock_sample
+{
+  public:
+    MOCK_METHOD(int, sample_func, (int, const char *));
+
+    Mock_sample();
+    virtual ~Mock_sample();
+};
+```
+
+仮想関数を持たないクラスでは、GCC がクラスのデバッグ情報をヘッダーを取り込む翻訳単位ごとに出力します。  
+モック ライブラリは 1 関数を 1 翻訳単位とするため、`MOCK_METHOD` の数と翻訳単位の数の積でデバッグ情報が増えます。  
+インラインでない仮想関数を持つクラスでは、その関数を定義する翻訳単位だけがクラスのデバッグ情報を出力します。  
+デストラクターを仮想関数とし、その定義を `mock_<lib>.cc` へ置くことで、デバッグ情報を 1 か所へ集めます。  
+テストの 1 つの翻訳単位だけで使う Mock クラスは、重複が起きないため対象外です。
+
 ## 注入ライフサイクル
 
 テスト Fixture やテスト本体で `Mock_<lib>` を生成すると、そのコンストラクターで `_mock_<lib>` が現在のオブジェクトを指します。  
@@ -158,6 +177,7 @@ TEST_F(MyTest, example)
 
 - 置換対象の関数と `MOCK_METHOD` のシグネチャが一致していること
 - `ON_CALL` の既定動作が追加されていること
+- ヘッダーで定義する Mock クラスのデストラクターが `virtual` で、`mock_<lib>.cc` だけで定義されていること
 - `_mock_<lib>` の設定と解除に `TESTFW_REGISTER_MOCK_INSTANCE` と `TESTFW_UNREGISTER_MOCK_INSTANCE` を使用していること
 - トレース出力の形式が同一ライブラリ内の既存実装と揃っていること
 - 新しい mock が既存のテスト ビルド経路で参照される配置に置かれていること

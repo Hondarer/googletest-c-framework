@@ -30,7 +30,7 @@ class Mock_ioctl
     MOCK_METHOD(int, ioctl, (const char *, const int, const char *, int, unsigned long, void *));
 
     Mock_ioctl();
-    ~Mock_ioctl();
+    virtual ~Mock_ioctl();
 };
 
 extern Mock_ioctl *_mock_ioctl;

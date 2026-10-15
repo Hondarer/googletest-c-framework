@@ -32,7 +32,7 @@ class Mock_sys_file
     MOCK_METHOD(int, flock, (const char *, const int, const char *, int, int));
 
     Mock_sys_file();
-    ~Mock_sys_file();
+    virtual ~Mock_sys_file();
 };
 
 extern Mock_sys_file *_mock_sys_file;

@@ -70,7 +70,7 @@ class Mock_time
     void switch_to_mock_time();
 
     Mock_time();
-    ~Mock_time();
+    virtual ~Mock_time();
 };
     #else
 extern errno_t delegate_real_gmtime_s(const char *, const int, const char *, struct tm *, const time_t *);
@@ -91,7 +91,7 @@ class Mock_time
     void switch_to_mock_time();
 
     Mock_time();
-    ~Mock_time();
+    virtual ~Mock_time();
 };
     #endif
 

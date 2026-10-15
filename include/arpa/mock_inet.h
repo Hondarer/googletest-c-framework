@@ -39,7 +39,7 @@ class Mock_arpa_inet
     MOCK_METHOD(const char *, inet_ntop, (const char *, const int, const char *, int, const void *, char *, socklen_t));
 
     Mock_arpa_inet();
-    ~Mock_arpa_inet();
+    virtual ~Mock_arpa_inet();
 };
 
 extern Mock_arpa_inet *_mock_arpa_inet;

@@ -154,7 +154,7 @@ class Mock_unistd
     MOCK_METHOD(int, gethostname, (const char *, const int, const char *, char *, size_t));
 
     Mock_unistd();
-    ~Mock_unistd();
+    virtual ~Mock_unistd();
 };
     #else  // _WIN32
 extern __int64 delegate_real__lseeki64(const char *, const int, const char *, int, __int64, int);
@@ -175,7 +175,7 @@ class Mock_unistd
     MOCK_METHOD(int, _write, (const char *, const int, const char *, int, const void *, unsigned int));
 
     Mock_unistd();
-    ~Mock_unistd();
+    virtual ~Mock_unistd();
 };
     #endif // _WIN32
 

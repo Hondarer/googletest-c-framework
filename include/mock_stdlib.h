@@ -83,7 +83,7 @@ class Mock_stdlib
     #endif // _WIN32
 
     Mock_stdlib();
-    ~Mock_stdlib();
+    virtual ~Mock_stdlib();
 };
 
 extern Mock_stdlib *_mock_stdlib;

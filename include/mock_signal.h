@@ -46,7 +46,7 @@ class Mock_signal
     MOCK_METHOD(int, raise, (const char *, const int, const char *, int));
 
     Mock_signal();
-    ~Mock_signal();
+    virtual ~Mock_signal();
 };
 
 extern Mock_signal *_mock_signal;
