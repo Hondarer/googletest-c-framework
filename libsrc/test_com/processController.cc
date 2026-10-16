@@ -37,20 +37,17 @@ bool writeLineStdin(AsyncProcessHandle &handle, const string &line)
     return writeStdinImpl(handle, line + "\n");
 }
 
-/* -------- waitForOutput -------- */
+/* -------- waitForOutput / tryWaitForOutput -------- */
 
-string waitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms)
+/* stdout にパターンが出現するまで待機する共通処理。出現した場合は true を返し、output に出現位置までの出力を格納する。 */
+static bool waitForPattern(AsyncProcessHandle &handle, const string &pattern, int timeout_ms, string *output,
+                           const char *api_name)
 {
-    if (!handle)
-    {
-        throw runtime_error("waitForOutput: null handle");
-    }
-
     int _tl = _getTraceLevel("processController");
     int pid = (int)handle->pid;
     if (_tl > TRACE_NONE)
     {
-        printf("  > waitForOutput pid=%d \"%s\" timeout=%dms\n", pid, pattern.c_str(), timeout_ms);
+        printf("  > %s pid=%d \"%s\" timeout=%dms\n", api_name, pid, pattern.c_str(), timeout_ms);
     }
 
     unique_lock<mutex> lk(handle->buf_mutex);
@@ -72,16 +69,44 @@ string waitForOutput(AsyncProcessHandle &handle, const string &pattern, int time
     {
         if (_tl > TRACE_NONE)
         {
-            printf("  > waitForOutput pid=%d \"%s\" timeout\n", pid, pattern.c_str());
+            printf("  > %s pid=%d \"%s\" timeout\n", api_name, pid, pattern.c_str());
         }
-        throw runtime_error("waitForOutput: timeout or EOF before pattern: \"" + pattern + "\"");
+        return false;
     }
 
     if (_tl > TRACE_NONE)
     {
-        printf("  > waitForOutput pid=%d \"%s\" matched\n", pid, pattern.c_str());
+        printf("  > %s pid=%d \"%s\" matched\n", api_name, pid, pattern.c_str());
     }
-    return handle->stdout_buf.substr(0, pos + pattern.size());
+    if (output != nullptr)
+    {
+        *output = handle->stdout_buf.substr(0, pos + pattern.size());
+    }
+    return true;
+}
+
+string waitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms)
+{
+    if (handle == nullptr)
+    {
+        throw runtime_error("waitForOutput: null handle");
+    }
+
+    string output;
+    if (!waitForPattern(handle, pattern, timeout_ms, &output, "waitForOutput"))
+    {
+        throw runtime_error("waitForOutput: timeout or EOF before pattern: \"" + pattern + "\"");
+    }
+    return output;
+}
+
+bool tryWaitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms, string *output)
+{
+    if (handle == nullptr)
+    {
+        return false;
+    }
+    return waitForPattern(handle, pattern, timeout_ms, output, "tryWaitForOutput");
 }
 
 /* -------- getStdout -------- */

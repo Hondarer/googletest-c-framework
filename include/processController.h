@@ -110,6 +110,20 @@ extern bool writeLineStdin(AsyncProcessHandle &handle, const string &line);
 extern string waitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms = 5000);
 
 /**
+ * stdout に指定パターンが出現するまで待機する。
+ *
+ * タイムアウトした場合やハンドルが空の場合も例外を送出せず、false を返す。
+ * Act フェーズで待機の成否を判定するときは、戻り値を変数で受けてから判定する。
+ *
+ * @param pattern    待機する文字列 (部分一致)
+ * @param timeout_ms タイムアウト (ms)。-1 で無制限。
+ * @param output     受信した stdout (パターン出現位置まで含む) の格納先。不要な場合は nullptr。
+ * @return           パターンが出現した場合は true。タイムアウトした場合は false。
+ */
+extern bool tryWaitForOutput(AsyncProcessHandle &handle, const string &pattern, int timeout_ms = 5000,
+                             string *output = nullptr);
+
+/**
  * プロセスの stdin パイプを閉じる。
  * fgets ブロックに EOF を通知する用途で使用する。
  */
