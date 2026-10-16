@@ -15,9 +15,9 @@ struct tm *delegate_fake_localtime_r(const char *file, const int line, const cha
     (void)func;
     (void)timep;
 
-    if (result == NULL)
+    if (result == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     memset(result, 0, sizeof(*result));

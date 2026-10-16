@@ -17,7 +17,7 @@ char *delegate_real_strdup(const char *file, const int line, const char *func, c
 
 char *mock_strdup(const char *file, const int line, const char *func, const char *s)
 {
-    char *mock_ret = NULL;
+    char *mock_ret = nullptr;
 
     if (_mock_string != nullptr)
     {

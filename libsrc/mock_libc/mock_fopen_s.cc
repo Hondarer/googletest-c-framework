@@ -18,7 +18,7 @@ errno_t delegate_fake_fopen_s(const char *file, const int line, const char *func
     (void)filename;
     (void)modes;
 
-    if (pFile == NULL)
+    if (pFile == nullptr)
     {
         return EINVAL;
     }
@@ -37,7 +37,7 @@ errno_t delegate_real_fopen_s(const char *file, const int line, const char *func
     (void)line;
     (void)func;
 
-    if (pFile == NULL)
+    if (pFile == nullptr)
     {
         return EINVAL;
     }
@@ -65,7 +65,7 @@ errno_t mock_fopen_s(const char *file, const int line, const char *func, FILE **
         printf("  > fopen_s %s, %s", filename, modes);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (err != 0 || *pFile == NULL)
+            if (err != 0 || *pFile == nullptr)
             {
                 printf(" from %s:%d -> error %d\n", file, line, err);
             }

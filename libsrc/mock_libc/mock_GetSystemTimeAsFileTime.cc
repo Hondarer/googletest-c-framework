@@ -14,7 +14,7 @@ void delegate_fake_GetSystemTimeAsFileTime(const char *file, const int line, con
     (void)line;
     (void)func;
 
-    if (file_time != NULL)
+    if (file_time != nullptr)
     {
         memset(file_time, 0, sizeof(*file_time));
     }
@@ -46,7 +46,7 @@ void mock_GetSystemTimeAsFileTime(const char *file, const int line, const char *
         printf("  > GetSystemTimeAsFileTime 0x%p", (void *)file_time);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (file_time == NULL)
+            if (file_time == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

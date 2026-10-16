@@ -15,7 +15,7 @@ errno_t delegate_fake_localtime_s(const char *file, const int line, const char *
     (void)func;
     (void)timep;
 
-    if (local_tm == NULL)
+    if (local_tm == nullptr)
     {
         return EINVAL;
     }

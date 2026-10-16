@@ -17,7 +17,7 @@ errno_t delegate_fake__wfopen_s(const char *file, const int line, const char *fu
     (void)filename;
     (void)modes;
 
-    if (pFile == NULL)
+    if (pFile == nullptr)
     {
         return EINVAL;
     }
@@ -34,7 +34,7 @@ errno_t delegate_real__wfopen_s(const char *file, const int line, const char *fu
     (void)line;
     (void)func;
 
-    if (pFile == NULL)
+    if (pFile == nullptr)
     {
         return EINVAL;
     }

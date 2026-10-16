@@ -13,7 +13,7 @@ char *delegate_fake_fgets(const char *file, const int line, const char *func, ch
     (void)n;
     (void)stream;
 
-    return NULL;
+    return nullptr;
 }
 
 char *delegate_real_fgets(const char *file, const int line, const char *func, char *s, int n, FILE *stream)

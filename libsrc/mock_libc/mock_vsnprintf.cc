@@ -39,7 +39,7 @@ int mock_vsnprintf(const char *file, const int line, const char *func, char *s, 
     str = allocvprintf(format, args_copy);
     va_end(args_copy);
 
-    if (str == NULL)
+    if (str == nullptr)
     {
         mock_ret = -1;
     }
@@ -52,7 +52,7 @@ int mock_vsnprintf(const char *file, const int line, const char *func, char *s, 
         mock_ret = delegate_real_vsnprintf(file, line, func, s, n, str);
     }
 
-    if (getTraceLevel() > TRACE_NONE && str != NULL)
+    if (getTraceLevel() > TRACE_NONE && str != nullptr)
     {
         printf("  > vsnprintf 0x%p, %zu, %s", (void *)s, n, str);
         if (getTraceLevel() >= TRACE_DETAIL)

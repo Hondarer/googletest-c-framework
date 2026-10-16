@@ -15,9 +15,9 @@ char *delegate_fake_ctime_r(const char *file, const int line, const char *func, 
     (void)func;
     (void)timep;
 
-    if (buf == NULL)
+    if (buf == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     strcpy(buf, "Thu Jan  1 00:00:00 1970\n");
@@ -53,7 +53,7 @@ char *mock_ctime_r(const char *file, const int line, const char *func, const tim
         printf("  > ctime_r 0x%p, 0x%p", (const void *)timep, (void *)buf);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret == NULL)
+            if (mock_ret == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

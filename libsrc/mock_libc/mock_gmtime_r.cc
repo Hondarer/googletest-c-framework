@@ -16,9 +16,9 @@ struct tm *delegate_fake_gmtime_r(const char *file, const int line, const char *
     (void)func;
     (void)timep;
 
-    if (result == NULL)
+    if (result == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     memset(result, 0, sizeof(*result));
@@ -55,7 +55,7 @@ struct tm *mock_gmtime_r(const char *file, const int line, const char *func, con
         printf("  > gmtime_r 0x%p, 0x%p", (const void *)timep, (void *)result);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret == NULL)
+            if (mock_ret == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

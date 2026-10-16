@@ -219,7 +219,7 @@ static VOID WINAPI etwEventCallback(PEVENT_RECORD pEvent)
 static DWORD WINAPI etwTraceThreadProc(LPVOID param)
 {
     TRACEHANDLE *pTraceHandle = static_cast<TRACEHANDLE *>(param);
-    ProcessTrace(pTraceHandle, 1, NULL, NULL);
+    ProcessTrace(pTraceHandle, 1, nullptr, nullptr);
     return 0;
 }
 
@@ -257,7 +257,7 @@ struct EtwSession
         snprintf(name_buf, sizeof(name_buf), "testfw_%lu_%lu", (unsigned long)GetCurrentProcessId(),
                  (unsigned long)target_pid);
 
-        int name_len_w = MultiByteToWideChar(CP_UTF8, 0, name_buf, -1, NULL, 0);
+        int name_len_w = MultiByteToWideChar(CP_UTF8, 0, name_buf, -1, nullptr, 0);
         if (name_len_w <= 0)
         {
             return false;
@@ -320,7 +320,7 @@ struct EtwSession
         }
 
         /* ProcessTrace ワーカー スレッドを起動 */
-        thread_handle = CreateThread(NULL, 0, etwTraceThreadProc, &trace_handle, 0, NULL);
+        thread_handle = CreateThread(nullptr, 0, etwTraceThreadProc, &trace_handle, 0, nullptr);
         if (thread_handle == nullptr)
         {
             stop();
@@ -335,7 +335,7 @@ struct EtwSession
     {
         if (session_handle != 0 && properties != nullptr)
         {
-            ControlTraceW(session_handle, NULL, properties, EVENT_TRACE_CONTROL_STOP);
+            ControlTraceW(session_handle, nullptr, properties, EVENT_TRACE_CONTROL_STOP);
             session_handle = 0;
         }
         if (thread_handle != nullptr)

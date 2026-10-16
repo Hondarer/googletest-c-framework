@@ -19,7 +19,7 @@ int delegate_fake_ssh_get_server_publickey(const char *file, const int line, con
     (void)session;
 
     /* ダミーの鍵ポインターを返す */
-    if (key != NULL)
+    if (key != nullptr)
     {
         *key = (ssh_key)malloc(sizeof(struct ssh_key_struct *));
     }
@@ -83,11 +83,11 @@ int delegate_fake_ssh_get_publickey_hash(const char *file, const int line, const
     (void)type;
 
     /* ダミーのハッシュを返す */
-    if (hash != NULL && hlen != NULL)
+    if (hash != nullptr && hlen != nullptr)
     {
         *hlen = 20;
         *hash = (unsigned char *)malloc(*hlen);
-        if (*hash != NULL)
+        if (*hash != nullptr)
         {
             memset(*hash, 0, *hlen);
         }
@@ -149,7 +149,7 @@ void delegate_fake_ssh_key_free(const char *file, const int line, const char *fu
     (void)line;
     (void)func;
 
-    if (key != NULL)
+    if (key != nullptr)
     {
         free(key);
     }
@@ -263,10 +263,10 @@ void delegate_fake_ssh_clean_pubkey_hash(const char *file, const int line, const
     (void)line;
     (void)func;
 
-    if (hash != NULL && *hash != NULL)
+    if (hash != nullptr && *hash != nullptr)
     {
         free(*hash);
-        *hash = NULL;
+        *hash = nullptr;
     }
 }
 

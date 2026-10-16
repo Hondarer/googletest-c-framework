@@ -36,7 +36,7 @@ HANDLE mock_CreateFileMappingA(const char *file, const int line, const char *fun
     if (getTraceLevel() > TRACE_NONE)
     {
         printf("  > CreateFileMappingA 0x%p, 0x%p, %lu, %lu, %lu, %s", (void *)mapping_file, (void *)attributes,
-               protect, size_high, size_low, (name != NULL) ? name : "(null)");
+               protect, size_high, size_low, (name != nullptr) ? name : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> 0x%p\n", file, line, (void *)mock_ret);

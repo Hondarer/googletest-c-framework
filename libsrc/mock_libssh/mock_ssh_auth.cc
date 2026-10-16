@@ -51,7 +51,7 @@ int mock_ssh_userauth_password(const char *file, const int line, const char *fun
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > ssh_userauth_password %p, user=%s", (void *)session, username ? username : "(null)");
+        printf("  > ssh_userauth_password %p, user=%s", (void *)session, username != nullptr ? username : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> %d\n", file, line, mock_ret);
@@ -113,7 +113,8 @@ int mock_ssh_userauth_publickey_auto(const char *file, const int line, const cha
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > ssh_userauth_publickey_auto %p, user=%s", (void *)session, username ? username : "(null)");
+        printf("  > ssh_userauth_publickey_auto %p, user=%s", (void *)session,
+               username != nullptr ? username : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> %d\n", file, line, mock_ret);

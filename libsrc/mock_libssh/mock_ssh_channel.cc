@@ -53,7 +53,7 @@ ssh_channel mock_ssh_channel_new(const char *file, const int line, const char *f
         printf("  > ssh_channel_new %p", (void *)session);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (channel == NULL)
+            if (channel == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
@@ -81,7 +81,7 @@ void delegate_fake_ssh_channel_free(const char *file, const int line, const char
     (void)line;
     (void)func;
 
-    if (channel != NULL)
+    if (channel != nullptr)
     {
         free(channel);
     }
@@ -283,7 +283,7 @@ int mock_ssh_channel_request_exec(const char *file, const int line, const char *
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        printf("  > ssh_channel_request_exec %p, cmd=%s", (void *)channel, cmd ? cmd : "(null)");
+        printf("  > ssh_channel_request_exec %p, cmd=%s", (void *)channel, cmd != nullptr ? cmd : "(null)");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
             printf(" from %s:%d -> %d\n", file, line, mock_ret);

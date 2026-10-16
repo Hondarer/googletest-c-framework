@@ -35,7 +35,7 @@ static string getExeDir()
     buf[len] = '\0';
 #else  /* _WIN32 */
     char buf[MAX_PATH];
-    DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
+    DWORD len = GetModuleFileNameA(nullptr, buf, MAX_PATH);
     if (len == 0)
     {
         return "";

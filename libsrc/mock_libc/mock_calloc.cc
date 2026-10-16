@@ -15,7 +15,7 @@ void *delegate_real_calloc(const char *file, const int line, const char *func, s
 
 void *mock_calloc(const char *file, const int line, const char *func, size_t __nmemb, size_t __size)
 {
-    void *mock_ret = NULL;
+    void *mock_ret = nullptr;
 
     if (_mock_stdlib != nullptr)
     {
@@ -31,7 +31,7 @@ void *mock_calloc(const char *file, const int line, const char *func, size_t __n
         printf("  > calloc %zd, %zd", __nmemb, __size);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret == NULL)
+            if (mock_ret == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

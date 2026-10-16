@@ -36,7 +36,7 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
     str = allocvprintf(fmt, args_copy);
     va_end(args_copy);
 
-    if (str == NULL)
+    if (str == nullptr)
     {
         mock_ret = -1;
     }
@@ -54,7 +54,7 @@ int mock_vfprintf(const char *file, const int line, const char *func, FILE *stre
         size_t len = strlen(str);
         char *trimmed_str = (char *)malloc(len + 1);
         memcpy(trimmed_str, str, len + 1);
-        if (trimmed_str != NULL)
+        if (trimmed_str != nullptr)
         {
             if (len > 0 && trimmed_str[len - 1] == '\n')
             {

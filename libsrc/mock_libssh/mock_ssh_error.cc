@@ -51,7 +51,7 @@ const char *mock_ssh_get_error(const char *file, const int line, const char *fun
         printf("  > ssh_get_error %p", error);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            printf(" from %s:%d -> %s\n", file, line, mock_ret ? mock_ret : "(null)");
+            printf(" from %s:%d -> %s\n", file, line, mock_ret != nullptr ? mock_ret : "(null)");
         }
         else
         {

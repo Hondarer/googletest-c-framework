@@ -17,7 +17,7 @@ errno_t delegate_fake_gmtime_s(const char *file, const int line, const char *fun
     (void)func;
     (void)timep;
 
-    if (utc_tm == NULL)
+    if (utc_tm == nullptr)
     {
         return EINVAL;
     }
@@ -56,7 +56,7 @@ errno_t mock_gmtime_s(const char *file, const int line, const char *func, struct
         printf("  > gmtime_s 0x%p, 0x%p", (void *)utc_tm, (const void *)timep);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret != 0 || utc_tm == NULL)
+            if (mock_ret != 0 || utc_tm == nullptr)
             {
                 printf(" from %s:%d -> %d\n", file, line, (int)mock_ret);
             }

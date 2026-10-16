@@ -27,7 +27,7 @@ int mock_snprintf(const char *file, const int line, const char *func, char *s, c
     str = allocvprintf(format, args);
     va_end(args);
 
-    if (str == NULL)
+    if (str == nullptr)
     {
         mock_ret = -1;
     }
@@ -40,7 +40,7 @@ int mock_snprintf(const char *file, const int line, const char *func, char *s, c
         mock_ret = delegate_real_snprintf(file, line, func, s, n, str);
     }
 
-    if (getTraceLevel() > TRACE_NONE && str != NULL)
+    if (getTraceLevel() > TRACE_NONE && str != nullptr)
     {
         printf("  > snprintf 0x%p, %zu, %s", (void *)s, n, str);
         if (getTraceLevel() >= TRACE_DETAIL)

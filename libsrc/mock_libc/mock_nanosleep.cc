@@ -15,7 +15,7 @@ int delegate_fake_nanosleep(const char *file, const int line, const char *func, 
     (void)func;
     (void)req;
 
-    if (rem != NULL)
+    if (rem != nullptr)
     {
         memset(rem, 0, sizeof(*rem));
     }

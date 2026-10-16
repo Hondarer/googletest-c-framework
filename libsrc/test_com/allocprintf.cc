@@ -20,22 +20,22 @@ char *testing::allocvprintf(const char *fmt, va_list args)
     char *str;
 
     va_copy(args_copy, args);
-    len = vsnprintf(NULL, 0, fmt, args_copy);
+    len = vsnprintf(nullptr, 0, fmt, args_copy);
     va_end(args_copy);
 
     // vsnprintf は符号化エラー時に負値を返す。負値のまま size_t へ変換すると
     // malloc へ巨大値が渡るため、ここで弾いてから変換する。
     if (len < 0)
     {
-        return NULL;
+        return nullptr;
     }
 
     size = (size_t)len + 1; // +1 for null terminator
 
     str = (char *)malloc(size);
-    if (str == NULL)
+    if (str == nullptr)
     {
-        return NULL;
+        return nullptr;
     }
 
     va_copy(args_copy, args);

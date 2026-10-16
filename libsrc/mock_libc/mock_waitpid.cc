@@ -30,7 +30,7 @@ pid_t mock_waitpid(const char *file, const int line, const char *func, pid_t pid
 
     if (getTraceLevel() > TRACE_NONE)
     {
-        if (stat_loc == NULL)
+        if (stat_loc == nullptr)
         {
             printf("  > waitpid %d, NULL, %d", pid, options);
         }

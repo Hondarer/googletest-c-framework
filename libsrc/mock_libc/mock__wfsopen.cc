@@ -49,7 +49,7 @@ FILE *mock__wfsopen(const char *file, const int line, const char *func, const wc
         printf("  > _wfsopen %ls, %ls, %d", filename, modes, shflag);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret == NULL)
+            if (mock_ret == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

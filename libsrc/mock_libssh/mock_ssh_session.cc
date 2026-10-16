@@ -52,7 +52,7 @@ ssh_session mock_ssh_new(const char *file, const int line, const char *func)
         printf("  > ssh_new");
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (session == NULL)
+            if (session == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }
@@ -80,7 +80,7 @@ void delegate_fake_ssh_free(const char *file, const int line, const char *func, 
     (void)line;
     (void)func;
 
-    if (session != NULL)
+    if (session != nullptr)
     {
         free(session);
     }

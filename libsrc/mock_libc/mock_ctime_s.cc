@@ -17,7 +17,7 @@ errno_t delegate_fake_ctime_s(const char *file, const int line, const char *func
     (void)func;
     (void)timep;
 
-    if (buf == NULL || size < 26)
+    if (buf == nullptr || size < 26)
     {
         return EINVAL;
     }
@@ -54,7 +54,7 @@ errno_t mock_ctime_s(const char *file, const int line, const char *func, char *b
         printf("  > ctime_s 0x%p, %zu, 0x%p", (void *)buf, size, (const void *)timep);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret != 0 || buf == NULL)
+            if (mock_ret != 0 || buf == nullptr)
             {
                 printf(" from %s:%d -> %d\n", file, line, (int)mock_ret);
             }

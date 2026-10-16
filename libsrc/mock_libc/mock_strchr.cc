@@ -31,7 +31,7 @@ char *mock_strchr(const char *file, const int line, const char *func, const char
         printf("  > strchr %s, 0x%02x", s != nullptr ? s : "(null)", c);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret == NULL)
+            if (mock_ret == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

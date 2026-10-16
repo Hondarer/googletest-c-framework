@@ -31,7 +31,7 @@ void *mock_memmove(const char *file, const int line, const char *func, void *des
         printf("  > memmove 0x%p, 0x%p, %zu", dest, src, n);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret == NULL)
+            if (mock_ret == nullptr)
             {
                 printf(" from %s:%d -> NULL\n", file, line);
             }

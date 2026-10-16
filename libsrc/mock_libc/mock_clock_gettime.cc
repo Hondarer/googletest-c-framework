@@ -14,7 +14,7 @@ int delegate_fake_clock_gettime(const char *file, const int line, const char *fu
     (void)func;
     (void)clk_id;
 
-    if (tp == NULL)
+    if (tp == nullptr)
     {
         return -1;
     }
@@ -54,7 +54,7 @@ int mock_clock_gettime(const char *file, const int line, const char *func, clock
         printf("  > clock_gettime %d, 0x%p", (int)clk_id, (void *)tp);
         if (getTraceLevel() >= TRACE_DETAIL)
         {
-            if (mock_ret != 0 || tp == NULL)
+            if (mock_ret != 0 || tp == nullptr)
             {
                 printf(" from %s:%d -> %d\n", file, line, mock_ret);
             }
