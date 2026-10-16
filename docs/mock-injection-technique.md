@@ -204,11 +204,11 @@ FILE *delegate_real_fopen(const char *file, const int line, const char *func,
 #ifndef _WIN32
     return fopen(filename, modes);
 #else
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     errno_t err = fopen_s(&fp, filename, modes);
     if (err != 0)
     {
-        return NULL;
+        return nullptr;
     }
     return fp;
 #endif
@@ -376,7 +376,7 @@ FILE *delegate_real_fopen(const char *file, const int line, const char *func,
 #ifndef _WIN32
     return fopen(filename, modes);
 #else
-    FILE *fp = NULL;
+    FILE *fp = nullptr;
     fopen_s(&fp, filename, modes);
     return fp;
 #endif

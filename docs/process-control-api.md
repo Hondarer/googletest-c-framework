@@ -147,6 +147,22 @@ stdout の読み取りはバックグラウンド スレッドが常時行って
 
 Linux / Windows いずれも reader_thread がリアルタイムで収集するため、`waitForOutput()` 完了後にはその時点までの全ログが利用可能です。
 
+#### tryWaitForOutput
+
+```cpp
+extern bool tryWaitForOutput(AsyncProcessHandle& handle,
+                             const string& pattern,
+                             int timeout_ms = 5000,
+                             string* output = nullptr)
+```
+
+`waitForOutput()` と同じく、stdout に指定パターン (部分一致) が出現するまで待機します。  
+パターンが出現した場合は `true` を返し、`output` が `nullptr` 以外であれば、パターン出現位置までの stdout を格納します。  
+タイムアウトした場合、プロセスが予期せず終了した場合、ハンドルが空の場合は、例外を送出せずに `false` を返します。
+
+テストで待機の成否を判定する場合は、`tryWaitForOutput()` の戻り値を判定します。  
+`ASSERT_NO_THROW(waitForOutput(...))` は呼び出しと判定が 1 つのマクロに入るため、Act フェーズで呼び出しと判定を分けられません ([テスト フェーズ](about-test-phase.md) の「Act の中の判定」)。
+
 > [!IMPORTANT]
 > **テスト対象側の要件**: stdout / stderr はパイプ経由で受け渡されるため、
 > テストが待機するパターンを出力した直後にテスト対象側で `fflush(stdout)` を呼び出す必要があります。
@@ -250,16 +266,18 @@ AsyncProcessHandle recv_h = startProcessAsync(recv_path, {config_path, "10"}, op
 ASSERT_NE(nullptr, recv_h);
 
 // リスニング開始を確認してから次のステップへ
-ASSERT_NO_THROW(waitForOutput(recv_h, "受信待機中", 5000));
+ASSERT_TRUE(tryWaitForOutput(recv_h, "受信待機中", 5000));
 
 // 別プロセスを起動して対話する
 AsyncProcessHandle send_h = startProcessAsync(send_path, {config_path, "10"}, opts);
-ASSERT_NO_THROW(waitForOutput(send_h, "メッセージ>", 5000));
+ASSERT_TRUE(tryWaitForOutput(send_h, "メッセージ>", 5000));
 
 ASSERT_TRUE(writeLineStdin(send_h, "Hello Porter"));
-ASSERT_NO_THROW(waitForOutput(send_h, "圧縮送信しますか", 3000));
+bool actual_ret_wait_compress = tryWaitForOutput(send_h, "圧縮送信しますか", 3000);
+ASSERT_TRUE(actual_ret_wait_compress);
 ASSERT_TRUE(writeLineStdin(send_h, "N"));
-ASSERT_NO_THROW(waitForOutput(send_h, "続けて送信しますか", 3000));
+bool actual_ret_wait_continue = tryWaitForOutput(send_h, "続けて送信しますか", 3000);
+ASSERT_TRUE(actual_ret_wait_continue);
 ASSERT_TRUE(writeLineStdin(send_h, "N"));
 EXPECT_EQ(0, waitForExit(send_h, 5000));
 
@@ -296,7 +314,7 @@ opts.preload_lib = ws + "/framework/testfw/lib/" TOSTRING(TARGET_ARCH) "/libmock
 /* Windows は capture_debug_output が既定 true のため追加設定不要 */
 
 AsyncProcessHandle h = startProcessAsync(binary, args, opts);
-ASSERT_NO_THROW(waitForOutput(h, "起動完了", 5000));
+ASSERT_TRUE(tryWaitForOutput(h, "起動完了", 5000));
 
 interruptProcess(h);
 waitForExit(h, 3000); // ← Linux はここでログが一括収集される

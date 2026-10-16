@@ -43,7 +43,7 @@ MyClass myObject;
 
 // モック オブジェクトの作成
 MockDependency mockDependency;
-ON_CALL(mockDependency, SomeMethod()).WillByDefault(Return(false)); // [状態] - SomeMethod が呼び出された際に false を返すようにモックを設定する。
+ON_CALL(mockDependency, SomeMethod()).WillByDefault(Return(false)); // [状態] - SomeMethod() が呼び出された際に false を返すようにモックを設定する。
 ```
 
 ### 資源確認 [状態確認]
@@ -109,6 +109,7 @@ Table: Pre-Assert フェーズの検証タグ一覧
 | 指定 | 判定の書き方 |
 | --- | --- |
 | `.Times(0)` | f() が呼び出されないこと。 |
+| `.Times(0)` で引数条件あり | X を指定した f() の呼び出しがないこと。 |
 | `.Times(n)`、または `WillOnce` が n 個で `WillRepeatedly` なし | f() が n 回呼び出されること。 |
 | `.Times(AtLeast(n))`、または `WillOnce` が n 個で `WillRepeatedly` あり | f() が n 回以上呼び出されること。 |
 | `.Times(AnyNumber())`、または `WillRepeatedly` だけ | f() が任意の回数呼び出されること。 |
@@ -121,12 +122,19 @@ Table: 呼び出し回数の書き方
 | --- | --- |
 | `StrEq(x)` | x と等しい文字列 |
 | `HasSubstr(x)` | x を含む文字列 |
-| `NotNull()` | NULL 以外 |
+| `NotNull()` | nullptr 以外 |
 | `Pointee(x)` | 指す先が x であるポインター |
 
 Table: マッチャーの言い換え
 
 表にないマッチャーも、同じ考え方で判定の意味を日本語で書きます。
+
+引数条件付きの `.Times(0)` は、否定が呼び出しだけにかかるよう、引数条件を呼び出しの修飾として前に置きます。
+
+```cpp
+EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq("/tmp/output.bin"), StrEq("wb"), _))
+    .Times(0); // [Pre-Assert確認_異常系] - "/tmp/output.bin" と等しい文字列、"wb" と等しい文字列を指定した cplat_fopen() の呼び出しがないこと。
+```
 
 ```cpp
 EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq(path), StrEq("rb"), nullptr))
@@ -140,7 +148,42 @@ EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq(path), StrEq("rb"), nullptr))
 // モック メソッドが呼び出されたとき true を返すことを期待
 EXPECT_CALL(mockDependency, SomeMethod())
     .WillOnce(Return(true)); // [Pre-Assert確認_正常系] - SomeMethod() が 1 回呼び出されること。
-                             // [Pre-Assert手順] - SomeMethod にて true を返却する。
+                             // [Pre-Assert手順] - SomeMethod() にて true を返却する。
+```
+
+### 動作を注入しない呼び出しの期待
+
+`WillOnce` / `WillRepeatedly` に `DoDefault()` だけを渡す `EXPECT_CALL` は、動作の指定をやめ、`.Times(n)` で呼び出し回数を書きます。動作を注入しないため、`[Pre-Assert手順]` は書きません。
+
+```cpp
+EXPECT_CALL(mock_stdio, printf(_, _, _, StrEq("3\n")))
+    .Times(1); // [Pre-Assert確認_正常系] - printf() が "3\n" と等しい文字列を指定して 1 回呼び出されること。
+```
+
+`DoDefault()` と別の動作を組み合わせる `EXPECT_CALL` (1 回目は失敗を返し、2 回目は既定の動作など) は、注入する動作を `[Pre-Assert手順]` に書きます。
+
+> [!NOTE]
+> 既定の動作を `[Pre-Assert手順]` に書くと、`ON_CALL` と同じく、注入した値と既定の値が `### 手順` に並び、矛盾して読まれるおそれがあります。`DoDefault()` だけの指定は回数の期待と同じ意味のため、回数で書きます。
+
+### 呼び出しの順序に依存する期待
+
+1 回目の呼び出しでは許し、2 回目の呼び出しでは禁じる期待のように、Act の途中で設定が必要な `EXPECT_CALL` は、[マルチ フェーズ テスト](#マルチ-フェーズ-テスト) に分け、2 回目の Act の前の Pre-Assert に置きます。間の Assert に判定がない場合は、構造コメントだけを置きます。
+
+```cpp
+// Act
+(void)format_job_failed(&actual_matched); // [手順] - 壊れた公開内容で組み立てる。
+
+// Assert
+
+// Pre-Assert_2
+EXPECT_CALL(mock_cplat, cplat_local_lock_try_lock(_))
+    .Times(0); // [Pre-Assert確認_異常系] - cplat_local_lock_try_lock() が呼び出されないこと。(同じ公開内容の取り込みを試みないことの確認)
+
+// Act_2
+(void)format_job_failed(&actual_matched); // [手順] - もう一度組み立てる。
+
+// Assert_2
+EXPECT_NE(0, actual_matched); // [確認_異常系] - actual_matched が 0 以外であること。(以前の条件を維持したことの確認)
 ```
 
 ## Act フェーズ [手順]
@@ -159,7 +202,7 @@ EXPECT_CALL(mockDependency, SomeMethod())
 
 ```cpp
 // テスト対象のメソッドを呼び出す
-bool result = myObject.TestedMethod(); // [手順] - TestedMethod を呼び出す。
+bool result = myObject.TestedMethod(); // [手順] - TestedMethod() を呼び出す。
 ```
 
 ### Act の中の判定
@@ -181,7 +224,7 @@ Table: Act フェーズの中の ASSERT の扱い
 
 ```cpp
 // Act
-FILE *out = cplat_fopen(path.c_str(), "wb", NULL);   // [手順] - 書き出し先を開く。
+FILE *out = cplat_fopen(path.c_str(), "wb", nullptr); // [手順] - 書き出し先を開く。
 ASSERT_NE(nullptr, out);                             // [状態確認] - cplat_fopen() の戻り値が nullptr 以外であること。
 size_t wrote_mgmt = fwrite(mgmt, 1, mgmt_size, out); // [手順] - 管理領域を書き出す。
 ```
@@ -209,6 +252,35 @@ Table: Assert フェーズの検証タグ一覧
 Assert フェーズの各 `ASSERT_*` / `EXPECT_*` マクロには、検証内容と一対一に対応する `[確認_正常系]` または `[確認_異常系]` のコメントを付与します。  
 後続の検証を継続できるか確認するための `ASSERT_*` マクロも、テスト結果の確認であるため省略しません。  
 クラッシュしないことを示す場合は、コメントだけで済ませず `SUCCEED()` を記載して確認タグを付けます。
+
+### Assert に置く文
+
+Assert フェーズには、判定と、判定のための値の取り出しや集計だけを置きます。
+
+| 文の種類 | Assert に置けるか | 例 |
+| --- | --- | --- |
+| 判定のマクロ (`EXPECT_*`、`ASSERT_*`、`SUCCEED()`) | 置ける | `EXPECT_EQ(3, verbose);` |
+| 被テスト対象の状態を変えない宣言、代入、ループ、検索 | 置ける | ログから該当の行を探すループ、見つかったことを示すフラグ |
+| 判定だけを行うサブ手順の呼び出し | 置ける | `testing::expectExportNamesMatch(expected, actual);` |
+| 被テスト対象への操作 (`[手順]` を付ける呼び出し、書き込み、状態の変更) | 置けない (Act へ移す) | `memset(buf, 0xAB, 16U);`、`cplat_argparser_handle_parse(parser);` |
+
+Table: Assert フェーズに置ける文
+
+操作の結果を判定し、その後に別の操作を行う場合は、[マルチ フェーズ テスト](#マルチ-フェーズ-テスト) に分けます。
+
+```cpp
+// Act
+buf = (uint8_t *)cplat_malloc(16U); // [手順] - 16 バイトを指定して cplat_malloc() を呼び出す。
+
+// Assert
+ASSERT_NE(nullptr, buf); // [確認_正常系] - cplat_malloc() の戻り値が nullptr 以外であること。
+
+// Act_2
+memset(buf, 0xAB, 16U); // [手順] - 確保した 16 バイト全体に 0xAB を書き込む。
+
+// Assert_2
+EXPECT_EQ(0xAB, buf[0]); // [確認_正常系] - buf[0] が 0xAB であること。
+```
 
 ### 例
 
@@ -246,6 +318,8 @@ EXPECT_EQ(ExpectedState, state); // [確認_正常系] - state が ExpectedState
 - 関数名の後には `()` を付け、引数は書きません。
 - 識別子と値はバッククォートで囲みません。
 - 期待値の文字列リテラルは全文書きます。
+- 期待値や引数条件に含まれるキャストのうち、型をそろえるためだけのものは省いて書きます (例: `static_cast<int>(sizeof(buf))` は「sizeof(buf)」、`(uint8_t)0xAB` は「0xAB」)。値の意味を変えるキャスト (符号の扱いを変える `(uint32_t)-1`、ポインターの同一性を比べる `(void *)` など) は残します。
+- C++ のテスト コードの空判定は `nullptr` と比べ、「nullptr 以外であること。」「nullptr であること。」と書きます。空ポインターの表記の規則は [コーディング規範](../../../app/general/docs/coding-guideline.md) の「空ポインターの表記」に従います。
 
 マクロごとの判定の書き方は次のとおりです。`ASSERT_*` は対応する `EXPECT_*` と同じです。
 
@@ -278,6 +352,15 @@ EXPECT_EQ(CPLAT_OK, actual_ret_added_table); // [確認_正常系] - 追加後�
 EXPECT_EQ(1u, added_table);                  // [確認_正常系] - added_table が 1 であること。(追加でテーブル世代が 0 から 1 増えたことの確認)
 EXPECT_NE(0, actual_after_release);          // [確認_正常系] - actual_after_release が 0 以外であること。(解放後の出力で条件を取り込んだことの確認)
 EXPECT_STREQ("a", buf);                      // [確認_正常系] - buf が "a" であること。(上矢印が無視されたことの確認)
+```
+
+### 状態と手順の説明文の表記
+
+`[状態]`、`[手順]`、`[Pre-Assert手順]` の説明文も、確認タグの説明文と同じく、関数名に引数なしの `()` を付け、識別子をバッククォートで囲みません。
+
+```cpp
+buf = (uint8_t *)cplat_malloc(16U); // [手順] - 16 バイトを指定して cplat_malloc() を呼び出す。
+ON_CALL(mock_cplat, cplat_isatty(_)).WillByDefault(Return(0)); // [状態] - cplat_isatty() の既定動作を設定する。
 ```
 
 ## Cleanup フェーズ
@@ -519,7 +602,7 @@ Linux では `PLATFORM_LINUX` と `__linux__`、Windows では `PLATFORM_WINDOWS
 
 ### 手順
 
-- handle=NULL で sample_close を呼び出す。
+- handle=nullptr で sample_close() を呼び出す。
 
 ### 確認 (異常系:2)
 
@@ -580,7 +663,7 @@ ASSERT_NE(nullptr, buffer); // [状態確認] - buffer が nullptr 以外であ�
 // Pre-Assert
 
 // Act
-int actual_ret = sample_func(buffer); // [手順] - sample_func にバッファーを渡して呼び出す。
+int actual_ret = sample_func(buffer); // [手順] - sample_func() にバッファーを渡して呼び出す。
 
 // Assert
 EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func() の戻り値が SAMPLE_OK であること。

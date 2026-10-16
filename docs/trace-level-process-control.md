@@ -78,6 +78,7 @@ processController は全体で 1 つの機能であり、キーは `processContr
 | `writeStdin` | `"  > writeStdin \"<string>\""` | なし |
 | `writeLineStdin` | `"  > writeLineStdin \"<line>\""` | なし |
 | `waitForOutput` | `"  > waitForOutput \"<pattern>\" timeout=<N>ms"` | 成功: `" -> waitForOutput matched"`、タイムアウト: `" -> waitForOutput timeout"` |
+| `tryWaitForOutput` | `"  > tryWaitForOutput \"<pattern>\" timeout=<N>ms"` | 成功: `" -> tryWaitForOutput matched"`、タイムアウト: `" -> tryWaitForOutput timeout"` |
 | `closeStdin` | `"  > closeStdin"` | なし |
 | `interruptProcess` | `"  > interruptProcess pid=<N>"` | なし |
 | `killProcess` | `"  > killProcess pid=<N>"` | なし |
