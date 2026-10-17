@@ -14,7 +14,7 @@
         #ifndef _OVERRIDE_WS2TCPIP_H
             #define _OVERRIDE_WS2TCPIP_H
 
-            /* 本物を include */
+            /* Windows SDK のヘッダーを include */
             #define _IN_OVERRIDE_WINSOCK_REAL_HEADERS
             #pragma push_macro("_WS2TCPIP_H_")
             #undef _WS2TCPIP_H_

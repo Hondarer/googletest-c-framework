@@ -3,7 +3,7 @@
     #ifndef _OVERRIDE_IO_H
         #define _OVERRIDE_IO_H
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #pragma push_macro("_INC_IO")
         #pragma push_macro("remove")
         #pragma push_macro("rename")

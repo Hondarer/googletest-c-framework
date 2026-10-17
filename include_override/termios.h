@@ -3,7 +3,7 @@
     #ifndef _OVERRIDE_TERMIOS_H
         #define _OVERRIDE_TERMIOS_H
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #include_next <termios.h>
 
         /* モックにすげ替え */

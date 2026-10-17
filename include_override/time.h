@@ -1,7 +1,7 @@
 #ifndef _OVERRIDE_TIME_H
 #define _OVERRIDE_TIME_H
 
-/* 本物を include */
+/* libc のヘッダーを include */
 #ifndef _WIN32
     #include_next <time.h>
 #else // _WIN32

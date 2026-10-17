@@ -3,7 +3,7 @@
     #ifndef _OVERRIDE_SYS_FILE_H
         #define _OVERRIDE_SYS_FILE_H
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #include_next <sys/file.h>
 
         /* モックにすげ替え */

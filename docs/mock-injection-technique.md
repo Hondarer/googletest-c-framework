@@ -9,7 +9,7 @@
 - **非侵襲的なテスト**: テスト対象コードを一切変更せずにテスト可能
 - **標準関数のモック化**: `fopen()`, `printf()`, `calloc()` などの標準関数の動作を制御
 - **デバッグ情報の自動取得**: 呼び出し元のファイル名、行番号、関数名を自動的に記録
-- **実行時の切り替え**: テスト中でも本物の実装とモックを柔軟に切り替え可能
+- **実行時の切り替え**: テスト中でも libc の処理とモックを柔軟に切り替え可能
 
 ## 全体アーキテクチャー
 
@@ -19,7 +19,7 @@
 [テスト対象Cコード]
     ↓ #include <stdio.h>
 [include_override/stdio.h]  ← インクルードパスで優先される
-    ↓ #include_next <stdio.h>  本物をインクルード
+    ↓ #include_next <stdio.h>  libc のヘッダーをインクルード
     ↓ #include <mock_stdio.h>  モック定義をインクルード
     ↓ #define fopen(...) mock_fopen(__FILE__, __LINE__, __func__, ...)
 [mock_stdio.h]  ← マクロ定義とモッククラス定義
@@ -46,9 +46,9 @@ include_override/
     +-- wait.h    # sys/wait.h のインターセプター
 ```
 
-### #include_next による本物のインクルード
+### #include_next による libc のヘッダーのインクルード
 
-`#include_next` ディレクティブを使用して、インクルード パスの次の階層にある本物の標準ライブラリ ヘッダーをインクルードします。
+`#include_next` ディレクティブを使用して、インクルード パスの次の階層にある libc のヘッダーをインクルードします。
 
 **include_override/stdio.h の例:**
 
@@ -56,7 +56,7 @@ include_override/
 #ifndef _OVERRIDE_STDIO_H
 #define _OVERRIDE_STDIO_H
 
-/* 本物を include */
+/* libc のヘッダーを include */
 #ifndef _WIN32
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wredundant-decls"
@@ -79,7 +79,7 @@ include_override/
 
 **ポイント:**
 
-- Linux/Unix: `#include_next` で本物の `<stdio.h>` をインクルード
+- Linux/Unix: `#include_next` で libc の `<stdio.h>` をインクルード
 - Windows: UCRT(Universal C Runtime) から直接インクルード
 - 警告抑制のための `#pragma` ディレクティブを使用
 
@@ -158,7 +158,7 @@ extern Mock_stdio *_mock_stdio;
 各モック関数には、次の 3 つの実装が用意されています:
 
 1. **mock_xxx**: エントリ ポイント (グローバル モック インスタンスの有無で分岐)
-2. **delegate_real_xxx**: 本物の実装を呼び出す
+2. **delegate_real_xxx**: libc の処理を呼び出す
 3. **delegate_fake_xxx**: フェイク実装 (簡易的なスタブ)
 
 **libsrc/mock_libc/mock_fopen.cc の例:**
@@ -176,7 +176,7 @@ FILE *mock_fopen(const char *file, const int line, const char *func,
     }
     else
     {
-        // モックが無効な場合: 本物の実装を呼び出す
+        // モックが無効な場合: libc の処理を呼び出す
         fp = delegate_real_fopen(file, line, func, filename, modes);
     }
 
@@ -200,7 +200,7 @@ FILE *mock_fopen(const char *file, const int line, const char *func,
 FILE *delegate_real_fopen(const char *file, const int line, const char *func,
                           const char *filename, const char *modes)
 {
-    // 本物の fopen を呼び出す
+    // libc の fopen() を呼び出す
 #ifndef _WIN32
     return fopen(filename, modes);
 #else
@@ -238,7 +238,7 @@ NiceMock<Mock_stdio> mock_stdio;
 // → _mock_stdio != nullptr のため、Google Mock が呼び出される
 
 // テスト終了後
-// → _mock_stdio == nullptr のため、本物の実装が呼び出される
+// → _mock_stdio == nullptr のため、libc の処理が呼び出される
 ```
 
 ## ビルド設定
@@ -267,7 +267,7 @@ LDLIBS += -lmock_libc
 #ifndef _OVERRIDE_STDIO_H
 #define _OVERRIDE_STDIO_H
 
-/* 本物を include */
+/* libc のヘッダーを include */
 #ifndef _WIN32
 #include_next <stdio.h>
 #else
@@ -445,8 +445,8 @@ TEST_F(MyTest, TestFopenSuccess)
 
 ### 柔軟性
 
-- テスト中でも本物の実装とモックを切り替え可能
-- 一部の関数だけモック化、他は本物を使用、といった柔軟な設定が可能
+- テスト中でも libc の処理とモックを切り替え可能
+- 一部の関数だけモック化、他は libc の処理を使用、といった柔軟な設定が可能
 
 ### Google Mock との統合
 
@@ -507,11 +507,11 @@ void (*fp)(const char *) = printf;
 本リポジトリで採用している標準ライブラリへのモック注入テクニックは、次の技術を組み合わせて実現されています:
 
 1. **ヘッダー インターセプション**: インクルード パスの優先順位を利用
-2. **#include_next**: 本物のヘッダーをインクルード
+2. **#include_next**: libc のヘッダーをインクルード
 3. **マクロ置き換え**: 標準関数をモック関数に自動変換
 4. **デバッグ情報の自動付加**: `__FILE__`, `__LINE__`, `__func__` の活用
 5. **条件付きコンパイル**: C コードと C++テスト コードの使い分け
-6. **Delegate パターン**: 本物とフェイクの実装を動的に切り替え
+6. **Delegate パターン**: libc の処理とフェイクの実装を動的に切り替え
 7. **グローバル インスタンス**: モックの有効/無効を実行時制御
 
 このテクニックにより、既存の C コードを一切変更することなく、標準ライブラリ関数の動作を完全に制御できます。これは、レガシ コードのテスタビリティを劇的に向上させる強力な手法です。

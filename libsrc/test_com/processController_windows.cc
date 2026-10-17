@@ -855,7 +855,7 @@ AsyncProcessHandle startProcessAsync(const string &path, const vector<string> &a
 
 void interruptProcess(AsyncProcessHandle &handle)
 {
-    if (!handle || handle->proc_handle == nullptr)
+    if (handle == nullptr || handle->proc_handle == nullptr)
     {
         return;
     }
@@ -870,7 +870,7 @@ void interruptProcess(AsyncProcessHandle &handle)
 
 void killProcess(AsyncProcessHandle &handle)
 {
-    if (!handle || handle->proc_handle == nullptr)
+    if (handle == nullptr || handle->proc_handle == nullptr)
     {
         return;
     }
@@ -885,7 +885,7 @@ void killProcess(AsyncProcessHandle &handle)
 
 bool writeStdinImpl(AsyncProcessHandle &handle, const string &data)
 {
-    if (!handle || handle->stdin_h == nullptr)
+    if (handle == nullptr || handle->stdin_h == nullptr)
     {
         return false;
     }
@@ -898,7 +898,7 @@ bool writeStdinImpl(AsyncProcessHandle &handle, const string &data)
 
 void closeStdin(AsyncProcessHandle &handle)
 {
-    if (!handle || handle->stdin_h == nullptr)
+    if (handle == nullptr || handle->stdin_h == nullptr)
     {
         return;
     }
@@ -914,7 +914,7 @@ void closeStdin(AsyncProcessHandle &handle)
 
 int waitForExit(AsyncProcessHandle &handle, int timeout_ms)
 {
-    if (!handle)
+    if (handle == nullptr)
     {
         return -1;
     }

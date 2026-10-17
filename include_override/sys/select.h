@@ -3,7 +3,7 @@
     #ifndef _OVERRIDE_SYS_SELECT_H
         #define _OVERRIDE_SYS_SELECT_H
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #include_next <sys/select.h>
 
         /* モックにすげ替え */

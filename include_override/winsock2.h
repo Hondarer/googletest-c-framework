@@ -14,7 +14,7 @@
         #ifndef _OVERRIDE_WINSOCK2_H
             #define _OVERRIDE_WINSOCK2_H
 
-            /* 本物を include */
+            /* Windows SDK のヘッダーを include */
             #define _IN_OVERRIDE_WINSOCK_REAL_HEADERS
             #pragma push_macro("_WINSOCK2API_")
             #undef _WINSOCK2API_

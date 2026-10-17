@@ -202,7 +202,7 @@ inline ProcessResult startProcess(const string &binary, const vector<string> &ar
                                   int timeout_ms = 30000)
 {
     auto h = startProcessAsync(binary, args, opts);
-    if (!h)
+    if (h == nullptr)
     {
         ProcessResult res;
         res.exit_code = -1;

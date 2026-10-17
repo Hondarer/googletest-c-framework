@@ -6,7 +6,7 @@
         /* signal.h は kill() を宣言するため、kill の mock macro より先に読み込む。 */
         #include_next <signal.h>
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #include_next <unistd.h>
 
         /* モックにすげ替え */

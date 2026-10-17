@@ -3,7 +3,7 @@
 
 #ifndef _WIN32
 
-    /* override 経由の場合、本物のヘッダーは include_override 側で取り込み済みである */
+    /* override 経由の場合、libc のヘッダーは include_override 側で取り込み済みである */
     #ifndef _IN_OVERRIDE_HEADER_DLFCN_H
         #include <dlfcn.h>
     #endif

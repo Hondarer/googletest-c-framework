@@ -1,7 +1,7 @@
 #ifndef _OVERRIDE_STDIO_H
 #define _OVERRIDE_STDIO_H
 
-/* 本物を include */
+/* libc のヘッダーを include */
 #ifndef _WIN32
     #pragma GCC diagnostic push
     #pragma GCC diagnostic ignored "-Wredundant-decls"

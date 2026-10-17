@@ -19,7 +19,7 @@ bool writeStdin(AsyncProcessHandle &handle, const string &data)
 {
     if (_getTraceLevel("processController") > TRACE_NONE)
     {
-        int pid = handle ? (int)handle->pid : -1;
+        int pid = (handle != nullptr) ? (int)handle->pid : -1;
         printf("  > writeStdin pid=%d \"%s\"\n", pid, data.c_str());
     }
     return writeStdinImpl(handle, data);
@@ -31,7 +31,7 @@ bool writeLineStdin(AsyncProcessHandle &handle, const string &line)
 {
     if (_getTraceLevel("processController") > TRACE_NONE)
     {
-        int pid = handle ? (int)handle->pid : -1;
+        int pid = (handle != nullptr) ? (int)handle->pid : -1;
         printf("  > writeLineStdin pid=%d \"%s\"\n", pid, line.c_str());
     }
     return writeStdinImpl(handle, line + "\n");
@@ -113,7 +113,7 @@ bool tryWaitForOutput(AsyncProcessHandle &handle, const string &pattern, int tim
 
 string getStdout(AsyncProcessHandle &handle)
 {
-    if (!handle)
+    if (handle == nullptr)
     {
         return {};
     }
@@ -125,7 +125,7 @@ string getStdout(AsyncProcessHandle &handle)
 
 string getStderr(AsyncProcessHandle &handle)
 {
-    if (!handle)
+    if (handle == nullptr)
     {
         return {};
     }
@@ -137,7 +137,7 @@ string getStderr(AsyncProcessHandle &handle)
 
 size_t getDebugLogCount(AsyncProcessHandle &handle)
 {
-    if (!handle)
+    if (handle == nullptr)
     {
         return 0;
     }
@@ -149,7 +149,7 @@ size_t getDebugLogCount(AsyncProcessHandle &handle)
 
 vector<string> getDebugLog(AsyncProcessHandle &handle, size_t from_index)
 {
-    if (!handle)
+    if (handle == nullptr)
     {
         return {};
     }

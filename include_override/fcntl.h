@@ -3,7 +3,7 @@
 
 #ifdef _WIN32
 
-    /* 本物を include */
+    /* libc のヘッダーを include */
     #pragma push_macro("_INC_FCNTL")
     #undef _INC_FCNTL
     #include <../ucrt/fcntl.h>

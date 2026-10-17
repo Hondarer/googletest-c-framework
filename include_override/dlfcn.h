@@ -3,7 +3,7 @@
     #ifndef _OVERRIDE_DLFCN_H
         #define _OVERRIDE_DLFCN_H
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #include_next <dlfcn.h>
 
         /* モックにすげ替え */

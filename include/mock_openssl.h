@@ -1,7 +1,7 @@
 #ifndef _MOCK_OPENSSL_H
 #define _MOCK_OPENSSL_H
 
-/* override 経由の場合、本物のヘッダーは include_override 側で取り込み済みである。
+/* override 経由の場合、OpenSSL のヘッダーは include_override 側で取り込み済みである。
  * ここで再取り込みすると、もう一方の override ヘッダーが
  * _IN_OVERRIDE_HEADER_OPENSSL_H を #undef して差し替えが無効になる。 */
 #ifndef _IN_OVERRIDE_HEADER_OPENSSL_H

@@ -7,13 +7,23 @@ mock 関数を追加するときの共通ルールを示します。
 - mock
     - ここではテスト ダブル全般を指す総称として扱います。
 - override ヘッダー
-    - 本物のヘッダーを読み込んだ後に、関数呼び出しを mock へ差し替えるためのヘッダーです。
+    - 差し替え前のヘッダーを読み込んだ後に、関数呼び出しを mock へ差し替えるためのヘッダーです。
     - 置換マクロが注入されるのは、ベース名が `TEST_SRCS` に一致するソース (makefw の `makesrc_c_cpp.mk` が `CFLAGS_TEST` / `CXXFLAGS_TEST` + `-D_IN_TEST_SRC` でコンパイルするテスト対象) だけです。テストの `.cc`、mock ライブラリ、`ADD_SRCS` には適用されません。
     - このため `read` / `write` / `close` のような一般名の CRT 関数も、C++ テスト コードとの名前衝突を心配せずにマクロで mock 化できます。
 - Mock クラス
     - Google Mock の `MOCK_METHOD` を並べたクラスです。テスト中の振る舞いはここで定義します。
 - mock 関数本体
     - 置換マクロの着地点になる関数です。グローバル ポインター経由で Mock クラスへ委譲します。
+- 差し替え前の処理、ヘッダー、API
+    - mock が委譲する元の処理と、override ヘッダーが読み込む元のヘッダーや API です。「本物」や「実際の処理」とは呼ばず、指す対象に応じて次のように呼びます。
+
+| 対象 | 製品コード (`prod`) | libc、OpenSSL などのライブラリ | 特定のライブラリに限らない説明 |
+| --- | --- | --- | --- |
+| 委譲先の処理 | 製品 (prod) の処理 | libc の処理、OpenSSL の処理 | 差し替え前の処理 |
+| ヘッダー | 製品 (prod) のヘッダー | libc のヘッダー、OpenSSL のヘッダー | 差し替え前のヘッダー |
+| API | 製品 (prod) の API | libc の API、OpenSSL の API | 差し替え前の API |
+
+Table: 委譲先と差し替え前のヘッダーの呼び方
 
 ## 流れ
 
@@ -24,7 +34,7 @@ mock 関数を追加するときの共通ルールを示します。
 ## 命名規則
 
 - mock ヘッダー: `mock_<module>.h` または `mock_<lib>.h`
-- override ヘッダー: 本物と同じヘッダー名
+- override ヘッダー: 差し替え前のヘッダーと同じヘッダー名
 - 置換先関数名: 対象ライブラリの既存パターンに従います
 - 既定処理: `delegate_real_<func>` / `delegate_fake_<func>` など
 - グローバル ポインター: `_mock_<lib>`
@@ -102,7 +112,7 @@ int actual_ret_read = sample_read(...); // [手順]
 
 対象外は次のとおりです。
 
-- 本物 API の出力引数名 (`gmtime_r` の `struct tm *result` など)
+- 差し替え前の API の出力引数名 (`gmtime_r` の `struct tm *result` など)
 - 生産コードの結果コード変数 (規範本則の `ret` / `result`)
 
 ## Mock クラスの追加
@@ -209,7 +219,7 @@ real delegate が同じオブジェクトを直接参照する構成では、追
 ### 新設した override ヘッダーは既存の依存ファイルに反映されない
 
 `.d` ファイルには、その時点で実際に取り込まれたヘッダーのパスが記録されます。  
-`include_override/` へ新しいヘッダーを追加しても、既存の `.d` には本物のヘッダー (`/usr/include/...` など) しか記録されていないため、対象のソースは再コンパイルされません。
+`include_override/` へ新しいヘッダーを追加しても、既存の `.d` には差し替え前のヘッダー (`/usr/include/...` など) しか記録されていないため、対象のソースは再コンパイルされません。
 
 この状態ではテストは成功しますが、置換が効かないまま古いオブジェクトが使われ、狙った分岐に到達しません。override ヘッダーを新設したときは、影響範囲の `obj/` を削除してから再ビルドしてください。
 
@@ -221,10 +231,10 @@ real delegate が同じオブジェクトを直接参照する構成では、追
 
 `openssl/evp.h` と `openssl/rand.h` のように、複数の override ヘッダーが同じモック ヘッダーを参照する構成では、`_IN_OVERRIDE_HEADER_*` フラグの扱いに注意が必要です。
 
-モック ヘッダーの先頭で本物のヘッダーを無条件に取り込むと、もう一方の override ヘッダーが同じフラグを `#undef` して、置換マクロが定義されないまま処理が進みます。
+モック ヘッダーの先頭で OpenSSL のヘッダーを無条件に取り込むと、もう一方の override ヘッダーが同じフラグを `#undef` して、置換マクロが定義されないまま処理が進みます。
 
 ```c
-/* override 経由の場合、本物のヘッダーは include_override 側で取り込み済みである */
+/* override 経由の場合、OpenSSL のヘッダーは include_override 側で取り込み済みである */
 #ifndef _IN_OVERRIDE_HEADER_OPENSSL_H
     #include <openssl/evp.h>
     #include <openssl/rand.h>

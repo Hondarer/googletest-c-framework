@@ -24,7 +24,7 @@
             #include <../um/ws2tcpip.h>
             #undef _IN_OVERRIDE_WINSOCK_REAL_HEADERS
 
-            /* 本物を include */
+            /* Windows SDK のヘッダーを include */
             #pragma push_macro("_WINDOWS_")
             #undef _WINDOWS_
             #include <../um/windows.h>

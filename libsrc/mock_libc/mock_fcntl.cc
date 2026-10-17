@@ -22,7 +22,7 @@ Mock_fcntl::~Mock_fcntl()
 
 /* 追加引数がポインターであるコマンドを判定する。
    fcntl は追加引数を int で読むコマンドとポインターで読むコマンドが混在するため、
-   本物へ委譲するときに正しい型で渡し分ける必要がある。
+   libc の処理へ委譲するときに正しい型で渡し分ける必要がある。
    see: https://pubs.opengroup.org/onlinepubs/9699919799/functions/fcntl.html */
 static bool takes_pointer_argument(int cmd)
 {

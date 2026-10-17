@@ -3,7 +3,7 @@
     #ifndef _OVERRIDE_SYS_WAIT_H
         #define _OVERRIDE_SYS_WAIT_H
 
-        /* 本物を include */
+        /* libc のヘッダーを include */
         #include_next <sys/wait.h>
 
         /* モックにすげ替え */

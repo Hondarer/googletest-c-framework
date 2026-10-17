@@ -1,7 +1,7 @@
 #ifndef _OVERRIDE_SYS_STAT_H
 #define _OVERRIDE_SYS_STAT_H
 
-/* 本物を include */
+/* libc のヘッダーを include */
 #ifndef _WIN32
     #include_next <sys/stat.h>
 #else // _WIN32

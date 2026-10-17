@@ -1,7 +1,7 @@
 #ifndef _OVERRIDE_LIBSSH_LIBSSH_H
 #define _OVERRIDE_LIBSSH_LIBSSH_H
 
-/* 本物を include (libssh がインストールされている場合) */
+/* libssh のヘッダーを include (libssh がインストールされている場合) */
 #ifdef USE_REAL_LIBSSH
     #ifndef _WIN32
         #pragma GCC diagnostic push

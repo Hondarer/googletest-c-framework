@@ -29,7 +29,7 @@
 
 ```cpp
 ON_CALL(mock_sys_file, flock(_, _, _, _, _))
-    .WillByDefault(Return(0)); // [状態] - flock が呼び出された際に 0 を返すようにモックを設定する。
+    .WillByDefault(Return(0)); // [状態] - flock() から 0 を返すように既定動作を設定する。
 ```
 
 `ON_CALL` に `[状態確認]` や `[Pre-Assert確認_*]` / `[Pre-Assert手順]` は使いません。`[状態確認]` は現在の値を ASSERT/EXPECT で確かめるためのタグです。既定動作を `[Pre-Assert手順]` に書くと、Act 用の `WillOnce` と同じ `### 手順` に並び、既定値と注入値が矛盾して解釈されるおそれがあります。
@@ -43,7 +43,7 @@ MyClass myObject;
 
 // モック オブジェクトの作成
 MockDependency mockDependency;
-ON_CALL(mockDependency, SomeMethod()).WillByDefault(Return(false)); // [状態] - SomeMethod() が呼び出された際に false を返すようにモックを設定する。
+ON_CALL(mockDependency, SomeMethod()).WillByDefault(Return(false)); // [状態] - SomeMethod() から false を返すように既定動作を設定する。
 ```
 
 ### 資源確認 [状態確認]
@@ -70,7 +70,7 @@ ASSERT_NE(nullptr, buffer); // [状態確認] - buffer が nullptr 以外であ�
 1 行の `ASSERT_*` / `EXPECT_*` が準備と確認を兼ねるときは、`EXPECT_CALL` に `[Pre-Assert確認_*]` と `[Pre-Assert手順]` を並べるのと同じく、`[状態]` と `[状態確認]` の両方を付けます。`[状態確認]` だけでは、何を用意したかが `### 状態` に残りません。
 
 ```cpp
-ASSERT_EQ(0, pipe(pipe_fds)); // [状態] - pipe を生成する。
+ASSERT_EQ(0, pipe(pipe_fds)); // [状態] - パイプを生成する。
                               // [状態確認] - pipe() の戻り値が 0 であること。
 ```
 
@@ -139,7 +139,7 @@ EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq("/tmp/output.bin"), StrEq("wb"), _))
 ```cpp
 EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq(path), StrEq("rb"), nullptr))
     .WillOnce(Return(file_)); // [Pre-Assert確認_正常系] - cplat_fopen() が path と等しい文字列、"rb" と等しい文字列、nullptr を指定して 1 回呼び出されること。
-                              // [Pre-Assert手順] - 設定ファイルを開くハンドルを返す。
+                              // [Pre-Assert手順] - cplat_fopen() から設定ファイルを開くハンドルを返す。
 ```
 
 ### 例
@@ -148,7 +148,7 @@ EXPECT_CALL(mock_cplat_, cplat_fopen(StrEq(path), StrEq("rb"), nullptr))
 // モック メソッドが呼び出されたとき true を返すことを期待
 EXPECT_CALL(mockDependency, SomeMethod())
     .WillOnce(Return(true)); // [Pre-Assert確認_正常系] - SomeMethod() が 1 回呼び出されること。
-                             // [Pre-Assert手順] - SomeMethod() にて true を返却する。
+                             // [Pre-Assert手順] - SomeMethod() から true を返す。
 ```
 
 ### 動作を注入しない呼び出しの期待
@@ -314,7 +314,7 @@ EXPECT_EQ(ExpectedState, state); // [確認_正常系] - state が ExpectedState
 - メソッドの戻り値は、オブジェクト名を含めて書きます (例: 「results.size() の戻り値」)。
 - テスト内のヘルパー関数を通して呼ぶ場合は、テストが呼ぶヘルパー関数の名前を書きます。
 - 関数の戻り値以外 (出力引数、ループで作った変数、構造体のメンバーなど) は、変数名や式をそのまま書きます。
-- 同じ関数を時点や入力を変えて呼び分けている場合は、その条件を主語の前に置きます (例: 「追加後の …」「NULL の空入力に対する …」)。判定の対象を特定する引数 (探す文字列など) も、主語の前に置きます (例: 「"キューの長さは 7 です。" を探した captured.find() の戻り値が …」)。
+- 同じ関数を時点や入力を変えて呼び分けている場合は、その条件を主語の前に置きます (例: 「追加後の …」「nullptr の空入力に対する …」)。判定の対象を特定する引数 (探す文字列など) も、主語の前に置きます (例: 「"キューの長さは 7 です。" を探した captured.find() の戻り値が …」)。
 - 関数名の後には `()` を付け、引数は書きません。
 - 識別子と値はバッククォートで囲みません。
 - 期待値の文字列リテラルは全文書きます。
@@ -356,12 +356,106 @@ EXPECT_STREQ("a", buf);                      // [確認_正常系] - buf が "a"
 
 ### 状態と手順の説明文の表記
 
-`[状態]`、`[手順]`、`[Pre-Assert手順]` の説明文も、確認タグの説明文と同じく、関数名に引数なしの `()` を付け、識別子をバッククォートで囲みません。
+#### 共通原則
+
+`[状態]`、`[手順]`、`[Pre-Assert手順]` の説明文は、次の原則に従います。文型を定める 4 種類 (注入、関数の呼び出し、既定動作、待機) 以外の説明文 (データの用意、値の書き込み、状態の変更など) は、この原則だけに従います。
+
+- 文末を動詞の終止形 (「〜する。」) で終えます。
+- 操作の対象を書きます。
+- 関数名には、確認タグの説明文と同じく引数なしの `()` を付け、識別子をバッククォートで囲みません。
+- 関数名は、コードで実際に呼んでいる関数の名前を書きます。関数名を動詞として使いません (「push() する」とは書きません)。
+
+`[状態]` は、テストの開始時点で用意されている状態を書きます。関数を呼び出す `[状態]` にも、[関数の呼び出し](#関数の呼び出し-手順) の文型は適用しません。
 
 ```cpp
-buf = (uint8_t *)cplat_malloc(16U); // [手順] - 16 バイトを指定して cplat_malloc() を呼び出す。
-ON_CALL(mock_cplat, cplat_isatty(_)).WillByDefault(Return(0)); // [状態] - cplat_isatty() の既定動作を設定する。
+char buf[32];                     // [状態] - 出力バッファーを用意する。
+ASSERT_EQ(0, compile("^b", &re)); // [状態] - パターン "^b" をコンパイルしておく。
 ```
+
+#### 注入 ([Pre-Assert手順])
+
+`[Pre-Assert手順]` は、動作を注入する関数の名前を必ず書き、「f() から」で始めます。
+
+| 注入する動作 | 文型 | 例 |
+| --- | --- | --- |
+| 戻り値を返す | f() から X を返す。 | cplat_malloc() から nullptr を返す。 |
+| 呼び出しごとに戻り値を変える | f() から 1 回目は X、2 回目は Y を返す。 | cplat_fgets() から 1 回目は "first"、2 回目は "second" を返す。 |
+| errno や出力引数を設定して戻り値を返す | f() から、〜を設定して X を返す。 | send() から、errno に EPIPE を設定して -1 を返す。 |
+| 何もせずに戻る (戻り値なし) | f() から戻る。 | cplat_console_init() から戻る。 |
+| 動作を伴って戻る (戻り値なし) | f() から、〜して戻る。 | freeaddrinfo() から、渡された解決結果を確かめて戻る。 |
+| 元の処理へ委譲する | f() から 1 回目は X を返し、以降は〈委譲先〉へ委譲する。 | cplat_malloc() から 1 回目は nullptr を返し、以降は製品 (prod) の処理へ委譲する。 |
+
+Table: 注入の文型
+
+動詞は「返却する」ではなく「返す」を使います。委譲先は、[モックの作成方法](how-to-mock.md) の「用語」の節の呼び方 (「製品 (prod) の処理」「libc の処理」など) で書きます。
+
+```cpp
+EXPECT_CALL(mock_unistd_, fsync(_, _, _, kFakeFd))
+    .WillOnce(Return(0)); // [Pre-Assert確認_正常系] - fsync() が kFakeFd を指定して 1 回呼び出されること。
+                          // [Pre-Assert手順] - fsync() から 0 を返す。
+```
+
+> [!NOTE]
+> `results.md` の手順節には、`[手順]` と `[Pre-Assert手順]` の説明文だけが並んで出力されます。関数名がないと、どの関数がどの値を返すかを手順節だけでは判別できません。確認タグの「f() の戻り値」と同じく、関数を明記します。
+
+#### 関数の呼び出し ([手順])
+
+文の主な操作が関数の呼び出しである `[手順]` (戻り値を変数で受ける文を含む) は、文末を「f() を呼び出す。」とし、テストの観点となる引数や状態を「〜を指定して」「〜の状態で」の形で前に置きます。引数をすべて列挙する必要はありません。
+
+```cpp
+int result = cplat_tracer_write_at(handle, CPLAT_TRACE_LEVEL_INFO, nullptr,
+                                   "test message"); // [手順] - INFO レベルと "test message" を指定して cplat_tracer_write_at() を呼び出す。
+int actual_ret_push = potr_internal_window_send_push(&win, &pkt); // [手順] - 満杯のウィンドウに 5 件目のパケットを指定して potr_internal_window_send_push() を呼び出す。
+```
+
+代入やループなど、関数の呼び出しでない `[手順]` は [共通原則](#共通原則) に従います。
+
+#### 既定動作 ([状態] の ON_CALL)
+
+`ON_CALL` の `[状態]` は、既定動作の内容を「注入」の節の文型で書き、「ように既定動作を設定する。」を続けます。
+
+```cpp
+ON_CALL(mock_cplat, cplat_isatty(_)).WillByDefault(Return(0)); // [状態] - cplat_isatty() から 0 を返すように既定動作を設定する。
+ON_CALL(mock_stdlib_, atexit(_, _, _, _))
+    .WillByDefault(Invoke(delegate_real_atexit)); // [状態] - atexit() から libc の処理へ委譲するように既定動作を設定する。
+```
+
+> [!NOTE]
+> `ON_CALL` は Arrange に置くため状態節に出力され、`[Pre-Assert手順]` の注入値とは別の節に出ます。既定動作の内容を書いても、注入値と並んで矛盾して読まれることはありません。
+
+#### 待機
+
+プロセスの出力や終了を待つ説明文は、関数の呼び出しの文型の例外とし、「〈プロセス〉が〈出力〉を出力するまで待機する。」「〈プロセス〉が終了するまで待機する。」と書きます。
+
+```cpp
+bool actual_ret_wait_hello =
+    tryWaitForOutput(recv_h_, "Hello Porter", 3000); // [手順] - RECIEVER が "Hello Porter" を出力するまで待機する。
+```
+
+> [!NOTE]
+> 待機の関数はテストの進行を合わせる手段で、読み手にとっての要点はどのプロセスの何を待つかです。説明文とコードの対応は、確認タグ (「"Hello Porter" を待つ tryWaitForOutput() の戻り値が true であること。」) で取れます。
+
+#### 説明文の空ポインターの表記
+
+C++ のテスト コードでは、エビデンス タグの説明文 (`[状態]`、`[手順]`、`[Pre-Assert手順]`、確認タグの判定、条件、総合期待) の空ポインターを一律「nullptr」と書きます。C で書かれた製品コードの振る舞いを説明する場合も同じです。
+
+```text
+key に nullptr を指定して cplat_hashtable_get() を呼び出す。
+handle が nullptr であること。(cplat_tracer_dispose() がハンドルを nullptr にしたことの確認)
+```
+
+#### 記号の文字そのもの
+
+説明文で記号の文字そのもの (波括弧など) を指す場合は、二重引用符で囲みます。エスケープ シーケンスは、C の文字列リテラルの形で二重引用符に入れて書きます。
+
+```text
+対を成さない "}" を含む書式を指定して cplat_internal_string_catalog_render_text() を呼び出す。
+dest が "value={ 123 }" であること。("{{" と "}}" が 1 文字の波括弧になったことの確認)
+"\x1B[1~" を指定して test_pinned_prompt_read_key() を呼び出す。
+```
+
+> [!NOTE]
+> `text_style_jp.py` は、コメント中の二重引用符で囲んだ部分を整形の対象から外します。引用符の外にある単独の括弧は、文字そのものか括弧かを機械的に判定できず、括弧の内側の空白を除く整形の対象になります。
 
 ## Cleanup フェーズ
 
@@ -602,7 +696,7 @@ Linux では `PLATFORM_LINUX` と `__linux__`、Windows では `PLATFORM_WINDOWS
 
 ### 手順
 
-- handle=nullptr で sample_close() を呼び出す。
+- handle に nullptr を指定して sample_close() を呼び出す。
 
 ### 確認 (異常系:2)
 
@@ -663,7 +757,7 @@ ASSERT_NE(nullptr, buffer); // [状態確認] - buffer が nullptr 以外であ�
 // Pre-Assert
 
 // Act
-int actual_ret = sample_func(buffer); // [手順] - sample_func() にバッファーを渡して呼び出す。
+int actual_ret = sample_func(buffer); // [手順] - 確保したバッファーを指定して sample_func() を呼び出す。
 
 // Assert
 EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func() の戻り値が SAMPLE_OK であること。
@@ -676,7 +770,7 @@ EXPECT_EQ(SAMPLE_OK, actual_ret); // [確認_正常系] - sample_func() の戻�
 
 ### 手順
 
-- sample_func にバッファーを渡して呼び出す。
+- 確保したバッファーを指定して sample_func() を呼び出す。
 
 ### 確認 (正常系:1)
 

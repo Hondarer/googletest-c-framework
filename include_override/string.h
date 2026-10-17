@@ -1,11 +1,11 @@
 #ifndef _OVERRIDE_STRING_H
 #define _OVERRIDE_STRING_H
 
-/* 本物を include */
+/* libc のヘッダーを include */
 #ifndef _WIN32
     #include_next <string.h>
 #else // _WIN32
-    /* UCRT_INCLUDE_DIR からの相対パスで 本物を include */
+    /* UCRT_INCLUDE_DIR からの相対パスで libc のヘッダーを include */
     #pragma push_macro("_INC_STRING")
     #undef _INC_STRING
     #include <../ucrt/string.h>
