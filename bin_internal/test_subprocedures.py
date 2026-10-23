@@ -258,7 +258,7 @@ class SourceIndex:
             # パラメーター登録コードは表示だけに用いる。
             if language == "c_cpp":
                 masked = "\n".join(code.rstrip("\r\n") for code, _ in parsed)
-                for match in re.finditer(r"\bINSTANTIATE_TEST_SUITE_P\s*\(\s*(\w+)\s*,\s*(\w+)\s*,", masked):
+                for match in re.finditer(r"\bINSTANTIATE_TEST_SUITE_P\s*\(\s*(\w*)\s*,\s*(\w+)\s*,", masked):
                     # 開始括弧から対応する終了括弧を求める。
                     depth = 0
                     for end in range(masked.find("(", match.start()), len(masked)):

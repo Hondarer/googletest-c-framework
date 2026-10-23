@@ -78,6 +78,50 @@ TEST_F(Fixture, Example) {
         self.assertNotIn('開始日時', result)
         self.assertNotIn('old console date', result)
 
+    def test_parameter_is_shown_without_google_test_prefix(self):
+        stamp = '2026-10-11 10:00:00 JST'
+        for comment, expected in [('# GetParam() = a: 1, name: "x_y"', '`a: 1, name: "x_y"`'), ('# TypeParam = int', '`int`')]:
+            with self.subTest(comment=comment):
+                result = md.individual('S.T/P/0', 'PASSED', '', 'OK', comment=comment, executed_at=stamp)
+                self.assertIn('- 実施日時: ' + stamp + '\n- パラメーター: ' + expected + '\n', result)
+                self.assertNotIn('備考', result)
+        result = md.individual('S.T', 'PASSED', '', 'OK', executed_at=stamp)
+        self.assertNotIn('パラメーター', result)
+        records = [dict(name='P/S.T/0', status='PASSED', executed_at=stamp, parameter='a: 1', path='P/0/results.md', output='OK'),
+                   dict(name='S.T/0', status='PASSED', executed_at=stamp, path='0/results.md', output='OK')]
+        result = md.definition('S.T', 'evidence', records, 2)
+        self.assertIn('- 実施日時: ' + stamp + '\n- パラメーター: a: 1\n- 詳細:', result)
+        self.assertIn('### S.T/0\n\n- 判定: PASSED\n- 実施日時: ' + stamp + '\n- 詳細:', result)
+        with tempfile.TemporaryDirectory() as directory:
+            result = md.summary('leaf', 'P/S.T/0\tPASSED\t# GetParam() = a: 1\nS.U\tPASSED\t', directory)
+        self.assertIn('| テスト ID | 結果 | パラメーター |', result)
+        self.assertIn('Table: テスト ID 別の判定とパラメーター', result)
+        self.assertIn('| PASSED | `a: 1` |', result)
+        self.assertNotIn('GetParam', result)
+
+    def test_parameter_bytes_are_detected_only_for_byte_dump(self):
+        for comment, warned in [('# GetParam() = 24-byte object <48-43 48-00>', True), ('# GetParam() = a: 1', False),
+                                ('# GetParam() = (1, 3, 3)', False), ('', False)]:
+            with self.subTest(comment=comment):
+                self.assertEqual(bool(md.PARAMETER_BYTES.match(comment)), warned)
+
+    def test_instantiations_with_empty_prefix_are_reported(self):
+        from gtest_summary_groups import instantiation_prefix
+        self.assertEqual(instantiation_prefix('S.T/0'), '')
+        self.assertEqual(instantiation_prefix('P/S.T/0'), 'P')
+        source = ('TEST_P(S, T) {\n}\n'
+                  'INSTANTIATE_TEST_SUITE_P(, S, Values(1));\n'
+                  'INSTANTIATE_TEST_SUITE_P(\n    Q, S,\n    Values(2));\n'
+                  'INSTANTIATE_TEST_SUITE_P(R, Other, Values(3));\n')
+        index = SourceIndex({'sample.cc': source})
+        report = index.report('S.T/0', code_only=True)
+        self.assertIn('INSTANTIATE_TEST_SUITE_P(, S, Values(1));', report)
+        self.assertIn('    Q, S,\n    Values(2));', report)
+        self.assertNotIn('Other', report)
+        report = index.report('S.T/0', True, 1, code_only=True, prefixes={''})
+        self.assertIn('INSTANTIATE_TEST_SUITE_P(, S, Values(1));', report)
+        self.assertNotIn('Values(2)', report)
+
     def test_platform_formats_agree_between_body_and_subprocedures(self):
         for windows in (False, True):
             for macro in ('PLATFORM_WINDOWS', '_WIN32', 'PLATFORM_LINUX', '__linux__'):
@@ -86,13 +130,11 @@ TEST_F(Fixture, Example) {
                                            (f'if defined( {macro} )', False), (f'if ! defined ( {macro} )', True)]:
                     with self.subTest(windows=windows, expression=expression):
                         source = f'TEST(S, T) {{\n  # {expression}\n// [状態] - YES\n  # else\n// [状態] - NO\n  # endif\n}}\n'
-                        body = subprocess.check_output(['awk', '-v', 'test_id=S.T', '-v', f'is_windows={int(windows)}', '-f', str(HERE / 'get_test_code_c_cpp.awk')], input=source, text=True, encoding='utf-8')
                         sub = ''.join(platform_lines(source, windows))
                         expected, absent = ('YES', 'NO') if defined != negate else ('NO', 'YES')
-                        for output in (body, sub):
-                            self.assertIn(expected, output)
-                            self.assertNotIn(absent, output)
-                            self.assertNotIn('#', output)
+                        self.assertIn(expected, sub)
+                        self.assertNotIn(absent, sub)
+                        self.assertNotIn('#', sub)
                         fragment = '// [サブ手順 名前=Setup]\nvoid Setup() {\n' + '\n'.join(source.splitlines()[1:-1]) + '\n}\n// [サブ手順終了]\n\nTEST(S, T) {\n// [サブ手順参照 名前=Setup]\n}\n'
                         report = SourceIndex({'sample.cc': fragment}, is_windows=windows).report('S.T')
                         self.assertIn(expected, report)
@@ -103,16 +145,15 @@ TEST_F(Fixture, Example) {
                            'if defined(_WIN32) || defined(__linux__)', 'if defined(_WIN32) // comment',
                            'ifdef _WIN32 /* comment */'):
             source = f'TEST(S, T) {{\n#{expression}\nYES();\n#else\nNO();\n#endif\n}}\n'
+            # 判定できない条件は、指令を含めてそのまま残す。
             for windows in (0, 1):
-                body = subprocess.check_output(['awk', '-v', 'test_id=S.T', '-v', f'is_windows={windows}', '-f', str(HERE / 'get_test_code_c_cpp.awk')], input=source, text=True, encoding='utf-8')
-                self.assertEqual(body, ''.join(platform_lines(source, bool(windows))))
+                self.assertEqual(source, ''.join(platform_lines(source, bool(windows))))
         source = 'TEST(S, T) {\n#ifdef _WIN32\nWIN();\n#elif ! defined( _WIN32 )\n#ifndef __linux__\nBAD();\n#else\nLINUX();\n#endif\n#endif\n}\n'
         for windows, expected, absent in ((0, 'LINUX', 'WIN'), (1, 'WIN', 'LINUX')):
-            body = subprocess.check_output(['awk', '-v', 'test_id=S.T', '-v', f'is_windows={windows}', '-f', str(HERE / 'get_test_code_c_cpp.awk')], input=source, text=True, encoding='utf-8')
-            for output in (body, ''.join(platform_lines(source, bool(windows)))):
-                self.assertIn(expected, output)
-                self.assertNotIn(absent, output)
-                self.assertNotIn('BAD', output)
+            output = ''.join(platform_lines(source, bool(windows)))
+            self.assertIn(expected, output)
+            self.assertNotIn(absent, output)
+            self.assertNotIn('BAD', output)
 
     def test_trx_start_time_earliest_record_offsets_fraction_and_fallback(self):
         xml = '''<TestRun xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">

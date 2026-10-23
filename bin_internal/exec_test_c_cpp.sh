@@ -223,7 +223,7 @@ function compute_test_signature() {
     done <<< "$evidence_sources"
 
     # 集計処理を変更した場合も古いエビデンスを再利用しない。
-    for src in exec_test_c_cpp.sh get_test_code_c_cpp.awk insert_summary_c_cpp.py \
+    for src in exec_test_c_cpp.sh insert_summary_c_cpp.py \
         test_summary.py test_subprocedures.py gtest_summary_groups.py results_markdown.py; do
         sig_srcs+=("$SCRIPT_DIR/$src")
     done
@@ -305,6 +305,19 @@ function execute_test_case() {
         esac; } | tee -a "$REPORT_STATE/runtime"
     elif [ "$IS_WINDOWS" -eq 1 ] && [ "$exit_code" -ne 0 ]; then
         printf '\n\e[31m[  FAILED  ]\e[0m Exit code: %s\n' "$exit_code" | tee -a "$REPORT_STATE/runtime"
+    fi
+    # パラメーターがバイト列で印字された合格レコードは、警告行を実行結果へ加えて WARNING にする。
+    # 判定は results_markdown.py が行う。全テストで Python を起動しないよう、候補だけを渡す。
+    local parameter_warning=""
+    if [ "$exit_code" -eq 0 ] && [[ "$ACTIVE_COMMENT" == *"-byte object <"* ]]; then
+        parameter_warning=$(python3 "$SCRIPT_DIR/results_markdown.py" parameter-warning \
+            --comment "$ACTIVE_COMMENT" --encoding "${FILES_LANG#*.}")
+    fi
+    if [ -n "$parameter_warning" ]; then
+        if [ -s "$REPORT_STATE/runtime" ] && [ -n "$(tail -c 1 "$REPORT_STATE/runtime")" ]; then
+            printf '\n' | tee -a "$REPORT_STATE/runtime"
+        fi
+        printf '\e[33m[ WARNING ]\e[0m %s\n' "$parameter_warning" | tee -a "$REPORT_STATE/runtime"
     fi
     # 末尾に改行がない出力でも、閉じフェンスは独立した行にする。
     if [ -s "$REPORT_STATE/runtime" ] && [ -n "$(tail -c 1 "$REPORT_STATE/runtime")" ]; then

@@ -12,6 +12,10 @@ from urllib.parse import quote
 from test_summary import text_encoding
 
 ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
+# パラメーターの型に PrintTo() も operator<< もないと、Google Test はバイト列で印字する。
+# see: https://google.github.io/googletest/advanced.html#teaching-googletest-how-to-print-your-values
+PARAMETER_BYTES = re.compile(r"^# GetParam\(\) = \d+-byte object <")
+PARAMETER_WARNING = "パラメーターがバイト列で印字されています。パラメーターの型に PrintTo() を定義してください。"
 
 
 def clean(text):
@@ -77,6 +81,11 @@ def write(path, text):
     Path(path).write_text(text.rstrip("\n") + "\n", encoding="utf-8", newline="\n")
 
 
+def parameter(comment):
+    """Google Test の注記から、パラメーターの印字だけを取り出す。"""
+    return re.sub(r"^# (?:GetParam\(\)|TypeParam) = ", "", comment)
+
+
 def individual(test_id, status, evidence, output, binary="", comment="", definition="", error="", console=False, executed_at=""):
     parts = ["# " + plain(test_id)]
     metadata = [] if console else [f"- 判定: {status}"]
@@ -85,7 +94,7 @@ def individual(test_id, status, evidence, output, binary="", comment="", definit
     if binary and console:
         metadata.append("- テスト バイナリ: " + plain(binary))
     if comment:
-        metadata.append("- 備考: " + inline(comment))
+        metadata.append("- パラメーター: " + inline(parameter(comment)))
     if metadata:
         parts.append("\n".join(metadata))
     if error:
@@ -128,7 +137,11 @@ def definition(test_id, evidence, records, total):
     distribution = ", ".join(f"{key}: {value}" for key, value in counts.items() if value)
     parts = ["# " + plain(test_id), f"- 総合判定: {status}\n- 実行レコード数: {n} ({distribution})", evidence.strip(), "## 実行レコード"]
     for record in records:
-        parts += ["### " + plain(record["name"]), f'- 判定: {record["status"]}\n- 実施日時: {record.get("executed_at", "")}\n- 詳細: ' + link("results.md", record["path"]), fence(record["output"])]
+        metadata = [f'- 判定: {record["status"]}', f'- 実施日時: {record.get("executed_at", "")}']
+        if record.get("parameter"):
+            metadata.append("- パラメーター: " + record["parameter"])
+        metadata.append("- 詳細: " + link("results.md", record["path"]))
+        parts += ["### " + plain(record["name"]), "\n".join(metadata), fence(record["output"])]
     return "\n\n".join(parts) + "\n"
 
 
@@ -170,11 +183,11 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
         columns = line.split("\t")
         if len(columns) >= 2 and columns[1] in {"PASSED", "WARNING", "FAILED"}:
             name, status = columns[:2]
-            results.append([link(plain(name), "../" + name + "/results.md"), status, inline(columns[2]) if len(columns) > 2 and columns[2] else ""])
+            results.append([link(plain(name), "../" + name + "/results.md"), status, inline(parameter(columns[2])) if len(columns) > 2 and columns[2] else ""])
             key = definition_id(name)
             if key not in definitions:
                 definitions.append(key)
-    parts.append("## テスト結果\n\n" + (table(["テスト ID", "結果", "備考"], results, "テスト ID 別の判定と備考") if results else "なし"))
+    parts.append("## テスト結果\n\n" + (table(["テスト ID", "結果", "パラメーター"], results, "テスト ID 別の判定とパラメーター") if results else "なし"))
     aggregation = []
     for label in ("Total tests", "Passed", "Warning(s)", "Failed"):
         match = re.search(r"^" + re.escape(label) + r"\t+(.*)$", text, re.M)
@@ -247,7 +260,7 @@ def gcov(body, workspace):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=["individual", "definition", "summary", "gcov", "decode"])
+    parser.add_argument("mode", choices=["individual", "definition", "summary", "gcov", "decode", "parameter-warning"])
     parser.add_argument("--output")
     parser.add_argument("--console-output")
     parser.add_argument("--dotnet-color", action="store_true")
@@ -298,6 +311,12 @@ def main():
     elif args.mode == "definition":
         state = json.loads(read(args.input))
         content = definition(**state)
+    elif args.mode == "parameter-warning":
+        # 実行結果はソースの文字コードで記録するため、警告もその文字コードで出力する。
+        if PARAMETER_BYTES.match(args.comment):
+            sys.stdout.flush()
+            sys.stdout.buffer.write(PARAMETER_WARNING.encode("utf-8" if encoding == "utf-8-sig" else encoding) + b"\n")
+        return
     else:
         source = Path(args.input)
         if source.is_dir():

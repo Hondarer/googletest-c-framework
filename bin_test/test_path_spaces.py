@@ -95,6 +95,14 @@ TEST_P(Repeats, Branch) {
 }
 INSTANTIATE_TEST_SUITE_P(A, Repeats, ::testing::Values(1, 2));
 INSTANTIATE_TEST_SUITE_P(B, Repeats, ::testing::Values(3));
+struct RawParam {
+    int value;
+};
+class RawParams : public ::testing::TestWithParam<RawParam> {};
+TEST_P(RawParams, Bytes) {
+    EXPECT_GT(GetParam().value, 0); // [確認_正常系 回数=PARAM] - 正の値であること。
+}
+INSTANTIATE_TEST_SUITE_P(, RawParams, ::testing::Values(RawParam{1}));
 TEST(InvalidComment, Case) {
     EXPECT_TRUE(true); // [確認_正常系 回数=1+] - true であること。
 }
@@ -206,15 +214,34 @@ int main(int argc, char **argv) {
         self.assertEqual(log.count("### 確認"), 1)
         self.assertIn("### 確認 (正常系:9)", log)
         self.assertIn("PARAM=3", log)
-        for name in ("Repeats.Uniform/A/0", "Repeats.Uniform/A/1", "Repeats.Uniform/B/0"):
+        for name, value in (("Repeats.Uniform/A/0", 1), ("Repeats.Uniform/A/1", 2), ("Repeats.Uniform/B/0", 3)):
             record = (self.leaf / "results" / name / "results.md").read_text(encoding="utf-8")
             self.assertRegex(record, r"- 判定: PASSED\n- 実施日時: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \S+")
             self.assertNotIn("テスト バイナリ:", record)
             stamp = next(line for line in record.splitlines() if line.startswith("- 実施日時:"))
-            self.assertIn("- 判定: PASSED\n" + stamp + "\n- 詳細:", log)
+            parameter = f"- パラメーター: `{value}`"
+            self.assertIn(stamp + "\n" + parameter + "\n", record)
+            self.assertIn("- 判定: PASSED\n" + stamp + "\n" + parameter + "\n- 詳細:", log)
             self.assertNotIn("### 確認", record)
+        summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+        self.assertIn("| テスト ID | 結果 | パラメーター |", summary)
+        self.assertNotIn("GetParam", summary)
         branch = (self.leaf / "results/Repeats.Branch/results.md").read_text(encoding="utf-8")
         self.assertIn("### 確認 (正常系:2, 異常系:1)", branch)
+
+    def test_parameter_printed_as_bytes_is_warned(self):
+        result = self.run_tests("RawParams.Bytes/*")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        record = (self.leaf / "results/RawParams.Bytes/0/results.md").read_text(encoding="utf-8")
+        self.assertIn("- 判定: WARNING", record)
+        self.assertRegex(record, r"- パラメーター: `\d+-byte object <")
+        self.assertIn("[ WARNING ] パラメーターがバイト列で印字されています。", record)
+        log = (self.leaf / "results/RawParams.Bytes/results.md").read_text(encoding="utf-8")
+        self.assertIn("- 総合判定: WARNING", log)
+        self.assertIn("INSTANTIATE_TEST_SUITE_P(, RawParams, ::testing::Values(RawParam{1}));", log)
+        summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+        self.assertRegex(summary, r"Warning\(s\) \| 1 \|")
+        self.assertIn("パラメーターがバイト列で印字されています。", summary.split("## 警告とエラー", 1)[1])
 
     def test_fixture_and_header_subprocedures_are_included(self):
         result = self.run_tests("EvidenceFixture.ReportsSubprocedures")

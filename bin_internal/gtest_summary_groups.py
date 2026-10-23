@@ -4,14 +4,10 @@
 import argparse
 import json
 from pathlib import Path
-import subprocess
 import sys
 
 from test_summary import SummaryError, text_encoding
 from test_subprocedures import SourceIndex, discover
-
-
-HERE = Path(__file__).resolve().parent
 
 
 def test_names(text):
@@ -47,15 +43,10 @@ def group_tests(full, selected):
     return {key: value for key, value in groups.items() if value["selected"] and "/" in value["selected"][0].split(".", 1)[1]}
 
 
-def extract_code(name, source, is_windows, encoding):
-    result = subprocess.run(
-        ["awk", "-v", f"test_id={name}", "-v", f"is_windows={is_windows}",
-         "-f", str(HERE / "get_test_code_c_cpp.awk")],
-        input=source, text=True, encoding=encoding, capture_output=True,
-    )
-    if result.returncode or not result.stdout.strip():
-        raise SummaryError(f"{name}: テストコードを抽出できません: {result.stderr.strip()}")
-    return result.stdout
+def instantiation_prefix(name):
+    # 接頭辞が空の登録では、展開名は Suite.Test/0 になり、suite 側に / がない。
+    suite = name.split(".", 1)[0]
+    return suite.rsplit("/", 1)[0] if "/" in suite else ""
 
 
 def prepare(full, selected, manifest, is_windows, encoding):
@@ -63,7 +54,7 @@ def prepare(full, selected, manifest, is_windows, encoding):
     index = SourceIndex.from_paths(discover("c_cpp"), is_windows=is_windows == "1", encoding=encoding) if groups else None
     for key, group in groups.items():
         partial = set(group["all"]) != set(group["selected"])
-        prefixes = {name.split("/", 1)[0] for name in group["all"]}
+        prefixes = {instantiation_prefix(name) for name in group["all"]}
         counts = {}
         group["evidence"] = index.report(key, True, len(group["all"]), partial, prefixes=prefixes, counts=counts)
         group["counts"] = None if partial else counts
@@ -81,9 +72,11 @@ def finish(manifest, encoding, counts_dir=None):
             content = record.read_text(encoding="utf-8")
             status = next(line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 判定: "))
             executed_at = next(line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 実施日時: "))
+            # レコードで書式化済みのため、そのまま転記する。
+            parameter = next((line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- パラメーター: ")), "")
             output = execution_output(content)
-            records.append({"name": name, "status": status,
-                            "executed_at": executed_at, "path": record_path(name)[len(key) + 1:] + "/results.md", "output": output})
+            records.append({"name": name, "status": status, "executed_at": executed_at, "parameter": parameter,
+                            "path": record_path(name)[len(key) + 1:] + "/results.md", "output": output})
         write(Path("results") / key / "results.md", definition(key, group["evidence"], records, len(group["all"])))
         if counts_dir:
             path = Path(counts_dir) / (key + ".json")
