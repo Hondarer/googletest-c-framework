@@ -223,10 +223,14 @@ function compute_test_signature() {
     done <<< "$evidence_sources"
 
     # 集計処理を変更した場合も古いエビデンスを再利用しない。
-    for src in exec_test_c_cpp.sh insert_summary_c_cpp.py \
-        test_summary.py test_subprocedures.py gtest_summary_groups.py results_markdown.py; do
-        sig_srcs+=("$SCRIPT_DIR/$src")
-    done
+    # 対象のスクリプトの範囲は、app 直下の判定と共有する list_signature_scripts.sh で定義する。
+    local signature_scripts
+    if ! signature_scripts=$(bash "$SCRIPT_DIR/list_signature_scripts.sh") || [ -z "$signature_scripts" ]; then
+        return 1
+    fi
+    while IFS= read -r src; do
+        [ -n "$src" ] && sig_srcs+=("$src")
+    done <<< "$signature_scripts"
 
     local entries=""
     for src in "${sig_srcs[@]}"; do

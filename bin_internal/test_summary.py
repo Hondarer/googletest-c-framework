@@ -1,12 +1,8 @@
 """C/C++ と .NET の期待確認コメントから、設計上の回数を集計する。"""
 
-import argparse
 import codecs
-import json
-from pathlib import Path
 from dataclasses import dataclass, field
 import re
-import sys
 
 
 class SummaryError(ValueError):
@@ -373,44 +369,3 @@ def render_summary(source, parameterized=False, param_count=None, partial=False,
         header = "未評価" if partial else ", ".join(f"{k}:{v}" for k, v in totals.items() if v) or "0"
         out.append(f"\n### 確認件数合計 ({header})\n")
     return "".join(out)
-
-
-def main(language):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--param-count", type=int)
-    parser.add_argument("--parameterized", action="store_true")
-    parser.add_argument("--partial", action="store_true")
-    parser.add_argument("--test-id", default="<stdin>")
-    parser.add_argument("--encoding", default="utf-8")
-    parser.add_argument("--counts-output")
-    output = parser.add_mutually_exclusive_group()
-    output.add_argument("--summary-only", action="store_true")
-    output.add_argument("--code-only", action="store_true")
-    args = parser.parse_args()
-    try:
-        encoding = text_encoding(args.encoding)
-    except LookupError as error:
-        parser.error(str(error))
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdin.reconfigure(encoding=encoding)
-        # BOM は各セクションの先頭に再挿入しない。
-        sys.stdout.reconfigure(encoding="utf-8" if encoding == "utf-8-sig" else encoding)
-        sys.stderr.reconfigure(encoding="utf-8")
-    source = sys.stdin.read()
-    try:
-        counts = {}
-        summary = "" if args.code_only else render_summary(
-            source, args.parameterized, args.param_count, args.partial, args.test_id, counts)
-        if args.counts_output:
-            Path(args.counts_output).write_text(json.dumps(None if args.partial else counts, ensure_ascii=False), encoding="utf-8")
-    except SummaryError as error:
-        print(f"[  FAILED  ] {error}", file=sys.stderr)
-        return 1
-    sys.stdout.write(summary)
-    if not args.summary_only:
-        if language == "dotnet":
-            lines = source.splitlines(keepends=True)
-            indent = min((len(line) - len(line.lstrip(" ")) for line in lines if line.strip()), default=0)
-            source = "".join(line[indent:] if line.strip() else line for line in lines)
-        sys.stdout.write(source)
-    return 0
