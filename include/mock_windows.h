@@ -27,6 +27,7 @@ extern "C"
                                                 PCONSOLE_SCREEN_BUFFER_INFO);
     extern BOOL mock_SetConsoleMode(const char *, const int, const char *, HANDLE, DWORD);
     extern DWORD mock_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
+    extern BOOL mock_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL);
     extern BOOL mock_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
     extern HANDLE mock_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD,
                                           DWORD, DWORD, LPCSTR);
@@ -76,6 +77,7 @@ extern "C"
                 mock_SetConsoleMode(__FILE__, __LINE__, __func__, console_handle, mode)
             #define WaitForSingleObject(handle, milliseconds) \
                 mock_WaitForSingleObject(__FILE__, __LINE__, __func__, handle, milliseconds)
+            #define ReadConsoleW(handle, buffer, count, read, control) mock_ReadConsoleW(__FILE__, __LINE__, __func__, handle, buffer, count, read, control)
             #define ReadFile(file_handle, buffer, bytes_to_read, bytes_read, overlapped) \
                 mock_ReadFile(__FILE__, __LINE__, __func__, file_handle, buffer, bytes_to_read, bytes_read, overlapped)
             #define CreateFileMappingA(file, attributes, protect, size_high, size_low, name) \
@@ -140,6 +142,7 @@ extern BOOL delegate_real_GetConsoleScreenBufferInfo(const char *, const int, co
                                                      PCONSOLE_SCREEN_BUFFER_INFO);
 extern BOOL delegate_real_SetConsoleMode(const char *, const int, const char *, HANDLE, DWORD);
 extern DWORD delegate_real_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
+extern BOOL delegate_real_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL);
 extern BOOL delegate_real_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 extern HANDLE delegate_real_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES,
                                                DWORD, DWORD, DWORD, LPCSTR);
@@ -186,6 +189,7 @@ class Mock_windows
                 (const char *, const int, const char *, HANDLE, PCONSOLE_SCREEN_BUFFER_INFO));
     MOCK_METHOD(BOOL, SetConsoleMode, (const char *, const int, const char *, HANDLE, DWORD));
     MOCK_METHOD(DWORD, WaitForSingleObject, (const char *, const int, const char *, HANDLE, DWORD));
+    MOCK_METHOD(BOOL, ReadConsoleW, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL));
     MOCK_METHOD(BOOL, ReadFile, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED));
     MOCK_METHOD(HANDLE, CreateFileMappingA,
                 (const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR));

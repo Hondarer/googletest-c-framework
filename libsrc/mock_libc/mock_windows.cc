@@ -17,6 +17,7 @@ Mock_windows::Mock_windows()
         .WillByDefault(Invoke(delegate_real_GetConsoleScreenBufferInfo));
     ON_CALL(*this, SetConsoleMode(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleMode));
     ON_CALL(*this, WaitForSingleObject(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_WaitForSingleObject));
+    ON_CALL(*this, ReadConsoleW(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadConsoleW));
     ON_CALL(*this, ReadFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadFile));
     ON_CALL(*this, CreateFileMappingA(_, _, _, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_CreateFileMappingA));
