@@ -363,6 +363,20 @@ int main(int argc, char **argv) {
                 self.assertNotIn("Skipping test", fourth.stdout)
             finally:
                 header.write_text(original_header, encoding="utf-8")
+            # makefw のテンプレートとスクリプトの変更でも、テストを省略しない。
+            for relative in ("makefiles/_flags.mk", "bin_internal/normalize_paths.sh"):
+                with self.subTest(makefw=relative):
+                    run()
+                    self.assertIn("Skipping test", run().stdout)
+                    makefw_input = self.root / "framework/makefw" / relative
+                    original_input = makefw_input.read_bytes()
+                    try:
+                        makefw_input.write_bytes(original_input + b"\n")
+                        changed = run()
+                        self.assertEqual(changed.returncode, 0, changed.stdout)
+                        self.assertNotIn("Skipping test", changed.stdout)
+                    finally:
+                        makefw_input.write_bytes(original_input)
         finally:
             self.script.write_text(script_text, encoding="utf-8")
             summary_script.write_text(original_script, encoding="utf-8")

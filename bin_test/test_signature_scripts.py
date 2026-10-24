@@ -15,16 +15,14 @@ BIN_INTERNAL = Path(__file__).resolve().parents[1] / "bin_internal"
 
 
 class SignatureScriptsTest(unittest.TestCase):
-    def test_lists_all_scripts_and_files_lang(self):
+    def test_lists_all_testfw_scripts(self):
         result = subprocess.run([BASH, str(BIN_INTERNAL / "list_signature_scripts.sh")],
                                 capture_output=True, encoding="utf-8", check=True)
         names = [Path(line).name for line in result.stdout.splitlines()]
         expected = sorted(path.name for path in BIN_INTERNAL.iterdir()
                           if path.is_file() and path.suffix in (".py", ".sh"))
-        # makefw は testfw と同じ親ディレクトリにある前提で、存在する場合だけ対象になる。
-        if (BIN_INTERNAL.parents[1] / "makefw/bin_internal/get_files_lang.sh").is_file():
-            expected.append("get_files_lang.sh")
-        self.assertEqual(sorted(names), sorted(expected))
+        # makefw のスクリプトは makefw の list_signature_inputs.sh が定義するため含めない。
+        self.assertEqual(names, expected)
         self.assertIn("list_signature_scripts.sh", names)
 
 

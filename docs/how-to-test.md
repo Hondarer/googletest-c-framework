@@ -200,12 +200,14 @@ export -n GTEST_FILTER # フィルターが不要になったら、GTEST_FILTER 
 
 ### 再テストのスキップ
 
-再テストの判定には、testfw のスクリプトも含めます。  
-確認タグの仕様や集計処理が変わった場合は、保存済みのエビデンスを再生成します。
+再テストの判定には、testfw のスクリプトと makefw の入力も含めます。  
+確認タグの仕様や集計処理が変わった場合は、保存済みのエビデンスを再生成します。  
+makefw のテンプレートやスクリプトを変えた場合も、テスト ソースに変更がなくてもテストを再実行します。コンパイル オプションを変えると、テストの実行ファイルが作り直されるためです。
 
-判定に含めるスクリプトは、`bin_internal/` 直下の `*.py` と `*.sh` すべてと、結果の文字コードを決める `framework/makefw/bin_internal/get_files_lang.sh` です。  
+判定に含める testfw のスクリプトは、`bin_internal/` 直下の `*.py` と `*.sh` すべてです。  
 結果に影響しないスクリプトも含めるのは、一覧の更新漏れで古いエビデンスを再利用しないためです。  
 範囲は `bin_internal/list_signature_scripts.sh` だけで定義し、後述のテスト対象ディレクトリ単位の判定と、app 単位の判定の両方が使います。  
+makefw の入力の範囲は、`framework/makefw/bin_internal/list_signature_inputs.sh` が定義します。範囲は [ビルド署名に含まれる入力](../../makefw/docs/build-configurations.md#ビルド署名に含まれる入力) を参照してください。  
 app 単位の判定は、testfw のライブラリの変更でも省略を解除します。詳細は [ビルド署名に含まれる入力](../../makefw/docs/build-configurations.md#ビルド署名に含まれる入力) を参照してください。
 
 テスト対象ディレクトリ (leaf ディレクトリ) 単位で、`TEST_SRCS`・`ADD_SRCS`・カレント ディレクトリ直下の `*.c`/`*.cc`/`*.cpp` (gtest のテスト本体、`*.inject.*` を含む)・ローカルの `makepart.mk`/`makelocal.mk` の MD5 が前回のクリーンな成功時 (`Failed` が 0 件) から変化していない場合、`make test` は実際のテスト実行を省略します。  

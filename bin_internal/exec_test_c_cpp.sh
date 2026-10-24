@@ -185,7 +185,7 @@ function populate_md5_cache_windows() {
 # leaf ディレクトリの再テスト スキップ判定に使うシグネチャを生成する。
 # TEST_SRCS / ADD_SRCS / このディレクトリ直下の makepart.mk・makelocal.mk を対象に
 # MD5 チェックサムを計算し、ソート済みの "<hash>  <相対パス>" 形式で出力する。
-# 対象ファイルが1つも無い場合、またはいずれかの MD5 計算に失敗した場合は
+# 対象ファイルが 1 つも無い場合、またはいずれかの MD5 計算に失敗した場合は
 # 何も出力せず終了コード 1 を返す (呼び出し側はスキップ判定・スタンプ書き込みの
 # 両方を諦め、必ずテストを実行する)。
 function compute_test_signature() {
@@ -232,10 +232,50 @@ function compute_test_signature() {
         [ -n "$src" ] && sig_srcs+=("$src")
     done <<< "$signature_scripts"
 
+    # makefw のテンプレートとスクリプトを変えると、テスト ソースに変更がなくても
+    # テストの実行ファイルが作り直されるため、makefw の入力も含める。
+    # 範囲は makefw の list_signature_inputs.sh で定義し、app 直下の判定と共有する。
+    local makefw_inputs
+    if ! makefw_inputs=$(bash "$WORKSPACE_DIR/framework/makefw/bin_internal/list_signature_inputs.sh") \
+        || [ -z "$makefw_inputs" ]; then
+        return 1
+    fi
+    while IFS= read -r src; do
+        [ -n "$src" ] && sig_srcs+=("$src")
+    done <<< "$makefw_inputs"
+
+    # Windows のキャッシュにない入力は、1 回の md5sum でまとめて計算する。
+    # 入力ごとに起動すると、Windows ではプロセスの起動の時間が入力の数だけかかる。
+    local -A checksums=()
+    local -a uncached=()
+    for src in "${sig_srcs[@]}"; do
+        if [ $IS_WINDOWS -eq 1 ] && declare -p _MD5_CACHE &>/dev/null && [[ -v _MD5_CACHE["$src"] ]]; then
+            checksums["$src"]=${_MD5_CACHE[$src]}
+        else
+            uncached+=("$src")
+        fi
+    done
+    if [ ${#uncached[@]} -gt 0 ]; then
+        local md5_output
+        if ! md5_output=$(md5sum -- "${uncached[@]}" 2>/dev/null); then
+            return 1
+        fi
+        local -a md5_lines=()
+        mapfile -t md5_lines <<< "$md5_output"
+        if [ ${#md5_lines[@]} -ne ${#uncached[@]} ]; then
+            return 1
+        fi
+        local i
+        for i in "${!uncached[@]}"; do
+            # 名前に \ や改行を含むファイルの行は、先頭に \ が付く。
+            local line=${md5_lines[$i]#\\}
+            checksums["${uncached[$i]}"]=${line%% *}
+        done
+    fi
+
     local entries=""
     for src in "${sig_srcs[@]}"; do
-        local checksum
-        checksum=$(get_md5_checksum "$src")
+        local checksum=${checksums[$src]-}
         if [ -z "$checksum" ]; then
             return 1
         fi
