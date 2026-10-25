@@ -210,7 +210,14 @@ makefw のテンプレートやスクリプトを変えた場合も、テスト 
 makefw の入力の範囲は、`framework/makefw/bin_internal/list_signature_inputs.sh` が定義します。範囲は [ビルド署名に含まれる入力](../../makefw/docs/build-configurations.md#ビルド署名に含まれる入力) を参照してください。  
 app 単位の判定は、testfw のライブラリの変更でも省略を解除します。詳細は [ビルド署名に含まれる入力](../../makefw/docs/build-configurations.md#ビルド署名に含まれる入力) を参照してください。
 
-テスト対象ディレクトリ (leaf ディレクトリ) 単位で、`TEST_SRCS`・`ADD_SRCS`・カレント ディレクトリ直下の `*.c`/`*.cc`/`*.cpp` (gtest のテスト本体、`*.inject.*` を含む)・ローカルの `makepart.mk`/`makelocal.mk` の MD5 が前回のクリーンな成功時 (`Failed` が 0 件) から変化していない場合、`make test` は実際のテスト実行を省略します。  
+テスト対象ディレクトリ (leaf ディレクトリ) 単位で、次の入力の MD5 が前回のクリーンな成功時 (`Failed` が 0 件) から変化していない場合、`make test` は実際のテスト実行を省略します。
+
+- テスト ソース (`TEST_SRCS`、`ADD_SRCS`、カレント ディレクトリ直下の `*.c`/`*.cc`/`*.cpp`。gtest のテスト本体と `*.inject.*` を含む)
+- カレント ディレクトリ直下の `makepart.mk`/`makelocal.mk`
+- テストにリンクするライブラリ
+- サブ手順の抜粋元のソース (カレント ディレクトリ配下の `*.cc`/`*.cpp`) と、それらが相対パスで include するヘッダー ([サブ手順](test-subprocedures.md))
+- testfw のスクリプトと makefw の入力 (前述)
+
 スキップした場合は `results/` 配下を前回のまま残し、次のメッセージを出力します。
 
 ```text

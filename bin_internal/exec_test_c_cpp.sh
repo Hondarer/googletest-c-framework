@@ -183,9 +183,15 @@ function populate_md5_cache_windows() {
 }
 
 # leaf ディレクトリの再テスト スキップ判定に使うシグネチャを生成する。
-# TEST_SRCS / ADD_SRCS / このディレクトリ直下の makepart.mk・makelocal.mk を対象に
-# MD5 チェックサムを計算し、ソート済みの "<hash>  <相対パス>" 形式で出力する。
-# 対象ファイルが 1 つも無い場合、またはいずれかの MD5 計算に失敗した場合は
+# 次の入力の MD5 チェックサムを計算し、ソート済みの "<hash>  <相対パス>" 形式で出力する。
+#   - テスト ソース (TEST_SRCS、ADD_SRCS、このディレクトリ直下の *.c/*.cc/*.cpp)
+#   - このディレクトリ直下の makepart.mk・makelocal.mk
+#   - リンクするライブラリ (MAKEFW_TEST_LIBS)
+#   - サブ手順の抜粋元のソースと、相対 include のヘッダー (test_subprocedures.py --list-inputs)
+#   - testfw のスクリプト (範囲は list_signature_scripts.sh で定義)
+#   - makefw の入力 (範囲は makefw の list_signature_inputs.sh で定義)
+# テスト ソース・make ファイル・ライブラリが 1 つも無い場合、入力の一覧の取得に失敗した場合、
+# またはいずれかの MD5 計算に失敗した場合は
 # 何も出力せず終了コード 1 を返す (呼び出し側はスキップ判定・スタンプ書き込みの
 # 両方を諦め、必ずテストを実行する)。
 function compute_test_signature() {
