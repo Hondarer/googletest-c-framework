@@ -48,6 +48,16 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, GetCurrentProcess(_, _, _)).WillByDefault(Invoke(delegate_real_GetCurrentProcess));
     ON_CALL(*this, GetCurrentProcessId(_, _, _)).WillByDefault(Invoke(delegate_real_GetCurrentProcessId));
     ON_CALL(*this, DuplicateHandle(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_DuplicateHandle));
+    ON_CALL(*this, OpenProcess(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_OpenProcess));
+    ON_CALL(*this, OpenThread(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_OpenThread));
+    ON_CALL(*this, SetPriorityClass(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetPriorityClass));
+    ON_CALL(*this, GetPriorityClass(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetPriorityClass));
+    ON_CALL(*this, SetProcessInformation(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetProcessInformation));
+    ON_CALL(*this, GetProcessInformation(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetProcessInformation));
+    ON_CALL(*this, SetProcessPriorityBoost(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetProcessPriorityBoost));
+    ON_CALL(*this, GetProcessPriorityBoost(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetProcessPriorityBoost));
+    ON_CALL(*this, SetThreadPriority(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetThreadPriority));
+    ON_CALL(*this, GetThreadPriority(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetThreadPriority));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);
 }

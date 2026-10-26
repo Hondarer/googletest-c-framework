@@ -2,6 +2,7 @@
 #define _MOCK_UNISTD_H
 
 #ifndef _WIN32
+    #include <stdint.h>
     #include <sys/types.h>
     #include <unistd.h>
 #else // _WIN32
@@ -39,6 +40,8 @@ extern "C"
     extern int mock_rmdir(const char *, const int, const char *, const char *);
     extern int mock_isatty(const char *, const int, const char *, int);
     extern int mock_gethostname(const char *, const int, const char *, char *, size_t);
+    extern long mock_syscall(const char *, const int, const char *, long, intptr_t, intptr_t, intptr_t, intptr_t,
+                             intptr_t);
 #else  // _WIN32
 extern __int64 mock__lseeki64(const char *, const int, const char *, int, __int64, int);
 extern int mock__close(const char *, const int, const char *, int);
@@ -82,6 +85,33 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
         #define isatty(fd)                mock_isatty(__FILE__, __LINE__, __func__, fd)
         #define gethostname(name, len)    mock_gethostname(__FILE__, __LINE__, __func__, name, len)
 
+        /* syscall はシステム コール番号と 0 〜 5 個の追加引数を取る可変長引数関数である。 */
+        /* MOCK_METHOD は可変長引数を扱えないため、引数の個数でマクロを選択し、           */
+        /* 追加引数を intptr_t 5 個へ畳んだ固定シグネチャの mock_syscall へ渡す。         */
+        /* 省略した追加引数には 0 を補う。                                                */
+        #define _MOCK_SYSCALL_SELECT(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
+        #define _MOCK_SYSCALL_1(number) \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)0, (intptr_t)0, (intptr_t)0, \
+                         (intptr_t)0, (intptr_t)0)
+        #define _MOCK_SYSCALL_2(number, a1) \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)0, (intptr_t)0, \
+                         (intptr_t)0, (intptr_t)0)
+        #define _MOCK_SYSCALL_3(number, a1, a2) \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), (intptr_t)0, \
+                         (intptr_t)0, (intptr_t)0)
+        #define _MOCK_SYSCALL_4(number, a1, a2, a3) \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), \
+                         (intptr_t)(a3), (intptr_t)0, (intptr_t)0)
+        #define _MOCK_SYSCALL_5(number, a1, a2, a3, a4) \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), \
+                         (intptr_t)(a3), (intptr_t)(a4), (intptr_t)0)
+        #define _MOCK_SYSCALL_6(number, a1, a2, a3, a4, a5) \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), \
+                         (intptr_t)(a3), (intptr_t)(a4), (intptr_t)(a5))
+        #define syscall(...)                                                                                  \
+            _MOCK_SYSCALL_SELECT(__VA_ARGS__, _MOCK_SYSCALL_6, _MOCK_SYSCALL_5, _MOCK_SYSCALL_4, _MOCK_SYSCALL_3, \
+                                 _MOCK_SYSCALL_2, _MOCK_SYSCALL_1)(__VA_ARGS__)
+
     #else // _WIN32
 
         #define _lseeki64(fd, offset, whence) mock__lseeki64(__FILE__, __LINE__, __func__, fd, offset, whence)
@@ -123,6 +153,8 @@ extern int delegate_real_sched_yield(const char *, const int, const char *);
 extern int delegate_real_rmdir(const char *, const int, const char *, const char *);
 extern int delegate_real_isatty(const char *, const int, const char *, int);
 extern int delegate_real_gethostname(const char *, const int, const char *, char *, size_t);
+extern long delegate_real_syscall(const char *, const int, const char *, long, intptr_t, intptr_t, intptr_t, intptr_t,
+                                  intptr_t);
 
 class Mock_unistd
 {
@@ -152,6 +184,8 @@ class Mock_unistd
     MOCK_METHOD(int, rmdir, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, isatty, (const char *, const int, const char *, int));
     MOCK_METHOD(int, gethostname, (const char *, const int, const char *, char *, size_t));
+    MOCK_METHOD(long, syscall,
+                (const char *, const int, const char *, long, intptr_t, intptr_t, intptr_t, intptr_t, intptr_t));
 
     Mock_unistd();
     virtual ~Mock_unistd();

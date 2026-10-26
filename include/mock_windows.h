@@ -58,6 +58,16 @@ extern "C"
     extern DWORD mock_GetCurrentProcessId(const char *, const int, const char *);
     extern BOOL mock_DuplicateHandle(const char *, const int, const char *, HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD,
                                      BOOL, DWORD);
+    extern HANDLE mock_OpenProcess(const char *, const int, const char *, DWORD, BOOL, DWORD);
+    extern HANDLE mock_OpenThread(const char *, const int, const char *, DWORD, BOOL, DWORD);
+    extern BOOL mock_SetPriorityClass(const char *, const int, const char *, HANDLE, DWORD);
+    extern DWORD mock_GetPriorityClass(const char *, const int, const char *, HANDLE);
+    extern BOOL mock_SetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+    extern BOOL mock_GetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+    extern BOOL mock_SetProcessPriorityBoost(const char *, const int, const char *, HANDLE, BOOL);
+    extern BOOL mock_GetProcessPriorityBoost(const char *, const int, const char *, HANDLE, PBOOL);
+    extern BOOL mock_SetThreadPriority(const char *, const int, const char *, HANDLE, int);
+    extern int mock_GetThreadPriority(const char *, const int, const char *, HANDLE);
 
         #ifdef __cplusplus
 }
@@ -127,6 +137,26 @@ extern "C"
                                     inherit_handle, options) \
                 mock_DuplicateHandle(__FILE__, __LINE__, __func__, source_process, source_handle, target_process, \
                                      target_handle, desired_access, inherit_handle, options)
+            #define OpenProcess(desired_access, inherit_handle, process_id) \
+                mock_OpenProcess(__FILE__, __LINE__, __func__, desired_access, inherit_handle, process_id)
+            #define OpenThread(desired_access, inherit_handle, thread_id) \
+                mock_OpenThread(__FILE__, __LINE__, __func__, desired_access, inherit_handle, thread_id)
+            #define SetPriorityClass(process, priority_class) \
+                mock_SetPriorityClass(__FILE__, __LINE__, __func__, process, priority_class)
+            #define GetPriorityClass(process) \
+                mock_GetPriorityClass(__FILE__, __LINE__, __func__, process)
+            #define SetProcessInformation(process, information_class, information, information_size) \
+                mock_SetProcessInformation(__FILE__, __LINE__, __func__, process, information_class, information, information_size)
+            #define GetProcessInformation(process, information_class, information, information_size) \
+                mock_GetProcessInformation(__FILE__, __LINE__, __func__, process, information_class, information, information_size)
+            #define SetProcessPriorityBoost(process, disable_priority_boost) \
+                mock_SetProcessPriorityBoost(__FILE__, __LINE__, __func__, process, disable_priority_boost)
+            #define GetProcessPriorityBoost(process, disable_priority_boost) \
+                mock_GetProcessPriorityBoost(__FILE__, __LINE__, __func__, process, disable_priority_boost)
+            #define SetThreadPriority(thread, priority) \
+                mock_SetThreadPriority(__FILE__, __LINE__, __func__, thread, priority)
+            #define GetThreadPriority(thread) \
+                mock_GetThreadPriority(__FILE__, __LINE__, __func__, thread)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -177,6 +207,16 @@ extern HANDLE delegate_real_GetCurrentProcess(const char *, const int, const cha
 extern DWORD delegate_real_GetCurrentProcessId(const char *, const int, const char *);
 extern BOOL delegate_real_DuplicateHandle(const char *, const int, const char *, HANDLE, HANDLE, HANDLE, LPHANDLE,
                                           DWORD, BOOL, DWORD);
+extern HANDLE delegate_real_OpenProcess(const char *, const int, const char *, DWORD, BOOL, DWORD);
+extern HANDLE delegate_real_OpenThread(const char *, const int, const char *, DWORD, BOOL, DWORD);
+extern BOOL delegate_real_SetPriorityClass(const char *, const int, const char *, HANDLE, DWORD);
+extern DWORD delegate_real_GetPriorityClass(const char *, const int, const char *, HANDLE);
+extern BOOL delegate_real_SetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+extern BOOL delegate_real_GetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+extern BOOL delegate_real_SetProcessPriorityBoost(const char *, const int, const char *, HANDLE, BOOL);
+extern BOOL delegate_real_GetProcessPriorityBoost(const char *, const int, const char *, HANDLE, PBOOL);
+extern BOOL delegate_real_SetThreadPriority(const char *, const int, const char *, HANDLE, int);
+extern int delegate_real_GetThreadPriority(const char *, const int, const char *, HANDLE);
 
 class Mock_windows
 {
@@ -224,6 +264,16 @@ class Mock_windows
     MOCK_METHOD(DWORD, GetCurrentProcessId, (const char *, const int, const char *));
     MOCK_METHOD(BOOL, DuplicateHandle,
                 (const char *, const int, const char *, HANDLE, HANDLE, HANDLE, LPHANDLE, DWORD, BOOL, DWORD));
+    MOCK_METHOD(HANDLE, OpenProcess, (const char *, const int, const char *, DWORD, BOOL, DWORD));
+    MOCK_METHOD(HANDLE, OpenThread, (const char *, const int, const char *, DWORD, BOOL, DWORD));
+    MOCK_METHOD(BOOL, SetPriorityClass, (const char *, const int, const char *, HANDLE, DWORD));
+    MOCK_METHOD(DWORD, GetPriorityClass, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(BOOL, SetProcessInformation, (const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD));
+    MOCK_METHOD(BOOL, GetProcessInformation, (const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD));
+    MOCK_METHOD(BOOL, SetProcessPriorityBoost, (const char *, const int, const char *, HANDLE, BOOL));
+    MOCK_METHOD(BOOL, GetProcessPriorityBoost, (const char *, const int, const char *, HANDLE, PBOOL));
+    MOCK_METHOD(BOOL, SetThreadPriority, (const char *, const int, const char *, HANDLE, int));
+    MOCK_METHOD(int, GetThreadPriority, (const char *, const int, const char *, HANDLE));
 
     void switch_to_real_time();
     void switch_to_mock_time();
