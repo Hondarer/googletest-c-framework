@@ -13,10 +13,12 @@ extern "C"
 {
     #endif
 
-    /* glibc は which を _GNU_SOURCE の有無で enum または int として宣言する。  */
-    /* C と C++ の双方から同じシグネチャで呼べるよう、mock は int で受け取る。 */
+    /* glibc は which と resource を _GNU_SOURCE の有無で enum または int として宣言する。 */
+    /* C と C++ の双方から同じシグネチャで呼び出せるよう、mock は int で受け取る。      */
     extern int mock_setpriority(const char *, const int, const char *, int, id_t, int);
     extern int mock_getpriority(const char *, const int, const char *, int, id_t);
+    extern int mock_setrlimit(const char *, const int, const char *, int, const struct rlimit *);
+    extern int mock_getrlimit(const char *, const int, const char *, int, struct rlimit *);
 
     #ifdef __cplusplus
 }
@@ -27,6 +29,8 @@ extern "C"
         #define setpriority(which, who, prio) \
             mock_setpriority(__FILE__, __LINE__, __func__, (int)(which), who, prio)
         #define getpriority(which, who) mock_getpriority(__FILE__, __LINE__, __func__, (int)(which), who)
+        #define setrlimit(resource, rlim) mock_setrlimit(__FILE__, __LINE__, __func__, (int)(resource), rlim)
+        #define getrlimit(resource, rlim) mock_getrlimit(__FILE__, __LINE__, __func__, (int)(resource), rlim)
 
     #else // _IN_OVERRIDE_HEADER_SYS_RESOURCE_H
 
@@ -34,12 +38,16 @@ extern "C"
 
 extern int delegate_real_setpriority(const char *, const int, const char *, int, id_t, int);
 extern int delegate_real_getpriority(const char *, const int, const char *, int, id_t);
+extern int delegate_real_setrlimit(const char *, const int, const char *, int, const struct rlimit *);
+extern int delegate_real_getrlimit(const char *, const int, const char *, int, struct rlimit *);
 
 class Mock_sys_resource
 {
   public:
     MOCK_METHOD(int, setpriority, (const char *, const int, const char *, int, id_t, int));
     MOCK_METHOD(int, getpriority, (const char *, const int, const char *, int, id_t));
+    MOCK_METHOD(int, setrlimit, (const char *, const int, const char *, int, const struct rlimit *));
+    MOCK_METHOD(int, getrlimit, (const char *, const int, const char *, int, struct rlimit *));
 
     Mock_sys_resource();
     virtual ~Mock_sys_resource();
