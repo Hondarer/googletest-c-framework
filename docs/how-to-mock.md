@@ -145,6 +145,16 @@ class Mock_sample
 デストラクターを仮想関数とし、その定義を `mock_<lib>.cc` へ置くことで、デバッグ情報を 1 か所へ集めます。  
 テストの 1 つの翻訳単位だけで使う Mock クラスは、重複が起きないため対象外です。
 
+## モック ライブラリのビルド設定
+
+app のモックは `test/libsrc/` 配下、testfw のモックは `libsrc/` 配下に置きます。  
+多数の `ON_CALL` を並べたコンストラクターのような巨大な関数は、コンパイラの上限を超えることがあります。  
+GCC は変数追跡の上限を超えると備考を出力し、MSVC はオブジェクトのセクション数が上限を超えると C1128 で停止します。  
+これを防ぐため、上記の配置では Linux で `-fno-var-tracking-assignments`、Windows で `/bigobj` が自動的に付与されます。  
+app 側の付与条件と理由は [ビルド構成](../../makefw/docs/build-configurations.md) の「テスト ビルドでの扱い」、testfw 側は `libsrc/makepart.mk` を参照してください。
+
+モックごとの `makepart.mk` で、これらのフラグや変数追跡の上限を個別に指定しません。
+
 ## 注入ライフサイクル
 
 テスト Fixture やテスト本体で `Mock_<lib>` を生成すると、そのコンストラクターで `_mock_<lib>` が現在のオブジェクトを指します。  
@@ -191,6 +201,7 @@ TEST_F(MyTest, example)
 - `_mock_<lib>` の設定と解除に `TESTFW_REGISTER_MOCK_INSTANCE` と `TESTFW_UNREGISTER_MOCK_INSTANCE` を使用していること
 - トレース出力の形式が同一ライブラリ内の既存実装と揃っていること
 - 新しい mock が既存のテスト ビルド経路で参照される配置に置かれていること
+- モックごとの `makepart.mk` で変数追跡や `/bigobj` を個別に指定していないこと
 
 ## app mock の弱リンク
 
