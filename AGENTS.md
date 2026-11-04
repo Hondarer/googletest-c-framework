@@ -42,5 +42,5 @@ make test
 - 同じディレクトリのモジュールを import する Python は、import より前に `sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))` を置いてください。  
   埋め込み版 Python (`._pth`) はスクリプトのディレクトリを `sys.path` に入れず、`ModuleNotFoundError` になるためです。  
   c-modernization-kit では `app/general/bin/check-python-import-path.py` と `PYTHONSAFEPATH=1` での実行で検証します。
-- `bin_test/` で子プロセスに待ち時間 (timeout) を指定するときは、`bin_test_timeout.scaled_timeout()` に Linux 基準の秒数を渡してください。  
-  Windows の Git Bash はプロセスの起動が遅いため、既定で 4 倍にします。環境変数 `BIN_TEST_TIMEOUT_SCALE` で倍率を変更できます。
+- `bin_test/` で子プロセスに待ち時間 (timeout) を指定するときは、Linux での所要時間に対して十分な余裕を取ってください。  
+  待ち時間は停止の検出に使うもので、Windows の Git Bash はプロセスの起動が遅く、Linux の数十倍かかることがあります。

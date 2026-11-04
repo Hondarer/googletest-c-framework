@@ -11,7 +11,6 @@ import sys
 # 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from bin_test_timeout import scaled_timeout
 from test_results_markdown import assert_results
 
 # Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると
@@ -146,7 +145,7 @@ public class SubprocedureTests : IDisposable {
         result = subprocess.run(
             ["make", "--no-print-directory", "test", "JOBS=1"],
             cwd=self.leaf, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            encoding="utf-8", errors="replace", timeout=scaled_timeout(240),
+            encoding="utf-8", errors="replace", timeout=960,
         )
         self.assertEqual(result.returncode, 0, result.stdout)
         log = (self.leaf / "results/ExampleTests.Pass/results.md").read_text(encoding="utf-8")
@@ -184,7 +183,7 @@ public class SubprocedureTests : IDisposable {
                 [BASH, str(self.root / "framework/testfw/bin_internal/exec_test_dotnet.sh")],
                 cwd=self.leaf, env=dict(self.env, CONFIG="RelWithDebInfo"),
                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                encoding="utf-8", errors="replace", timeout=scaled_timeout(60),
+                encoding="utf-8", errors="replace", timeout=240,
             )
             self.assertEqual(failed.returncode, 1, failed.stdout)
             failed_log = (self.leaf / "results/ExampleTests.Pass/results.md").read_text(encoding="utf-8")
@@ -197,7 +196,7 @@ public class SubprocedureTests : IDisposable {
         result = subprocess.run(
             [BASH, str(TESTFW / "bin_internal/exec_test_dotnet.sh")],
             cwd=self.leaf, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            encoding="utf-8", errors="replace", timeout=scaled_timeout(30),
+            encoding="utf-8", errors="replace", timeout=120,
         )
         self.assertNotEqual(result.returncode, 0, result.stdout)
         self.assertIn("--list-tests failed", result.stdout)
@@ -217,7 +216,7 @@ public class SubprocedureTests : IDisposable {
         result = subprocess.run(
             [BASH, str(TESTFW / "bin_internal/exec_test_dotnet.sh")],
             cwd=self.leaf, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            encoding="utf-8", errors="replace", timeout=scaled_timeout(30),
+            encoding="utf-8", errors="replace", timeout=120,
         )
         self.assertNotEqual(result.returncode, 0, result.stdout)
         self.assertIn("--list-tests found no tests", result.stdout)

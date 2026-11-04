@@ -12,7 +12,6 @@ import sys
 # 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from bin_test_timeout import scaled_timeout
 from test_results_markdown import assert_results
 
 # Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると
@@ -169,7 +168,7 @@ int main(int argc, char **argv) {
             ]
         result = subprocess.run(
             command, cwd=cls.leaf, env=cls.env, stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT, encoding="utf-8", errors="replace", timeout=scaled_timeout(120),
+            stderr=subprocess.STDOUT, encoding="utf-8", errors="replace", timeout=480,
         )
         if result.returncode:
             raise RuntimeError(result.stdout)
@@ -184,7 +183,7 @@ int main(int argc, char **argv) {
         result = subprocess.run(
             [BASH, str(self.script)], cwd=self.leaf, env=env,
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-            encoding="utf-8", errors="replace", timeout=scaled_timeout(120),
+            encoding="utf-8", errors="replace", timeout=480,
         )
         if (self.leaf / "results/all_tests/summary.md").exists():
             assert_results(self, self.leaf / "results")
@@ -351,7 +350,7 @@ int main(int argc, char **argv) {
             def run():
                 return subprocess.run([BASH, str(self.script)], cwd=self.leaf, env=env,
                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                      encoding="utf-8", errors="replace", timeout=scaled_timeout(120))
+                                      encoding="utf-8", errors="replace", timeout=480)
             first = run()
             self.assertEqual(first.returncode, 0, first.stdout)
             second = run()
