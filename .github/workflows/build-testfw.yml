@@ -12,6 +12,8 @@ permissions:
 
 env:
   MAKEFW_HOME: ${{ github.workspace }}/framework/makefw
+  # 埋め込み版 Python (._pth) と同じく、スクリプトのディレクトリを sys.path に入れずに実行する。
+  PYTHONSAFEPATH: "1"
 
 jobs:
   build-linux:

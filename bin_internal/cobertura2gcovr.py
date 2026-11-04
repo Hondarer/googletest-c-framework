@@ -18,6 +18,9 @@ import os
 import re
 import xml.etree.ElementTree as ET
 
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 
 def parse_condition_coverage(coverage_str):
     """

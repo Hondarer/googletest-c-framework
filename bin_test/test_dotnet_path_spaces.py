@@ -6,6 +6,11 @@ import shutil
 import subprocess
 import tempfile
 import unittest
+import sys
+
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from test_results_markdown import assert_results
 
 # Windows の subprocess は System32 を PATH より先に探すため、名前だけで起動すると

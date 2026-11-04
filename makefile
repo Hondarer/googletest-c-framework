@@ -98,7 +98,8 @@ clean : $(SUBDIRS)
 .PHONY: test
 test : $(SUBDIRS)
 	@$(MAKE) -C test test
-	python -m unittest discover -s bin_test -p 'test_*.py'
+	# 埋め込み版 Python (._pth) と同じく、スクリプトのディレクトリを sys.path に入れずに実行する。
+	PYTHONSAFEPATH=1 python -m unittest discover -s bin_test -p 'test_*.py'
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :
