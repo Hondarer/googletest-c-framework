@@ -9,6 +9,9 @@ import re
 import sys
 from urllib.parse import quote
 
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 from test_summary import text_encoding
 
 ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")

@@ -5,6 +5,10 @@ import argparse
 import json
 from pathlib import Path
 import sys
+import os
+
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from test_summary import SummaryError, text_encoding
 from test_subprocedures import SourceIndex, discover

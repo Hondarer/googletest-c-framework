@@ -6,6 +6,10 @@ from dataclasses import dataclass
 from pathlib import Path
 import re
 import sys
+import os
+
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from test_summary import CHECK, TAG, CountExpression, SummaryError, render_summary, source_lines, text_encoding
 

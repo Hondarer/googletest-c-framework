@@ -16,11 +16,15 @@ cobertura2gcov.py - Cobertura XML を gcov 形式に変換するスクリプト
 """
 
 import sys
-from test_summary import text_encoding
 import os
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from test_summary import text_encoding
 
 
 def parse_condition_coverage(coverage_str):
