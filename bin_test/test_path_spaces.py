@@ -205,6 +205,17 @@ int main(int argc, char **argv) {
         self.assertRegex(re.sub(r"\x1b\[[0-9;]*m", "", result.stdout), r"\[  PASSED  \] 1 test\.\n```\n")
         self.assertNotRegex(re.sub(r"\x1b\[[0-9;]*m", "", result.stdout), r"\[  PASSED  \] 1 test\.\n\n```")
 
+    @unittest.skipUnless(os.name == "nt", "[Windows] Linux 成果物との共存を検証する")
+    def test_windows_ignores_extensionless_linux_binary(self):
+        linux_binary = self.leaf / "bin/test leaf"
+        linux_binary.write_bytes(b"\x7fELF\x02\x01\x01\x00")
+        try:
+            result = self.run_tests("PathSpaces.Pass")
+            self.assertEqual(result.returncode, 0, result.stdout)
+            self.assertIn("test leaf.exe", result.stdout)
+        finally:
+            linux_binary.unlink()
+
     def test_failure_is_reported(self):
         result = self.run_tests("PathSpaces.Fail")
         self.assertEqual(result.returncode, 1, result.stdout)
@@ -345,7 +356,8 @@ int main(int argc, char **argv) {
         # テスト用にコピーしたスクリプトだけでラッパーを指定する。
         script_text = self.script.read_text(encoding="utf-8")
         try:
-            self.script.write_text(script_text.replace("TEST_BINARY=bin/${PWD##*/}", "TEST_BINARY='bin/only pass.sh'"), encoding="utf-8")
+            binary_selection = 'TEST_BINARY=bin/${PWD##*/}\nif [ "$IS_WINDOWS" -eq 1 ]; then\n    TEST_BINARY+=.exe\nfi'
+            self.script.write_text(script_text.replace(binary_selection, "TEST_BINARY='bin/only pass.sh'"), encoding="utf-8")
             source.write_text(original.replace("回数=1+]", "回数=1]"), encoding="utf-8")
             def run():
                 return subprocess.run([BASH, str(self.script)], cwd=self.leaf, env=env,

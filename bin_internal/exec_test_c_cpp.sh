@@ -56,6 +56,9 @@ FILES_LANG=$(bash "$WORKSPACE_DIR/framework/makefw/bin_internal/get_files_lang.s
 
 # テスト バイナリのパス (basename `pwd` 相当)
 TEST_BINARY=bin/${PWD##*/}
+if [ "$IS_WINDOWS" -eq 1 ]; then
+    TEST_BINARY+=.exe
+fi
 
 # スタック サイズ制限緩和
 # (1) ハード リミットのスタック サイズを取得
