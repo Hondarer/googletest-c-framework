@@ -9,6 +9,9 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'bin_internal'))
+# 埋め込み版 Python (._pth) はスクリプトのディレクトリを sys.path に入れないため、明示的に追加する。
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from bin_test_timeout import scaled_timeout
 import results_markdown as md
 from test_subprocedures import SourceIndex
 from test_summary import render_summary
@@ -398,7 +401,7 @@ else:
             env['PARTIAL'] = '1'
         if list_error:
             env['LIST_ERROR'] = '1'
-        result = subprocess.run([shutil.which('bash') or 'bash', str(scripts / 'exec_test_dotnet.sh')], cwd=leaf, env=env, capture_output=True, encoding='utf-8', errors='replace', timeout=30)
+        result = subprocess.run([shutil.which('bash') or 'bash', str(scripts / 'exec_test_dotnet.sh')], cwd=leaf, env=env, capture_output=True, encoding='utf-8', errors='replace', timeout=scaled_timeout(30))
         return result, leaf / 'results'
 
     def test_dotnet_full_counts_and_dynamic_fences(self):
