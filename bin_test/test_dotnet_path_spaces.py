@@ -22,6 +22,22 @@ BASH = shutil.which("bash") or "bash"
 TESTFW = Path(__file__).resolve().parents[1]
 MAKEFW = TESTFW.parent / "makefw"
 
+# NuGet のパッケージ ソースからサービス インデックスを読み込めないときのエラー コード。
+# ネットワークの無い環境で既定のソース (api.nuget.org) に到達できないときに出る。
+# see: https://learn.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu1301
+NUGET_UNREACHABLE = "error NU1301"
+
+
+def skip_if_nuget_unreachable(test, result):
+    """パッケージの復元が NuGet ソースに到達できずに失敗したとき、テストをスキップする。
+
+    ローカルのキャッシュやミラーから復元できる環境では、ビルドが成功するため実行する。
+    ソースに到達できないことは、フレームワークの不具合ではなく実行環境の制約のため、失敗にしない。
+    """
+    if result.returncode != 0 and NUGET_UNREACHABLE in result.stdout:
+        lines = [line.strip() for line in result.stdout.splitlines() if NUGET_UNREACHABLE in line]
+        test.skipTest("NuGet ソースに到達できないため、パッケージを復元できない: " + lines[-1])
+
 
 class DotnetPathSpacesTest(unittest.TestCase):
     @classmethod
@@ -147,8 +163,9 @@ public class SubprocedureTests : IDisposable {
             cwd=self.leaf, env=self.env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
             encoding="utf-8", errors="replace", timeout=960,
         )
+        skip_if_nuget_unreachable(self, result)
         self.assertEqual(result.returncode, 0, result.stdout)
-        log = (self.leaf / "results/ExampleTests.Pass/results.md").read_text(encoding="utf-8")
+        log =(self.leaf / "results/ExampleTests.Pass/results.md").read_text(encoding="utf-8")
         self.assertIn("// Arrange", log)
         self.assertIn("### 確認 (正常系:1)", log)
         branch = (self.leaf / "results/ExampleTests.Branch/results.md").read_text(encoding="utf-8")

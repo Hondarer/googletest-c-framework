@@ -95,10 +95,31 @@ clean : $(SUBDIRS)
 	@$(MAKE) -C test clean
 	@rm -f "$(BUILD_STAMP)"
 
+# framework/testfw.assured.stamp のハッシュが HEAD と一致し、作業ツリーに差分が無いとき、
+# test/ と bin_test/ のテストを省略する。判定は makefw の resolve_app_deps.sh --assured で行う。
+# libsrc (app がリンクするライブラリ) は $(SUBDIRS) として通常どおりビルドする。
+# スタンプが無いときは判定のスクリプトを起動せず、通常どおりテストする。
+# bin_test/ は、埋め込み版 Python (._pth) と同じく、スクリプトのディレクトリを sys.path に入れずに実行する。
+TESTFW_MAKEFW_HOME ?= $(if $(strip $(MAKEFW_HOME)),$(subst \,/,$(strip $(MAKEFW_HOME))),$(CURDIR)/../makefw)
+TESTFW_ASSURED_STAMP = $(CURDIR).assured.stamp
+
 .PHONY: test
 test : $(SUBDIRS)
-	@$(MAKE) -C test test
-	# 埋め込み版 Python (._pth) と同じく、スクリプトのディレクトリを sys.path に入れずに実行する。
+	@assured=0; \
+	if [ -f "$(TESTFW_ASSURED_STAMP)" ]; then \
+		resolver="$(TESTFW_MAKEFW_HOME)/bin_internal/resolve_app_deps.sh"; \
+		if [ -f "$$resolver" ]; then \
+			assured=$$(bash "$$resolver" --assured "$(CURDIR)") || exit $$?; \
+		else \
+			echo "Warning: $$resolver is not found. Ignoring testfw.assured.stamp." >&2; \
+		fi; \
+	fi; \
+	if [ "$$assured" = "1" ]; then \
+		echo "INFO: Skipping test and bin_test (testfw.assured.stamp matches the commit and the tree is clean)"; \
+		exit 0; \
+	fi; \
+	$(MAKE) -C test test || exit $$?; \
+	echo "PYTHONSAFEPATH=1 python -m unittest discover -s bin_test -p 'test_*.py'"; \
 	PYTHONSAFEPATH=1 python -m unittest discover -s bin_test -p 'test_*.py'
 
 .PHONY: $(SUBDIRS)

@@ -241,6 +241,15 @@ app 単位のスキップは、途中で 1 つでもテストが失敗すると 
 `test/src` 配下での直接 `make test` は妨げません。  
 詳細は [ビルド構成](../../makefw/docs/build-configurations.md#assuredstamp-による保証済み-app-の扱い) を参照してください。
 
+testfw 自身も、`framework/testfw.assured.stamp` で同じ判定を受けます。  
+省略が有効なとき、testfw 直下の `make test` (ルートの `make test` から呼ばれるもの) は `libsrc/` のライブラリだけをビルドし、`test/` と `bin_test/` のテストを実行しません。  
+利用するプロジェクトでは、上流で検証済みのコミットを書いたスタンプをコミットして使います。  
+詳細は [framework の省略](../../makefw/docs/build-configurations.md#framework-の省略) を参照してください。
+
+`bin_test/test_dotnet_path_spaces.py` は、.NET のテスト プロジェクトを生成し、NuGet からパッケージを復元してビルドします。  
+ネットワークの無い環境で NuGet ソースに到達できず、復元が `error NU1301` で失敗したときは、フレームワークの不具合ではないため、そのテストをスキップします。  
+ローカルのキャッシュやミラーから復元できる環境では、通常どおり実行します。
+
 ## 結果ファイル
 
 `make test` は `results/` 配下へ、人が読む結果を Markdown で出力します。
