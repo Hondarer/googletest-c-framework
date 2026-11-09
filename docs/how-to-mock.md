@@ -155,6 +155,11 @@ app 側の付与条件と理由は [ビルド構成](../../makefw/docs/build-con
 
 モックごとの `makepart.mk` で、これらのフラグや変数追跡の上限を個別に指定しません。
 
+app は `test/include_override/` に override ヘッダーを置けます。  
+makefw は、テストする app 自身と、その依存先の app の `test/include_override/` を、テスト対象 (`TEST_SRCS`) のコンパイルだけに追加します。  
+静的ライブラリとしてリンクする外部ライブラリは、リンク時に関数を差し替えられないため、この方式で呼び出しを mock 関数へ置き換えます。  
+override ヘッダー、モック ヘッダー、モック ライブラリは、外部ライブラリを取り込む app の `test/` 配下にまとめて置きます。
+
 ## 注入ライフサイクル
 
 テスト Fixture やテスト本体で `Mock_<lib>` を生成すると、そのコンストラクターで `_mock_<lib>` が現在のオブジェクトを指します。  
@@ -240,15 +245,15 @@ real delegate が同じオブジェクトを直接参照する構成では、追
 
 ### 複数の override ヘッダーで 1 つのモック ヘッダーを共有する場合
 
-`openssl/evp.h` と `openssl/rand.h` のように、複数の override ヘッダーが同じモック ヘッダーを参照する構成では、`_IN_OVERRIDE_HEADER_*` フラグの扱いに注意が必要です。
+`<lib>/a.h` と `<lib>/b.h` のように、複数の override ヘッダーが同じモック ヘッダーを参照する構成では、`_IN_OVERRIDE_HEADER_*` フラグの扱いに注意が必要です。
 
-モック ヘッダーの先頭で OpenSSL のヘッダーを無条件に取り込むと、もう一方の override ヘッダーが同じフラグを `#undef` して、置換マクロが定義されないまま処理が進みます。
+モック ヘッダーの先頭で対象ライブラリのヘッダーを無条件に取り込むと、もう一方の override ヘッダーが同じフラグを `#undef` して、置換マクロが定義されないまま処理が進みます。
 
 ```c
-/* override 経由の場合、OpenSSL のヘッダーは include_override 側で取り込み済みである */
-#ifndef _IN_OVERRIDE_HEADER_OPENSSL_H
-    #include <openssl/evp.h>
-    #include <openssl/rand.h>
+/* override 経由の場合、対象ライブラリのヘッダーは include_override 側で取り込み済みである */
+#ifndef _IN_OVERRIDE_HEADER_LIB_H
+    #include <lib/a.h>
+    #include <lib/b.h>
 #endif
 ```
 
