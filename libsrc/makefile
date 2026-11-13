@@ -66,71 +66,51 @@ test:
 		--app-deps --silent-missing --echo-command --progress \
 		"$$libsrc_jobs" test $(SUBDIRS)
 
-# Windows 用: 4 種類のランタイム ライブラリをビルド
-# Build all 4 runtime library variants for Windows.
+# Windows 用: ビルド・クリーン対象のランタイム ライブラリ種別 (既定は 4 種類すべて)
+# Runtime library variants to build/clean on Windows (all 4 variants by default).
+TESTFW_WINDOWS_VARIANTS ?= md mdd mt mtd
+
+# Windows 用: 指定されたランタイム ライブラリをビルド
+# Build specified runtime library variants for Windows.
 .PHONY: build-all-windows
 build-all-windows:
 	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
 	libsrc_jobs="$$jobs"; \
 	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=RelWithDebInfo MSVC_CRT=shared MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" default $(SUBDIRS)
-	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
-	libsrc_jobs="$$jobs"; \
-	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=Debug MSVC_CRT=shared MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" default $(SUBDIRS)
-	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
-	libsrc_jobs="$$jobs"; \
-	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=RelWithDebInfo MSVC_CRT=static MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" default $(SUBDIRS)
-	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
-	libsrc_jobs="$$jobs"; \
-	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=Debug MSVC_CRT=static MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" default $(SUBDIRS)
+	for variant in $(TESTFW_WINDOWS_VARIANTS); do \
+		case "$$variant" in \
+			md)  cfg=RelWithDebInfo; crt=shared ;; \
+			mdd) cfg=Debug;          crt=shared ;; \
+			mt)  cfg=RelWithDebInfo; crt=static ;; \
+			mtd) cfg=Debug;          crt=static ;; \
+			*)   echo "ERROR: Unknown TESTFW_WINDOWS_VARIANTS entry: $$variant" >&2; exit 1 ;; \
+		esac; \
+		CONFIG="$$cfg" MSVC_CRT="$$crt" MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
+			"$(ROOT_RUNNER)" \
+			--app-deps --silent-missing --echo-command --progress \
+			"$$libsrc_jobs" default $(SUBDIRS) || exit $$?; \
+	done
 
-# Windows 用: 4 種類のランタイム ライブラリをクリーン
-# Clean all 4 runtime library variants for Windows.
+# Windows 用: 指定されたランタイム ライブラリをクリーン
+# Clean specified runtime library variants for Windows.
 .PHONY: clean-all-windows
 clean-all-windows:
 	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
 	libsrc_jobs="$$jobs"; \
 	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=RelWithDebInfo MSVC_CRT=shared MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" clean $(SUBDIRS)
-	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
-	libsrc_jobs="$$jobs"; \
-	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=Debug MSVC_CRT=shared MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" clean $(SUBDIRS)
-	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
-	libsrc_jobs="$$jobs"; \
-	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=RelWithDebInfo MSVC_CRT=static MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" clean $(SUBDIRS)
-	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
-	libsrc_jobs="$$jobs"; \
-	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
-	CONFIG=Debug MSVC_CRT=static MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
-		"$(ROOT_RUNNER)" \
-		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" clean $(SUBDIRS)
+	for variant in $(TESTFW_WINDOWS_VARIANTS); do \
+		case "$$variant" in \
+			md)  cfg=RelWithDebInfo; crt=shared ;; \
+			mdd) cfg=Debug;          crt=shared ;; \
+			mt)  cfg=RelWithDebInfo; crt=static ;; \
+			mtd) cfg=Debug;          crt=static ;; \
+			*)   echo "ERROR: Unknown TESTFW_WINDOWS_VARIANTS entry: $$variant" >&2; exit 1 ;; \
+		esac; \
+		CONFIG="$$cfg" MSVC_CRT="$$crt" MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
+			"$(ROOT_RUNNER)" \
+			--app-deps --silent-missing --echo-command --progress \
+			"$$libsrc_jobs" clean $(SUBDIRS) || exit $$?; \
+	done
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS) :

@@ -8,6 +8,7 @@ BUILD_STAMP = $(CURDIR)/make_build.stamp
 ifeq ($(OS),Windows_NT)
     MSVC_CRT ?= shared
     CONFIG ?= RelWithDebInfo
+    TESTFW_WINDOWS_VARIANTS ?= md mdd mt mtd
     ifeq ($(MSVC_CRT_SUBDIR),)
         ifeq ($(CONFIG),Debug)
             ifeq ($(MSVC_CRT),shared)
@@ -33,6 +34,7 @@ default :
 	@git_hash=$$(git -C "$(CURDIR)" rev-parse HEAD 2>/dev/null); \
 	git_dirty=$$(git -C "$(CURDIR)" status --porcelain 2>/dev/null); \
 	msvc_crt="$(MSVC_CRT_SUBDIR)"; \
+	variants="$(strip $(TESTFW_WINDOWS_VARIANTS))"; \
 	if [ -f "$(BUILD_STAMP)" ] && [ -n "$$msvc_crt" ]; then \
 		prev_line=$$(sed -n '2p' "$(BUILD_STAMP)"); \
 		prev_crt=$$(printf '%s' "$$prev_line" | sed -n 's/^MSVC_CRT=//p'); \
@@ -43,14 +45,16 @@ default :
 	fi; \
 	if [ -n "$$git_hash" ] && [ -z "$$git_dirty" ] && [ -f "$(BUILD_STAMP)" ]; then \
 		prev_hash=$$(sed -n '1p' "$(BUILD_STAMP)"); \
+		prev_variants=$$(sed -n 's/^VARIANTS=//p' "$(BUILD_STAMP)"); \
+		if [ -z "$$prev_variants" ]; then prev_variants="md mdd mt mtd"; fi; \
 		if [ -n "$$msvc_crt" ]; then \
 			prev_crt=$$(sed -n 's/^MSVC_CRT=//p' "$(BUILD_STAMP)"); \
-			if [ "$$prev_hash" = "$$git_hash" ] && [ "$$prev_crt" = "$$msvc_crt" ]; then \
+			if [ "$$prev_hash" = "$$git_hash" ] && [ "$$prev_crt" = "$$msvc_crt" ] && [ "$$prev_variants" = "$$variants" ]; then \
 				echo "INFO: Skipping build (already built at $$git_hash with $$msvc_crt)"; \
 				exit 0; \
 			fi; \
 		else \
-			if [ "$$prev_hash" = "$$git_hash" ]; then \
+			if [ "$$prev_hash" = "$$git_hash" ] && [ "$$prev_variants" = "$$variants" ]; then \
 				echo "INFO: Skipping build (already built at $$git_hash)"; \
 				exit 0; \
 			fi; \
@@ -67,6 +71,7 @@ default :
 		if [ -n "$$msvc_crt" ]; then \
 			printf 'MSVC_CRT=%s\n' "$$msvc_crt" >> "$(BUILD_STAMP)"; \
 		fi; \
+		printf 'VARIANTS=%s\n' "$$variants" >> "$(BUILD_STAMP)"; \
 	fi; \
 	if [ $$make_exit -ne 0 ]; then exit $$make_exit; fi
 else

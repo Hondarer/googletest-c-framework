@@ -113,22 +113,26 @@ function safe_tput() {
 function format_src_path_for_display() {
     local src="$1"
     local normalized_src
-    local normalized_workspace
+
+    if [ -z "${_NORMALIZED_WORKSPACE+x}" ]; then
+        _NORMALIZED_WORKSPACE=$(realpath -m "$WORKSPACE_DIR" 2>/dev/null || printf '%s\n' "$WORKSPACE_DIR")
+        if [ $IS_WINDOWS -eq 1 ]; then
+            _NORMALIZED_WORKSPACE=$(cygpath -u "$_NORMALIZED_WORKSPACE" 2>/dev/null || printf '%s\n' "$_NORMALIZED_WORKSPACE")
+        fi
+        _NORMALIZED_WORKSPACE=${_NORMALIZED_WORKSPACE//\\//}
+    fi
 
     normalized_src=$(realpath -m "$src" 2>/dev/null || printf '%s\n' "$src")
-    normalized_workspace=$(realpath -m "$WORKSPACE_DIR" 2>/dev/null || printf '%s\n' "$WORKSPACE_DIR")
 
     if [ $IS_WINDOWS -eq 1 ]; then
         normalized_src=$(cygpath -u "$normalized_src" 2>/dev/null || printf '%s\n' "$normalized_src")
-        normalized_workspace=$(cygpath -u "$normalized_workspace" 2>/dev/null || printf '%s\n' "$normalized_workspace")
     fi
 
     normalized_src=${normalized_src//\\//}
-    normalized_workspace=${normalized_workspace//\\//}
 
     case "$normalized_src" in
-        "$normalized_workspace"/*)
-            printf '%s\n' "${normalized_src#"$normalized_workspace"/}"
+        "$_NORMALIZED_WORKSPACE"/*)
+            printf '%s\n' "${normalized_src#"$_NORMALIZED_WORKSPACE"/}"
             ;;
         *)
             printf '%s\n' "$normalized_src"
@@ -137,52 +141,10 @@ function format_src_path_for_display() {
 }
 
 # md5sum の出力差異に依存せず、チェックサム値だけを取得
-# Windows では _MD5_CACHE を参照し、未登録の場合は md5sum にフォールバックする
 function get_md5_checksum() {
     local src="$1"
 
-    if [ $IS_WINDOWS -eq 1 ] && declare -p _MD5_CACHE &>/dev/null && [[ -v _MD5_CACHE["$src"] ]]; then
-        printf '%s\n' "${_MD5_CACHE[$src]}"
-        return
-    fi
-
     md5sum "$src" 2>/dev/null | awk 'NR == 1 { print $1 }'
-}
-
-# 引数に渡したファイル一覧の MD5 を、1 回の powershell.exe 呼び出しで一括取得し
-# _MD5_CACHE へキャッシュする (Windows 専用。get_md5_checksum の高速化用)
-function populate_md5_cache_windows() {
-    local _ps_cmd=""
-    if command -v powershell.exe &>/dev/null; then
-        _ps_cmd="powershell.exe"
-    elif [ -f "/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe" ]; then
-        _ps_cmd="/c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe"
-    fi
-    if [ -z "$_ps_cmd" ]; then
-        return 0
-    fi
-
-    declare -gA _MD5_CACHE
-    local _src_keys=()
-    local ps_script=""
-    local src
-    for src in "$@"; do
-        local win_path
-        win_path=$(cygpath -w "$src" 2>/dev/null || printf '%s\n' "$src")
-        ps_script+="(Get-FileHash -LiteralPath '${win_path//\'/\'\'}' -Algorithm MD5).Hash.ToLower();"
-        _src_keys+=("$src")
-    done
-    local ps_output
-    ps_output=$("$_ps_cmd" -NoProfile -Command "$ps_script" 2>/dev/null)
-    local _i=0
-    while IFS= read -r _line; do
-        # PowerShell の出力は CRLF のため末尾の \r を除去する
-        _line="${_line%$'\r'}"
-        if [ -n "$_line" ] && [ $_i -lt ${#_src_keys[@]} ]; then
-            _MD5_CACHE["${_src_keys[$_i]}"]="$_line"
-        fi
-        ((_i++))
-    done <<< "$ps_output"
 }
 
 # leaf ディレクトリの再テスト スキップ判定に使うシグネチャを生成する。
@@ -253,45 +215,54 @@ function compute_test_signature() {
         [ -n "$src" ] && sig_srcs+=("$src")
     done <<< "$makefw_inputs"
 
-    # Windows のキャッシュにない入力は、1 回の md5sum でまとめて計算する。
-    # 入力ごとに起動すると、Windows ではプロセスの起動の時間が入力の数だけかかる。
-    local -A checksums=()
-    local -a uncached=()
-    for src in "${sig_srcs[@]}"; do
-        if [ $IS_WINDOWS -eq 1 ] && declare -p _MD5_CACHE &>/dev/null && [[ -v _MD5_CACHE["$src"] ]]; then
-            checksums["$src"]=${_MD5_CACHE[$src]}
-        else
-            uncached+=("$src")
-        fi
-    done
-    if [ ${#uncached[@]} -gt 0 ]; then
-        local md5_output
-        if ! md5_output=$(md5sum -- "${uncached[@]}" 2>/dev/null); then
+    # 入力ごとに realpath / cygpath / md5sum を起動すると、Windows ではプロセス生成の時間が
+    # 入力の数だけかかる。MSYS パスの変換 (cygpath -m) と Python による MD5 計算・
+    # ワークスペース相対パス正規化・ソートをそれぞれ 1 回の起動でまとめて行う。
+    local ws_for_py="$WORKSPACE_DIR"
+    local -a srcs_for_py=("${sig_srcs[@]}")
+    if [ "$IS_WINDOWS" -eq 1 ]; then
+        local cygpath_out
+        if ! cygpath_out=$(cygpath -m -- "$WORKSPACE_DIR" "${sig_srcs[@]}" 2>/dev/null); then
             return 1
         fi
-        local -a md5_lines=()
-        mapfile -t md5_lines <<< "$md5_output"
-        if [ ${#md5_lines[@]} -ne ${#uncached[@]} ]; then
+        local -a converted_paths=()
+        mapfile -t converted_paths <<< "$cygpath_out"
+        if [ "${#converted_paths[@]}" -ne $(( ${#sig_srcs[@]} + 1 )) ]; then
             return 1
         fi
-        local i
-        for i in "${!uncached[@]}"; do
-            # 名前に \ や改行を含むファイルの行は、先頭に \ が付く。
-            local line=${md5_lines[$i]#\\}
-            checksums["${uncached[$i]}"]=${line%% *}
-        done
+        ws_for_py="${converted_paths[0]}"
+        srcs_for_py=("${converted_paths[@]:1}")
     fi
 
-    local entries=""
-    for src in "${sig_srcs[@]}"; do
-        local checksum=${checksums[$src]-}
-        if [ -z "$checksum" ]; then
-            return 1
-        fi
-        entries+="$checksum  $(format_src_path_for_display "$src")"$'\n'
-    done
-
-    printf '%s' "$entries" | LC_ALL=C sort
+    python3 -c '
+import hashlib, os, sys
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", newline="\n")
+is_win = sys.argv[1] == "1"
+ws = os.path.realpath(sys.argv[2]).replace("\\", "/").rstrip("/")
+if is_win and len(ws) >= 2 and ws[1] == ":":
+    ws = ws[0].upper() + ws[1:]
+prefix = (ws + "/") if ws else "/"
+entries = []
+for p in sys.argv[3:]:
+    try:
+        with open(p, "rb") as f:
+            h = hashlib.md5(f.read()).hexdigest()
+    except OSError:
+        sys.exit(1)
+    norm = os.path.realpath(p).replace("\\", "/")
+    if is_win and len(norm) >= 2 and norm[1] == ":":
+        norm = norm[0].upper() + norm[1:]
+    if norm.startswith(prefix):
+        rel = norm[len(prefix):]
+    elif is_win and len(norm) >= 3 and norm[1] == ":" and norm[2] == "/":
+        rel = "/" + norm[0].lower() + norm[2:]
+    else:
+        rel = norm
+    entries.append(f"{h}  {rel}\n")
+entries.sort()
+sys.stdout.write("".join(entries))
+' "$IS_WINDOWS" "$ws_for_py" "${srcs_for_py[@]}"
 }
 
 # テスト一覧を取得
@@ -636,26 +607,6 @@ function main() {
     test_signature_file=$(mktemp)
     local test_signature_ok=1
 
-    if [ $IS_WINDOWS -eq 1 ]; then
-        local -a signature_srcs_for_cache=()
-        local ssrc
-        for ssrc in "${TEST_SOURCE_FILES[@]}" "${ADD_SOURCE_FILES[@]}"; do
-            [ -n "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
-        done
-        for ssrc in makepart.mk makelocal.mk; do
-            [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
-        done
-        for ssrc in "${TEST_LIBRARY_FILES[@]}"; do
-            [ -n "$ssrc" ] && [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
-        done
-        for ssrc in *.c *.cc *.cpp; do
-            [ -f "$ssrc" ] && signature_srcs_for_cache+=("$ssrc")
-        done
-        if [ ${#signature_srcs_for_cache[@]} -gt 0 ]; then
-            populate_md5_cache_windows "${signature_srcs_for_cache[@]}"
-        fi
-    fi
-
     if ! compute_test_signature > "$test_signature_file"; then
         test_signature_ok=0
         rm -f "$test_signature_file"
@@ -707,8 +658,6 @@ function main() {
     echo -e "----" | tee -a "$SUMMARY_JOURNAL"
     if [ -n "$TEST_SRCS" ]; then
         # TEST_SRCS が指定されている場合のみ MD5 チェックサムを表示
-        # (Windows での _MD5_CACHE 一括取得は、再テスト スキップ判定のシグネチャ計算時に
-        #  ADD_SRCS・ローカル makefile も含めてすでに実施済み)
 
         safe_tput cr
         echo -e "MD5 checksums of files in TEST_SRCS:" | tee -a "$SUMMARY_JOURNAL"
