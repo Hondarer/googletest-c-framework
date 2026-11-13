@@ -1355,19 +1355,33 @@ void delegate_fake_sftp_attributes_free(const char *file, const int line, const 
     if (attr != nullptr)
     {
         if (attr->name != nullptr)
+        {
             free(attr->name);
+        }
         if (attr->longname != nullptr)
+        {
             free(attr->longname);
+        }
         if (attr->owner != nullptr)
+        {
             free(attr->owner);
+        }
         if (attr->group != nullptr)
+        {
             free(attr->group);
+        }
         if (attr->acl != nullptr)
+        {
             free(attr->acl);
+        }
         if (attr->extended_type != nullptr)
+        {
             free(attr->extended_type);
+        }
         if (attr->extended_data != nullptr)
+        {
             free(attr->extended_data);
+        }
         free(attr);
     }
 }

@@ -5,7 +5,9 @@
 
 using namespace testing;
 
-BOOL delegate_real_SetProcessInformation(const char *file, const int line, const char *func, HANDLE process, PROCESS_INFORMATION_CLASS information_class, LPVOID information, DWORD information_size)
+BOOL delegate_real_SetProcessInformation(const char *file, const int line, const char *func, HANDLE process,
+                                         PROCESS_INFORMATION_CLASS information_class, LPVOID information,
+                                         DWORD information_size)
 {
     (void)file;
     (void)line;
@@ -14,17 +16,20 @@ BOOL delegate_real_SetProcessInformation(const char *file, const int line, const
     return SetProcessInformation(process, information_class, information, information_size);
 }
 
-BOOL mock_SetProcessInformation(const char *file, const int line, const char *func, HANDLE process, PROCESS_INFORMATION_CLASS information_class, LPVOID information, DWORD information_size)
+BOOL mock_SetProcessInformation(const char *file, const int line, const char *func, HANDLE process,
+                                PROCESS_INFORMATION_CLASS information_class, LPVOID information, DWORD information_size)
 {
     BOOL mock_ret;
 
     if (_mock_windows != nullptr)
     {
-        mock_ret = _mock_windows->SetProcessInformation(file, line, func, process, information_class, information, information_size);
+        mock_ret = _mock_windows->SetProcessInformation(file, line, func, process, information_class, information,
+                                                        information_size);
     }
     else
     {
-        mock_ret = delegate_real_SetProcessInformation(file, line, func, process, information_class, information, information_size);
+        mock_ret = delegate_real_SetProcessInformation(file, line, func, process, information_class, information,
+                                                       information_size);
     }
 
     if (getTraceLevel() > TRACE_NONE)

@@ -5,7 +5,8 @@
 
 using namespace testing;
 
-HANDLE delegate_real_OpenProcess(const char *file, const int line, const char *func, DWORD desired_access, BOOL inherit_handle, DWORD process_id)
+HANDLE delegate_real_OpenProcess(const char *file, const int line, const char *func, DWORD desired_access,
+                                 BOOL inherit_handle, DWORD process_id)
 {
     (void)file;
     (void)line;
@@ -14,7 +15,8 @@ HANDLE delegate_real_OpenProcess(const char *file, const int line, const char *f
     return OpenProcess(desired_access, inherit_handle, process_id);
 }
 
-HANDLE mock_OpenProcess(const char *file, const int line, const char *func, DWORD desired_access, BOOL inherit_handle, DWORD process_id)
+HANDLE mock_OpenProcess(const char *file, const int line, const char *func, DWORD desired_access, BOOL inherit_handle,
+                        DWORD process_id)
 {
     HANDLE mock_ret;
 

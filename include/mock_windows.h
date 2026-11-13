@@ -27,7 +27,8 @@ extern "C"
                                                 PCONSOLE_SCREEN_BUFFER_INFO);
     extern BOOL mock_SetConsoleMode(const char *, const int, const char *, HANDLE, DWORD);
     extern DWORD mock_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
-    extern BOOL mock_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL);
+    extern BOOL mock_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD,
+                                  PCONSOLE_READCONSOLE_CONTROL);
     extern BOOL mock_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
     extern HANDLE mock_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD,
                                           DWORD, DWORD, LPCSTR);
@@ -62,8 +63,10 @@ extern "C"
     extern HANDLE mock_OpenThread(const char *, const int, const char *, DWORD, BOOL, DWORD);
     extern BOOL mock_SetPriorityClass(const char *, const int, const char *, HANDLE, DWORD);
     extern DWORD mock_GetPriorityClass(const char *, const int, const char *, HANDLE);
-    extern BOOL mock_SetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
-    extern BOOL mock_GetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+    extern BOOL mock_SetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS,
+                                           LPVOID, DWORD);
+    extern BOOL mock_GetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS,
+                                           LPVOID, DWORD);
     extern BOOL mock_SetProcessPriorityBoost(const char *, const int, const char *, HANDLE, BOOL);
     extern BOOL mock_GetProcessPriorityBoost(const char *, const int, const char *, HANDLE, PBOOL);
     extern BOOL mock_SetThreadPriority(const char *, const int, const char *, HANDLE, int);
@@ -87,7 +90,8 @@ extern "C"
                 mock_SetConsoleMode(__FILE__, __LINE__, __func__, console_handle, mode)
             #define WaitForSingleObject(handle, milliseconds) \
                 mock_WaitForSingleObject(__FILE__, __LINE__, __func__, handle, milliseconds)
-            #define ReadConsoleW(handle, buffer, count, read, control) mock_ReadConsoleW(__FILE__, __LINE__, __func__, handle, buffer, count, read, control)
+            #define ReadConsoleW(handle, buffer, count, read, control) \
+                mock_ReadConsoleW(__FILE__, __LINE__, __func__, handle, buffer, count, read, control)
             #define ReadFile(file_handle, buffer, bytes_to_read, bytes_read, overlapped) \
                 mock_ReadFile(__FILE__, __LINE__, __func__, file_handle, buffer, bytes_to_read, bytes_read, overlapped)
             #define CreateFileMappingA(file, attributes, protect, size_high, size_low, name) \
@@ -143,20 +147,20 @@ extern "C"
                 mock_OpenThread(__FILE__, __LINE__, __func__, desired_access, inherit_handle, thread_id)
             #define SetPriorityClass(process, priority_class) \
                 mock_SetPriorityClass(__FILE__, __LINE__, __func__, process, priority_class)
-            #define GetPriorityClass(process) \
-                mock_GetPriorityClass(__FILE__, __LINE__, __func__, process)
+            #define GetPriorityClass(process) mock_GetPriorityClass(__FILE__, __LINE__, __func__, process)
             #define SetProcessInformation(process, information_class, information, information_size) \
-                mock_SetProcessInformation(__FILE__, __LINE__, __func__, process, information_class, information, information_size)
+                mock_SetProcessInformation(__FILE__, __LINE__, __func__, process, information_class, information, \
+                                           information_size)
             #define GetProcessInformation(process, information_class, information, information_size) \
-                mock_GetProcessInformation(__FILE__, __LINE__, __func__, process, information_class, information, information_size)
+                mock_GetProcessInformation(__FILE__, __LINE__, __func__, process, information_class, information, \
+                                           information_size)
             #define SetProcessPriorityBoost(process, disable_priority_boost) \
                 mock_SetProcessPriorityBoost(__FILE__, __LINE__, __func__, process, disable_priority_boost)
             #define GetProcessPriorityBoost(process, disable_priority_boost) \
                 mock_GetProcessPriorityBoost(__FILE__, __LINE__, __func__, process, disable_priority_boost)
             #define SetThreadPriority(thread, priority) \
                 mock_SetThreadPriority(__FILE__, __LINE__, __func__, thread, priority)
-            #define GetThreadPriority(thread) \
-                mock_GetThreadPriority(__FILE__, __LINE__, __func__, thread)
+            #define GetThreadPriority(thread) mock_GetThreadPriority(__FILE__, __LINE__, __func__, thread)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -172,7 +176,8 @@ extern BOOL delegate_real_GetConsoleScreenBufferInfo(const char *, const int, co
                                                      PCONSOLE_SCREEN_BUFFER_INFO);
 extern BOOL delegate_real_SetConsoleMode(const char *, const int, const char *, HANDLE, DWORD);
 extern DWORD delegate_real_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
-extern BOOL delegate_real_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL);
+extern BOOL delegate_real_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD,
+                                       PCONSOLE_READCONSOLE_CONTROL);
 extern BOOL delegate_real_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 extern HANDLE delegate_real_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES,
                                                DWORD, DWORD, DWORD, LPCSTR);
@@ -211,8 +216,10 @@ extern HANDLE delegate_real_OpenProcess(const char *, const int, const char *, D
 extern HANDLE delegate_real_OpenThread(const char *, const int, const char *, DWORD, BOOL, DWORD);
 extern BOOL delegate_real_SetPriorityClass(const char *, const int, const char *, HANDLE, DWORD);
 extern DWORD delegate_real_GetPriorityClass(const char *, const int, const char *, HANDLE);
-extern BOOL delegate_real_SetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
-extern BOOL delegate_real_GetProcessInformation(const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+extern BOOL delegate_real_SetProcessInformation(const char *, const int, const char *, HANDLE,
+                                                PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
+extern BOOL delegate_real_GetProcessInformation(const char *, const int, const char *, HANDLE,
+                                                PROCESS_INFORMATION_CLASS, LPVOID, DWORD);
 extern BOOL delegate_real_SetProcessPriorityBoost(const char *, const int, const char *, HANDLE, BOOL);
 extern BOOL delegate_real_GetProcessPriorityBoost(const char *, const int, const char *, HANDLE, PBOOL);
 extern BOOL delegate_real_SetThreadPriority(const char *, const int, const char *, HANDLE, int);
@@ -229,7 +236,8 @@ class Mock_windows
                 (const char *, const int, const char *, HANDLE, PCONSOLE_SCREEN_BUFFER_INFO));
     MOCK_METHOD(BOOL, SetConsoleMode, (const char *, const int, const char *, HANDLE, DWORD));
     MOCK_METHOD(DWORD, WaitForSingleObject, (const char *, const int, const char *, HANDLE, DWORD));
-    MOCK_METHOD(BOOL, ReadConsoleW, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL));
+    MOCK_METHOD(BOOL, ReadConsoleW,
+                (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL));
     MOCK_METHOD(BOOL, ReadFile, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED));
     MOCK_METHOD(HANDLE, CreateFileMappingA,
                 (const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR));
@@ -268,8 +276,10 @@ class Mock_windows
     MOCK_METHOD(HANDLE, OpenThread, (const char *, const int, const char *, DWORD, BOOL, DWORD));
     MOCK_METHOD(BOOL, SetPriorityClass, (const char *, const int, const char *, HANDLE, DWORD));
     MOCK_METHOD(DWORD, GetPriorityClass, (const char *, const int, const char *, HANDLE));
-    MOCK_METHOD(BOOL, SetProcessInformation, (const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD));
-    MOCK_METHOD(BOOL, GetProcessInformation, (const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD));
+    MOCK_METHOD(BOOL, SetProcessInformation,
+                (const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD));
+    MOCK_METHOD(BOOL, GetProcessInformation,
+                (const char *, const int, const char *, HANDLE, PROCESS_INFORMATION_CLASS, LPVOID, DWORD));
     MOCK_METHOD(BOOL, SetProcessPriorityBoost, (const char *, const int, const char *, HANDLE, BOOL));
     MOCK_METHOD(BOOL, GetProcessPriorityBoost, (const char *, const int, const char *, HANDLE, PBOOL));
     MOCK_METHOD(BOOL, SetThreadPriority, (const char *, const int, const char *, HANDLE, int));

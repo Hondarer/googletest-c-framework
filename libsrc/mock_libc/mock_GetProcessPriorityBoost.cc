@@ -5,7 +5,8 @@
 
 using namespace testing;
 
-BOOL delegate_real_GetProcessPriorityBoost(const char *file, const int line, const char *func, HANDLE process, PBOOL disable_priority_boost)
+BOOL delegate_real_GetProcessPriorityBoost(const char *file, const int line, const char *func, HANDLE process,
+                                           PBOOL disable_priority_boost)
 {
     (void)file;
     (void)line;
@@ -14,7 +15,8 @@ BOOL delegate_real_GetProcessPriorityBoost(const char *file, const int line, con
     return GetProcessPriorityBoost(process, disable_priority_boost);
 }
 
-BOOL mock_GetProcessPriorityBoost(const char *file, const int line, const char *func, HANDLE process, PBOOL disable_priority_boost)
+BOOL mock_GetProcessPriorityBoost(const char *file, const int line, const char *func, HANDLE process,
+                                  PBOOL disable_priority_boost)
 {
     BOOL mock_ret;
 

@@ -100,15 +100,15 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
             mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), (intptr_t)0, \
                          (intptr_t)0, (intptr_t)0)
         #define _MOCK_SYSCALL_4(number, a1, a2, a3) \
-            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), \
-                         (intptr_t)(a3), (intptr_t)0, (intptr_t)0)
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), (intptr_t)(a3), \
+                         (intptr_t)0, (intptr_t)0)
         #define _MOCK_SYSCALL_5(number, a1, a2, a3, a4) \
-            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), \
-                         (intptr_t)(a3), (intptr_t)(a4), (intptr_t)0)
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), (intptr_t)(a3), \
+                         (intptr_t)(a4), (intptr_t)0)
         #define _MOCK_SYSCALL_6(number, a1, a2, a3, a4, a5) \
-            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), \
-                         (intptr_t)(a3), (intptr_t)(a4), (intptr_t)(a5))
-        #define syscall(...)                                                                                  \
+            mock_syscall(__FILE__, __LINE__, __func__, (long)(number), (intptr_t)(a1), (intptr_t)(a2), (intptr_t)(a3), \
+                         (intptr_t)(a4), (intptr_t)(a5))
+        #define syscall(...) \
             _MOCK_SYSCALL_SELECT(__VA_ARGS__, _MOCK_SYSCALL_6, _MOCK_SYSCALL_5, _MOCK_SYSCALL_4, _MOCK_SYSCALL_3, \
                                  _MOCK_SYSCALL_2, _MOCK_SYSCALL_1)(__VA_ARGS__)
 

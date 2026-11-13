@@ -5,7 +5,8 @@
 
 using namespace testing;
 
-BOOL delegate_real_SetPriorityClass(const char *file, const int line, const char *func, HANDLE process, DWORD priority_class)
+BOOL delegate_real_SetPriorityClass(const char *file, const int line, const char *func, HANDLE process,
+                                    DWORD priority_class)
 {
     (void)file;
     (void)line;

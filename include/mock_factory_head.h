@@ -534,7 +534,9 @@
     ret name() \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(); \
+        } \
     }
 
 // 1 引数 void 戻り値
@@ -561,7 +563,9 @@
     ret name(A1 _1) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1); \
+        } \
     }
 
 // 2 引数 void 戻り値
@@ -588,7 +592,9 @@
     ret name(A1 _1, A2 _2) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2); \
+        } \
     }
 
 // 3 引数 void 戻り値
@@ -615,7 +621,9 @@
     ret name(A1 _1, A2 _2, A3 _3) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3); \
+        } \
     }
 
 // 4 引数 void 戻り値
@@ -642,7 +650,9 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4); \
+        } \
     }
 
 // 5 引数 void 戻り値
@@ -669,7 +679,9 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4, _5); \
+        } \
     }
 
 // 6 引数 void 戻り値
@@ -696,7 +708,9 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4, _5, _6); \
+        } \
     }
 
 // 7 引数 void 戻り値
@@ -723,7 +737,9 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4, _5, _6, _7); \
+        } \
     }
 
 // 8 引数 void 戻り値
@@ -750,7 +766,9 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4, _5, _6, _7, _8); \
+        } \
     }
 
 // 9 引数 void 戻り値
@@ -777,7 +795,9 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8, A9 _9) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4, _5, _6, _7, _8, _9); \
+        } \
     }
 
 // 10 引数 void 戻り値
@@ -804,5 +824,7 @@
     ret name(A1 _1, A2 _2, A3 _3, A4 _4, A5 _5, A6 _6, A7 _7, A8 _8, A9 _9, A10 _10) \
     { \
         if (_mock_##name) \
+        { \
             _mock_##name->name(_1, _2, _3, _4, _5, _6, _7, _8, _9, _10); \
+        } \
     }

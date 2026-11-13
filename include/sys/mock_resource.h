@@ -26,11 +26,10 @@ extern "C"
 
     #ifdef _IN_OVERRIDE_HEADER_SYS_RESOURCE_H
 
-        #define setpriority(which, who, prio) \
-            mock_setpriority(__FILE__, __LINE__, __func__, (int)(which), who, prio)
-        #define getpriority(which, who) mock_getpriority(__FILE__, __LINE__, __func__, (int)(which), who)
-        #define setrlimit(resource, rlim) mock_setrlimit(__FILE__, __LINE__, __func__, (int)(resource), rlim)
-        #define getrlimit(resource, rlim) mock_getrlimit(__FILE__, __LINE__, __func__, (int)(resource), rlim)
+        #define setpriority(which, who, prio) mock_setpriority(__FILE__, __LINE__, __func__, (int)(which), who, prio)
+        #define getpriority(which, who)       mock_getpriority(__FILE__, __LINE__, __func__, (int)(which), who)
+        #define setrlimit(resource, rlim)     mock_setrlimit(__FILE__, __LINE__, __func__, (int)(resource), rlim)
+        #define getrlimit(resource, rlim)     mock_getrlimit(__FILE__, __LINE__, __func__, (int)(resource), rlim)
 
     #else // _IN_OVERRIDE_HEADER_SYS_RESOURCE_H
 

@@ -5,7 +5,8 @@
 
 using namespace testing;
 
-HANDLE delegate_real_OpenThread(const char *file, const int line, const char *func, DWORD desired_access, BOOL inherit_handle, DWORD thread_id)
+HANDLE delegate_real_OpenThread(const char *file, const int line, const char *func, DWORD desired_access,
+                                BOOL inherit_handle, DWORD thread_id)
 {
     (void)file;
     (void)line;
@@ -14,7 +15,8 @@ HANDLE delegate_real_OpenThread(const char *file, const int line, const char *fu
     return OpenThread(desired_access, inherit_handle, thread_id);
 }
 
-HANDLE mock_OpenThread(const char *file, const int line, const char *func, DWORD desired_access, BOOL inherit_handle, DWORD thread_id)
+HANDLE mock_OpenThread(const char *file, const int line, const char *func, DWORD desired_access, BOOL inherit_handle,
+                       DWORD thread_id)
 {
     HANDLE mock_ret;
 

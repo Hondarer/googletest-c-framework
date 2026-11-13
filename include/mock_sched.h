@@ -25,8 +25,8 @@ extern "C"
 
         #define sched_setscheduler(pid, policy, param) \
             mock_sched_setscheduler(__FILE__, __LINE__, __func__, pid, policy, param)
-        #define sched_getscheduler(pid)       mock_sched_getscheduler(__FILE__, __LINE__, __func__, pid)
-        #define sched_getparam(pid, param)    mock_sched_getparam(__FILE__, __LINE__, __func__, pid, param)
+        #define sched_getscheduler(pid)    mock_sched_getscheduler(__FILE__, __LINE__, __func__, pid)
+        #define sched_getparam(pid, param) mock_sched_getparam(__FILE__, __LINE__, __func__, pid, param)
 
     #else // _IN_OVERRIDE_HEADER_SCHED_H
 
@@ -40,7 +40,8 @@ extern int delegate_real_sched_getparam(const char *, const int, const char *, p
 class Mock_sched
 {
   public:
-    MOCK_METHOD(int, sched_setscheduler, (const char *, const int, const char *, pid_t, int, const struct sched_param *));
+    MOCK_METHOD(int, sched_setscheduler,
+                (const char *, const int, const char *, pid_t, int, const struct sched_param *));
     MOCK_METHOD(int, sched_getscheduler, (const char *, const int, const char *, pid_t));
     MOCK_METHOD(int, sched_getparam, (const char *, const int, const char *, pid_t, struct sched_param *));
 

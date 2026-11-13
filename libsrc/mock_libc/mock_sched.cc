@@ -22,7 +22,8 @@ Mock_sched::~Mock_sched()
     TESTFW_UNREGISTER_MOCK_INSTANCE(_mock_sched);
 }
 
-int delegate_real_sched_setscheduler(const char *file, const int line, const char *func, pid_t pid, int policy, const struct sched_param *param)
+int delegate_real_sched_setscheduler(const char *file, const int line, const char *func, pid_t pid, int policy,
+                                     const struct sched_param *param)
 {
     // avoid -Wunused-parameter
     (void)file;
@@ -32,7 +33,8 @@ int delegate_real_sched_setscheduler(const char *file, const int line, const cha
     return sched_setscheduler(pid, policy, param);
 }
 
-int mock_sched_setscheduler(const char *file, const int line, const char *func, pid_t pid, int policy, const struct sched_param *param)
+int mock_sched_setscheduler(const char *file, const int line, const char *func, pid_t pid, int policy,
+                            const struct sched_param *param)
 {
     int mock_ret;
 
@@ -100,7 +102,8 @@ int mock_sched_getscheduler(const char *file, const int line, const char *func, 
     return mock_ret;
 }
 
-int delegate_real_sched_getparam(const char *file, const int line, const char *func, pid_t pid, struct sched_param *param)
+int delegate_real_sched_getparam(const char *file, const int line, const char *func, pid_t pid,
+                                 struct sched_param *param)
 {
     // avoid -Wunused-parameter
     (void)file;
