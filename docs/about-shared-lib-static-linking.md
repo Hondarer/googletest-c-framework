@@ -94,34 +94,30 @@ The first found `.a` file is used. If not found, it remains as `-l` option for d
 
 ### 動作フロー / Operation Flow
 
-```plantuml
-@startuml
-start
-:LIB_TYPE=shared?;
+```mermaid
+flowchart TD
+    startNode((開始)) --> step1["LIB_TYPE=shared?"]
+    step1 --> step2["LIBS から .a ファイルを直接抽出"]
 
-:LIBS から .a ファイルを直接抽出;
+    subgraph part ["LIBS から -l オプションを処理 / Process -l options from LIBS"]
+        step3["LIBS から -l オプションを抽出"]
+        step4["検索パスから .a を検索"]
+        cond1{".a が見つかる?"}
+        out_static["静的リンク対象"]
+        out_dynamic["動的リンク対象"]
 
-partition "LIBS から -l オプションを処理 / Process -l options from LIBS" {
-  :LIBS から -l オプションを抽出;
+        step3 --> step4 --> cond1
+        cond1 -- yes --> out_static
+        cond1 -- no --> out_dynamic
+    end
 
-  :検索パスから .a を検索;
-
-  if (.a が見つかる?) then (yes)
-    :静的リンク対象;
-  else (no)
-    :動的リンク対象;
-  endif
-}
-
-:共有ライブラリをビルド:
-gcc -shared -o libXXX.so
-  (オブジェクト / objects)
-  (静的ライブラリ / static libraries)
-  (動的ライブラリオプション / dynamic library options);
-
-stop
-@enduml
+    step2 --> step3
+    out_static --> step5["共有ライブラリをビルド:<br>gcc -shared -o libXXX.so<br>(オブジェクト / objects)<br>(静的ライブラリ / static libraries)<br>(動的ライブラリオプション / dynamic library options)"]
+    out_dynamic --> step5
+    step5 --> endNode((終了))
 ```
+
+CodeBlock: 動作フロー / Operation Flow
 
 ## 使用例 / Usage Examples
 
