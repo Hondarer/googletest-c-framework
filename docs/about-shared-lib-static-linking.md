@@ -117,7 +117,7 @@ flowchart TD
     step5 --> endNode((終了))
 ```
 
-CodeBlock: 動作フロー / Operation Flow
+Figure: 動作フロー / Operation Flow
 
 ## 使用例 / Usage Examples
 
