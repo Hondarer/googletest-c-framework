@@ -43,13 +43,18 @@ COLOR_RULES = [
     # 赤: 失敗 (OnTestEnd で result()->Failed() の場合、PrintFailedTests)
     (re.compile(r"^\[\s*FAILED\s*\]"), AnsiColor.RED),
 
-    # 黄: スキップ (OnTestEnd で result()->Skipped() の場合、PrintSkippedTests)
-    (re.compile(r"^\[\s*SKIPPED\s*\]"), AnsiColor.YELLOW),
+    # 緑: スキップ (OnTestEnd で result()->Skipped() の場合、OnTestIterationEnd、PrintSkippedTests)
+    # GoogleTest はスキップを成功と同じ緑で出力する。
+    # see: https://github.com/google/googletest/blob/v1.17.0/googletest/src/gtest.cc
+    (re.compile(r"^\[\s*SKIPPED\s*\]"), AnsiColor.GREEN),
 
-    # 黄: Death test 実行中 (DeathTest 内部で使用)
-    (re.compile(r"^\[\s*DEATH\s*\]"), AnsiColor.YELLOW),
+    # 黄: 無効テスト (OnTestDisabled)
+    (re.compile(r"^\[\s*DISABLED\s*\]"), AnsiColor.YELLOW),
 
-    # 黄: 警告 (GTEST_FLAG の警告出力など)
+    # 黄: 警告 (本フレームワーク独自の着色)
+    # GoogleTest は内部ログの "[WARNING]" を着色しないが、テスト実行スクリプトが出力する
+    # "[ WARNING ]" と同じく WARNING 判定の根拠になる行であるため、黄で示す。
+    # Death test の "[  DEATH   ]" など、GoogleTest が着色しない他の見出しは着色しない。
     (re.compile(r"^\[\s*WARNING\s*\]"), AnsiColor.YELLOW),
 
     # 緑: 成功 (OnTestEnd で result()->Passed() の場合)

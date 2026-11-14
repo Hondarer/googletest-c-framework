@@ -108,8 +108,8 @@ clean : $(SUBDIRS)
 TESTFW_MAKEFW_HOME ?= $(if $(strip $(MAKEFW_HOME)),$(subst \,/,$(strip $(MAKEFW_HOME))),$(CURDIR)/../makefw)
 TESTFW_ASSURED_STAMP = $(CURDIR).assured.stamp
 
-.PHONY: test
-test : $(SUBDIRS)
+.PHONY: test quicktest
+test quicktest : $(SUBDIRS)
 	@assured=0; \
 	if [ -f "$(TESTFW_ASSURED_STAMP)" ]; then \
 		resolver="$(TESTFW_MAKEFW_HOME)/bin_internal/resolve_app_deps.sh"; \
@@ -123,7 +123,7 @@ test : $(SUBDIRS)
 		echo "INFO: Skipping test and bin_test (testfw.assured.stamp matches the commit and the tree is clean)"; \
 		exit 0; \
 	fi; \
-	$(MAKE) -C test test || exit $$?; \
+	$(MAKE) -C test $@ || exit $$?; \
 	echo "PYTHONSAFEPATH=1 python -m unittest discover -s bin_test -p 'test_*.py'"; \
 	PYTHONSAFEPATH=1 python -m unittest discover -s bin_test -p 'test_*.py'
 

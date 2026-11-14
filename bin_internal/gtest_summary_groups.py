@@ -78,8 +78,10 @@ def finish(manifest, encoding, counts_dir=None):
             executed_at = next(line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 実施日時: "))
             # レコードで書式化済みのため、そのまま転記する。
             parameter = next((line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- パラメーター: ")), "")
+            run_mode = next((line.split(": ", 1)[1] for line in content.splitlines() if line.startswith("- 実行方式: ")), "")
             output = execution_output(content)
             records.append({"name": name, "status": status, "executed_at": executed_at, "parameter": parameter,
+                            "run_mode": run_mode,
                             "path": record_path(name)[len(key) + 1:] + "/results.md", "output": output})
         write(Path("results") / key / "results.md", definition(key, group["evidence"], records, len(group["all"])))
         if counts_dir:

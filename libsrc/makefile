@@ -56,15 +56,15 @@ clean:
 		"$$libsrc_jobs" clean $(SUBDIRS)
 endif
 
-.PHONY: test
-test:
+.PHONY: test quicktest
+test quicktest:
 	@$(call _MAKEFW_RESOLVE_PARALLEL_SHELL) \
 	libsrc_jobs="$$jobs"; \
 	if [ -z "$$libsrc_jobs" ]; then libsrc_jobs=1; fi; \
 	MAKEFW_SUBDIR_MAKE="$(MAKE)" "$(SHELL)" \
 		"$(ROOT_RUNNER)" \
 		--app-deps --silent-missing --echo-command --progress \
-		"$$libsrc_jobs" test $(SUBDIRS)
+		"$$libsrc_jobs" $@ $(SUBDIRS)
 
 # Windows 用: ビルド・クリーン対象のランタイム ライブラリ種別 (既定は 4 種類すべて)
 # Runtime library variants to build/clean on Windows (all 4 variants by default).

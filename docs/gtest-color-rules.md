@@ -13,7 +13,7 @@ GoogleTest の内部では、以下の 4 つの色が定義されています。
 | 既定 (無色) | `kDefault` | `\033[0m` | 色のリセット |
 | 緑 | `kGreen` | `\033[0;32m` | 成功状態の表示 |
 | 赤 | `kRed` | `\033[0;31m` | 失敗状態の表示 |
-| 黄 | `kYellow` | `\033[0;33m` | スキップ、警告の表示 |
+| 黄 | `kYellow` | `\033[0;33m` | 無効テスト、注記の表示 |
 
 Table: GoogleTest の内部定義色と ANSI コード一覧
 
@@ -38,18 +38,25 @@ Table: テスト実行フェーズの見出し行と着色定義
 | `[       OK ]` | 緑 | 個別テストの成功 |
 | `[  PASSED  ]` | 緑 | テスト全体の成功サマリー |
 | `[  FAILED  ]` | 赤 | 個別テストの失敗、または失敗サマリー |
-| `[ SKIPPED  ]` | 黄 | テストのスキップ (GTEST_SKIP 使用時) |
+| `[  SKIPPED ]` | 緑 | テストのスキップ (GTEST_SKIP 使用時) |
+| `[ DISABLED ]` | 黄 | 無効にしたテスト (`DISABLED_` 使用時) |
 
 Table: テスト結果の見出し行と着色定義
+
+GoogleTest は、スキップを成功と同じ緑で出力します。
 
 ### その他の情報出力
 
 | 見出し | 色 | 意味 |
 |---|---|---|
-| `[  DEATH   ]` | 黄 | Death test 実行中 |
-| `[  INFO    ]` | 黄 | 情報メッセージ |
+| `[  DEATH   ]` | なし | Death test の子プロセスが出力した各行の行頭 (失敗メッセージに含まれる) |
+| `[  INFO ]`、`[WARNING]`、`[ ERROR ]`、`[ FATAL ]` | なし | GoogleTest の内部ログ (標準エラー出力) |
 
 Table: その他の情報出力見出しと着色定義
+
+これらの見出しは `ColoredPrintf` を通らないため、GoogleTest は着色しません。  
+`add_gtest_color.py` も、`[  DEATH   ]`、`[  INFO ]`、`[ ERROR ]`、`[ FATAL ]` を着色しません。  
+例外として、`[ WARNING ]` (`[WARNING]` を含む) は黄で着色します。テスト実行スクリプトが出力する警告と同じく、WARNING 判定の根拠になる行であるためです。これは本フレームワーク独自の着色です。
 
 ## 出力例
 
@@ -66,13 +73,13 @@ Table: その他の情報出力見出しと着色定義
 [----------] 2 tests from FooTest (1 ms total)        <- 緑
 [----------] 1 test from BarTest                      <- 緑
 [ RUN      ] BarTest.SkippedOnCondition               <- 緑
-[ SKIPPED  ] BarTest.SkippedOnCondition (0 ms)        <- 黄
+[  SKIPPED ] BarTest.SkippedOnCondition (0 ms)        <- 緑
 [----------] 1 test from BarTest (0 ms total)         <- 緑
 [----------] Global test environment tear-down        <- 緑
 [==========] 3 tests from 2 test suites ran. (2 ms)   <- 緑
 [  PASSED  ] 1 test.                                  <- 緑
-[ SKIPPED  ] 1 test, listed below:                    <- 黄
-[ SKIPPED  ] BarTest.SkippedOnCondition               <- 黄
+[  SKIPPED ] 1 test, listed below:                    <- 緑
+[  SKIPPED ] BarTest.SkippedOnCondition               <- 緑
 [  FAILED  ] 1 test, listed below:                    <- 赤
 [  FAILED  ] FooTest.HasXyzProperty                   <- 赤
 
@@ -112,11 +119,13 @@ export GTEST_COLOR=0    # 色を無効化
 
 | メソッド | 出力する見出し |
 |---|---|
-| `OnTestProgramStart` | `[==========]` (緑) |
-| `OnTestSuiteStart` | `[----------]` (緑) |
+| `OnTestIterationStart` | `[==========]` (緑) |
+| `OnEnvironmentsSetUpStart`、`OnEnvironmentsTearDownStart` | `[----------]` (緑) |
+| `OnTestSuiteStart`、`OnTestSuiteEnd` | `[----------]` (緑) |
 | `OnTestStart` | `[ RUN      ]` (緑) |
-| `OnTestEnd` | `[       OK ]` (緑) または `[  FAILED  ]` (赤) または `[ SKIPPED  ]` (黄) |
-| `OnTestProgramEnd` | `[  PASSED  ]` (緑)、`[  FAILED  ]` (赤) |
+| `OnTestDisabled` | `[ DISABLED ]` (黄) |
+| `OnTestEnd` | `[       OK ]` (緑) または `[  SKIPPED ]` (緑) または `[  FAILED  ]` (赤) |
+| `OnTestIterationEnd` | `[==========]` (緑)、`[  PASSED  ]` (緑)、`[  SKIPPED ]` (緑)、`[  FAILED  ]` (赤) |
 
 Table: PrettyUnitTestResultPrinter のメソッドと出力見出し対応
 
@@ -156,7 +165,8 @@ Windows の `add_gtest_color.py` は、行頭の `[` で始まる GoogleTest の
 | `[       OK ]` | 緑 | ✅ 完全 |
 | `[  PASSED  ]` | 緑 | ✅ 完全 |
 | `[  FAILED  ]` | 赤 | ✅ 完全 |
-| `[ SKIPPED  ]` | 黄 | ✅ 完全 |
+| `[  SKIPPED ]` | 緑 | ✅ 完全 |
+| `[ DISABLED ]` | 黄 | ✅ 完全 |
 | `[==========]` | 緑 | ✅ 完全 |
 | `[----------]` | 緑 | ✅ 完全 |
 
@@ -164,19 +174,23 @@ Table: 見出しテキスト別の色復元可逆性
 
 ### 可逆性の技術的根拠
 
-元の GoogleTest ソース コード (`gtest.cc`) では、`PrettyUnitTestResultPrinter` クラスが次のように着色を行っています。
+元の GoogleTest ソース コード (`gtest.cc`) では、`PrettyUnitTestResultPrinter` クラスが次のように着色を行っています。  
+次の抜粋は [GoogleTest 1.17.0 の gtest.cc](https://github.com/google/googletest/blob/v1.17.0/googletest/src/gtest.cc) に基づきます。
 
 ```cpp
 // OnTestStart - テスト開始時
-ColoredPrintf(GTestColor::kGreen, "[ RUN      ]");
+ColoredPrintf(GTestColor::kGreen, "[ RUN      ] ");
+
+// OnTestDisabled - 無効にしたテスト
+ColoredPrintf(GTestColor::kYellow, "[ DISABLED ] ");
 
 // OnTestEnd - テスト終了時
-if (result.Skipped()) {
-  ColoredPrintf(GTestColor::kYellow, "[ SKIPPED  ]");
-} else if (result.Passed()) {
-  ColoredPrintf(GTestColor::kGreen, "[       OK ]");
+if (test_info.result()->Passed()) {
+  ColoredPrintf(GTestColor::kGreen, "[       OK ] ");
+} else if (test_info.result()->Skipped()) {
+  ColoredPrintf(GTestColor::kGreen, "[  SKIPPED ] ");
 } else {
-  ColoredPrintf(GTestColor::kRed, "[  FAILED  ]");
+  ColoredPrintf(GTestColor::kRed, "[  FAILED  ] ");
 }
 ```
 
@@ -184,13 +198,15 @@ if (result.Skipped()) {
 
 ### 可逆でない可能性がある部分
 
-次のケースでは、フィルターが対応できない可能性があります。
+次のケースでは、フィルターの出力が元の GoogleTest の着色と一致しない、または対応できない可能性があります。
 
-1. **カスタム TestEventListener の出力**: ユーザーが独自の Listener を実装し、標準と異なる見出しを使用した場合
+1. **本フレームワーク独自の着色**: GoogleTest が着色しない `[WARNING]` を、フィルターが黄で着色する場合
 
-2. **将来の GoogleTest バージョン**: 新しい見出しが追加された場合は、フィルターの更新が必要となる可能性
+2. **カスタム TestEventListener の出力**: ユーザーが独自の Listener を実装し、標準と異なる見出しを使用した場合
 
-3. **サード パーティー ツールの出力**: GoogleTest 互換の書式でも、微妙に異なるスペーシングを使用している場合
+3. **将来の GoogleTest バージョン**: 新しい見出しが追加された場合は、フィルターの更新が必要となる可能性
+
+4. **サード パーティー ツールの出力**: GoogleTest 互換の書式でも、微妙に異なるスペーシングを使用している場合
 
 ### 検証方法
 

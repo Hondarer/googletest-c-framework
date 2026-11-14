@@ -173,11 +173,15 @@ int main(int argc, char **argv) {
         if result.returncode:
             raise RuntimeError(result.stdout)
 
-    def run_tests(self, test_filter, coverage=False, source_path=None):
+    def run_tests(self, test_filter, coverage=False, source_path=None, quicktest=False):
         env = dict(
             self.env, GTEST_FILTER=test_filter, MAKEFW_TEST_FORCE="1",
             TEST_SRCS="../source/sample.c" if coverage else "", ADD_SRCS="",
         )
+        if quicktest:
+            env["TESTFW_QUICKTEST"] = "1"
+        else:
+            env.pop("TESTFW_QUICKTEST", None)
         if source_path is not None:
             env["TEST_SRCS"] = source_path
         result = subprocess.run(
@@ -347,6 +351,7 @@ int main(int argc, char **argv) {
         env = dict(self.env, TEST_SRCS="", ADD_SRCS="")
         env.pop("GTEST_FILTER", None)
         env.pop("MAKEFW_TEST_FORCE", None)
+        env.pop("TESTFW_QUICKTEST", None)
         # テスト本体の失敗は別テストで検証し、ここでは成功する定義だけを展開する。
         wrapper = self.leaf / "bin/only pass.sh"
         binary = "test leaf.exe" if os.name == "nt" else "test leaf"
@@ -367,6 +372,22 @@ int main(int argc, char **argv) {
             self.assertEqual(first.returncode, 0, first.stdout)
             second = run()
             self.assertIn("Skipping test", second.stdout)
+            quick_env = dict(env, TESTFW_QUICKTEST="1")
+            quick_first = subprocess.run([BASH, str(self.script)], cwd=self.leaf, env=quick_env,
+                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                         encoding="utf-8", errors="replace", timeout=480)
+            # スタンプは通常実行と一括実行で共通であり、どちらの成功後も他方を省略する。
+            self.assertEqual(quick_first.returncode, 0, quick_first.stdout)
+            self.assertIn("Skipping test", quick_first.stdout)
+            (self.leaf / "test.stamp").unlink()
+            quick_second = subprocess.run([BASH, str(self.script)], cwd=self.leaf, env=quick_env,
+                                          stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                          encoding="utf-8", errors="replace", timeout=480)
+            self.assertEqual(quick_second.returncode, 0, quick_second.stdout)
+            self.assertNotIn("Skipping test", quick_second.stdout)
+            after_quick = run()
+            self.assertEqual(after_quick.returncode, 0, after_quick.stdout)
+            self.assertIn("Skipping test", after_quick.stdout)
             summary_script.write_text(original_script + "\n", encoding="utf-8")
             third = run()
             self.assertEqual(third.returncode, 0, third.stdout)
@@ -455,6 +476,43 @@ int main(int argc, char **argv) {
         self.assertEqual(result.returncode, 0, result.stdout)
         self.assertTrue((self.leaf / "results/all_tests/coverage.xml").exists(), result.stdout)
         self.assertIn("source/sample.c", result.stdout)
+
+    def test_quicktest_batch(self):
+        result = self.run_tests(
+            "PathSpaces.Pass:*/Repeats.*/*:RawParams.Bytes/*:EvidenceFixture.ReportsSubprocedures:Records/EvidenceParams.ReportsSubprocedures/*",
+            coverage=True, quicktest=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertTrue((self.leaf / "results/all_tests/coverage.xml").exists(), result.stdout)
+        self.assertTrue((self.leaf / "results/all_tests/sample.c.gcov.md").exists(), result.stdout)
+        self.assertFalse((self.leaf / "results/PathSpaces.Pass/sample.c.gcov.md").exists(), result.stdout)
+        pass_log = (self.leaf / "results/PathSpaces.Pass/results.md").read_text(encoding="utf-8")
+        self.assertIn("- 判定: PASSED", pass_log)
+        self.assertIn("[       OK ] PathSpaces.Pass", pass_log)
+        # 一括実行の結果は、個別の結果、テスト定義の実行レコード、サマリーで識別できる。
+        self.assertRegex(pass_log, r"- 実施日時: [^\n]+\n- 実行方式: 一括実行 \(quicktest\)\n")
+        self.assertIn("- 実行方式: 一括実行 (quicktest)",
+                      (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8"))
+        uniform_log = (self.leaf / "results/Repeats.Uniform/results.md").read_text(encoding="utf-8")
+        self.assertIn("### 確認 (正常系:9)", uniform_log)
+        raw_log = (self.leaf / "results/RawParams.Bytes/0/results.md").read_text(encoding="utf-8")
+        self.assertIn("- 判定: WARNING", raw_log)
+        self.assertIn("[ WARNING ] パラメーターがバイト列で印字されています。", raw_log)
+
+        failed = self.run_tests("PathSpaces.Pass:PathSpaces.Fail", quicktest=True)
+        self.assertEqual(failed.returncode, 1, failed.stdout)
+        fail_log = (self.leaf / "results/PathSpaces.Fail/results.md").read_text(encoding="utf-8")
+        self.assertIn("- 判定: FAILED", fail_log)
+        self.assertIn("[  FAILED  ] PathSpaces.Fail", fail_log)
+        # 失敗しても個別実行へはやり直さず、合格したテストは一括実行の結果を残す。
+        kept_log = (self.leaf / "results/PathSpaces.Pass/results.md").read_text(encoding="utf-8")
+        self.assertIn("- 判定: PASSED", kept_log)
+
+        invalid = self.run_tests("InvalidComment.Case", quicktest=True)
+        self.assertEqual(invalid.returncode, 1, invalid.stdout)
+        invalid_log = (self.leaf / "results/InvalidComment.Case/results.md").read_text(encoding="utf-8")
+        self.assertIn("InvalidComment.Case:抽出コード:", invalid_log)
+        self.assertNotIn("[       OK ] InvalidComment.Case", invalid_log)
 
 
 if __name__ == "__main__":

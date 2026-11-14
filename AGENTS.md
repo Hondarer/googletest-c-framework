@@ -28,6 +28,7 @@
 make
 make clean
 make test
+make quicktest
 ```
 
 ## 注意点

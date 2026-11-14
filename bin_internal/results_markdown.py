@@ -19,6 +19,9 @@ ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
 # see: https://google.github.io/googletest/advanced.html#teaching-googletest-how-to-print-your-values
 PARAMETER_BYTES = re.compile(r"^# GetParam\(\) = \d+-byte object <")
 PARAMETER_WARNING = "パラメーターがバイト列で印字されています。パラメーターの型に PrintTo() を定義してください。"
+# テスト バイナリを 1 回だけ起動し、その出力をテストごとに切り出した結果であることを示す。
+# 1 ケースずつ実行した結果には、この項目を記載しない。
+RUN_MODE_BATCH = "一括実行 (quicktest)"
 
 
 def clean(text):
@@ -89,11 +92,13 @@ def parameter(comment):
     return re.sub(r"^# (?:GetParam\(\)|TypeParam) = ", "", comment)
 
 
-def individual(test_id, status, evidence, output, binary="", comment="", definition="", error="", console=False, executed_at=""):
+def individual(test_id, status, evidence, output, binary="", comment="", definition="", error="", console=False, executed_at="", run_mode=""):
     parts = ["# " + plain(test_id)]
     metadata = [] if console else [f"- 判定: {status}"]
     if not console:
         metadata.append("- 実施日時: " + executed_at)
+        if run_mode:
+            metadata.append("- 実行方式: " + run_mode)
     if binary and console:
         metadata.append("- テスト バイナリ: " + plain(binary))
     if comment:
@@ -141,6 +146,8 @@ def definition(test_id, evidence, records, total):
     parts = ["# " + plain(test_id), f"- 総合判定: {status}\n- 実行レコード数: {n} ({distribution})", evidence.strip(), "## 実行レコード"]
     for record in records:
         metadata = [f'- 判定: {record["status"]}', f'- 実施日時: {record.get("executed_at", "")}']
+        if record.get("run_mode"):
+            metadata.append("- 実行方式: " + record["run_mode"])
         if record.get("parameter"):
             metadata.append("- パラメーター: " + record["parameter"])
         metadata.append("- 詳細: " + link("results.md", record["path"]))
@@ -173,6 +180,8 @@ def summary(directory, journal, counts_dir, coverage="", filter_value=None, jour
     parts = ["# " + plain(directory) + " のテスト結果サマリー"]
     if start:
         parts.append("- 実施日時: " + start[1])
+    if re.search(r"^@run_mode\tbatch$", text, re.M):
+        parts.append("- 実行方式: " + RUN_MODE_BATCH)
     if filter_value is not None:
         parts.append(admonition("NOTE", "GTEST_FILTER = " + inline(filter_value)))
     md5 = re.findall(r"^([0-9a-f]{32})  (.+)$", text, re.M)

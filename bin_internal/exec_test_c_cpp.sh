@@ -563,6 +563,110 @@ function run_test() {
     return $result
 }
 
+# テストを一括実行 (個別カバレッジなし、失敗・異常終了時もそのまま FAILED として記録する)
+function run_all_tests_quick() {
+    local selected_list="$1"
+    local batch_json="$REPORT_STATE/batch_gtest.json"
+    local batch_stdout="$REPORT_STATE/batch_stdout"
+    local batch_json_arg="$batch_json"
+    if [ "$IS_WINDOWS" -eq 1 ]; then
+        batch_json_arg=$(cygpath -m "$batch_json" 2>/dev/null || printf '%s' "$batch_json")
+    fi
+
+    find . -name "*.gcda" -delete 2>/dev/null
+    rm -rf obj/*.info gcov lcov coverage/* > /dev/null 2>&1
+
+    export LANG="$FILES_LANG"
+    local -a command=("./$TEST_BINARY" --gtest_color=no "--gtest_output=json:$batch_json_arg")
+    if [[ "${GTEST_FILTER+x}" ]]; then
+        command+=("--gtest_filter=$GTEST_FILTER")
+    fi
+    if [ "$IS_WINDOWS" -eq 1 ] && [ -n "$TEST_SRCS" ]; then
+        command=(OpenCppCoverage.exe "${SOURCES_OPTS[@]}" --quiet
+            --export_type cobertura:coverage/coverage.xml -- "${command[@]}")
+    fi
+
+    # サマリーに一括実行であることを記載させる。個別の results.md には quicktest_batch.py が記載する。
+    printf '@run_mode\tbatch\n' >> "$SUMMARY_JOURNAL"
+    echo "Note: TESTFW_QUICKTEST = 1 (batch run)"
+
+    local batch_executed_at
+    batch_executed_at=$(bash "$SCRIPT_DIR/local_time.sh")
+    "${command[@]}" > "$batch_stdout" 2>&1
+    local batch_exit_code=$?
+    if [ "$IS_WINDOWS" -eq 1 ] && [ -n "$TEST_SRCS" ]; then
+        rm -f LastCoverageResults.log 1> /dev/null 2>&1
+    fi
+
+    # 失敗や異常終了でも個別実行へはやり直さない。テストごとの判定は、標準出力と JSON から
+    # quicktest_batch.py が決め、失敗したテストも FAILED として記録する。
+    python3 "$SCRIPT_DIR/quicktest_batch.py" \
+        --selected-list "$selected_list" \
+        --json "$batch_json" \
+        --stdout "$batch_stdout" \
+        --binary "$TEST_BINARY" \
+        --executed-at "$batch_executed_at" \
+        --exit-code "$batch_exit_code" \
+        --is-windows "$IS_WINDOWS" \
+        --encoding "${FILES_LANG#*.}" \
+        --report-state "$REPORT_STATE"
+    local py_status=$?
+    if [ "$py_status" -ne 0 ]; then
+        # エビデンスを生成できない場合は、テスト バイナリの出力をそのまま示して失敗にする。
+        cat "$batch_stdout"
+        echo -e "\e[31m[  FAILED  ]\e[0m Batch evidence generation failed (test binary exit code: $batch_exit_code)." | tee -a "$SUMMARY_JOURNAL"
+        printf '0\n0\n1\n' > "$REPORT_STATE/batch_counts"
+        : > "$REPORT_STATE/batch_summary"
+    fi
+    rm -f "$batch_json" "$batch_stdout"
+
+    if [ "$IS_WINDOWS" -eq 1 ] && [ -n "$TEST_SRCS" ]; then
+        # 個別実行と同じ累積処理を通し、inject 用ソースの除外と統計の再計算を揃える。
+        if [ -f coverage/coverage.xml ]; then
+            python "$SCRIPT_DIR/cobertura_accumulate.py" coverage/coverage.xml coverage/accumulated_coverage.xml 1> /dev/null 2>&1
+            rm -f coverage/coverage.xml 1> /dev/null 2>&1
+        else
+            echo -e "\e[33m[ WARNING ]\e[0m Coverage file was not generated: coverage/coverage.xml" | tee -a "$SUMMARY_JOURNAL"
+        fi
+    fi
+
+    {
+        IFS= read -r SUCCESS_COUNT
+        IFS= read -r WARNING_COUNT
+        IFS= read -r FAILURE_COUNT
+    } < "$REPORT_STATE/batch_counts"
+    test_summary=$(<"$REPORT_STATE/batch_summary")
+    if [ -n "$test_summary" ]; then
+        test_summary+=$'\n'
+    fi
+
+    if [ "$IS_WINDOWS" -ne 1 ] && [ -n "$TEST_SRCS" ]; then
+        local -a gcovr_lock=()
+        if command -v flock > /dev/null 2>&1; then
+            gcovr_lock=(flock "${TMPDIR:-/tmp}/testfw-gcovr-$(printf '%s' "$WORKSPACE_DIR" | md5sum | cut -c1-16).lock")
+        fi
+        local gcovr_error
+        gcovr_error=$("${gcovr_lock[@]}" gcovr --root "$WORKSPACE_DIR" . \
+            --exclude-unreachable-branches \
+            --exclude-throw-branches --json --output coverage/coverage.raw.json 2>&1 1> /dev/null)
+        if [ ! -f coverage/coverage.raw.json ]; then
+            echo -e "\e[33m[ WARNING ]\e[0m Coverage data could not be read:" | tee -a "$SUMMARY_JOURNAL"
+            echo "$gcovr_error"
+            printf '%s\n' "$gcovr_error" >> "$SUMMARY_JOURNAL"
+        else
+            local -a test_src_list=("${TEST_SOURCE_FILES[@]}")
+            if ! python "$SCRIPT_DIR/gcovr_json_normalize.py" \
+                coverage/coverage.raw.json coverage/accumulated_coverage.json "$WORKSPACE_DIR" "${test_src_list[@]}"; then
+                echo -e "\e[31m[  FAILED  ]\e[0m gcovr_json_normalize.py rejected coverage data." | tee -a "$SUMMARY_JOURNAL"
+                FAILURE_COUNT=$((FAILURE_COUNT + 1))
+            fi
+            rm -f coverage/coverage.raw.json 1> /dev/null 2>&1
+        fi
+    fi
+
+    return 0
+}
+
 # メイン処理
 function main() {
     # サブディレクトリを含めて gcda ファイルをクリア
@@ -720,11 +824,15 @@ function main() {
 
     # フィルター適用前の一覧で PARAM を確定し、全体件数を重複掲載しない。
     local all_tests full_test_list selected_test_list group_manifest
-    all_tests=$(list_tests all)
-    if [ $? -ne 0 ]; then
-        echo "Error: Failed to get full test list: $TEST_BINARY" | tee -a "$SUMMARY_JOURNAL"
-        rm -f "$test_stamp_file" "$test_signature_file"
-        return 1
+    if [ -z "${GTEST_FILTER+x}" ]; then
+        all_tests="$tests"
+    else
+        all_tests=$(list_tests all)
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to get full test list: $TEST_BINARY" | tee -a "$SUMMARY_JOURNAL"
+            rm -f "$test_stamp_file" "$test_signature_file"
+            return 1
+        fi
     fi
     full_test_list=$(mktemp)
     selected_test_list=$(mktemp)
@@ -739,21 +847,26 @@ function main() {
         rm -f "$full_test_list" "$selected_test_list" "$group_manifest" "$test_stamp_file" "$test_signature_file"
         return 1
     fi
-    rm -f "$full_test_list" "$selected_test_list"
+    rm -f "$full_test_list"
 
-    # テスト バイナリが標準入力を消費しないように、専用の記述子から読み取る。
-    while IFS= read -r test_name_w_comment <&3; do
-        if [ -z "$test_name_w_comment" ]; then
-            continue
-        fi
-        run_test "$test_name_w_comment"
-        # すべてのテストをやり切ったほうが使い勝手が良い
-        # 失敗しない前提であれば、以下を活かしても良い
-        #local result=$?
-        #if [ "$result" -ne 0 ]; then
-        #    return 1
-        #fi
-    done 3<<< "$tests"
+    if [ "${TESTFW_QUICKTEST:-0}" = "1" ] && [ "$test_count" -gt 0 ]; then
+        run_all_tests_quick "$selected_test_list"
+    else
+        # テスト バイナリが標準入力を消費しないように、専用の記述子から読み取る。
+        while IFS= read -r test_name_w_comment <&3; do
+            if [ -z "$test_name_w_comment" ]; then
+                continue
+            fi
+            run_test "$test_name_w_comment"
+            # すべてのテストをやり切ったほうが使い勝手が良い
+            # 失敗しない前提であれば、以下を活かしても良い
+            #local result=$?
+            #if [ "$result" -ne 0 ]; then
+            #    return 1
+            #fi
+        done 3<<< "$tests"
+    fi
+    rm -f "$selected_test_list"
 
     if ! python3 "$SCRIPT_DIR/gtest_summary_groups.py" finish "$group_manifest" --counts-dir "$REPORT_STATE/counts" --encoding "${FILES_LANG#*.}"; then
         FAILURE_COUNT=$((FAILURE_COUNT + 1))
