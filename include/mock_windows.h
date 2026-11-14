@@ -20,6 +20,8 @@ extern "C"
         #endif
 
     extern ULONGLONG mock_GetTickCount64(const char *, const int, const char *);
+    extern BOOL mock_QueryPerformanceFrequency(const char *, const int, const char *, LARGE_INTEGER *);
+    extern BOOL mock_QueryPerformanceCounter(const char *, const int, const char *, LARGE_INTEGER *);
     extern void mock_GetSystemTimeAsFileTime(const char *, const int, const char *, LPFILETIME);
     extern HANDLE mock_GetStdHandle(const char *, const int, const char *, DWORD);
     extern BOOL mock_GetConsoleMode(const char *, const int, const char *, HANDLE, LPDWORD);
@@ -79,6 +81,9 @@ extern "C"
         #ifdef _IN_OVERRIDE_HEADER_WINDOWS_H
 
             #define GetTickCount64() mock_GetTickCount64(__FILE__, __LINE__, __func__)
+            #define QueryPerformanceFrequency(frequency) \
+                mock_QueryPerformanceFrequency(__FILE__, __LINE__, __func__, frequency)
+            #define QueryPerformanceCounter(counter) mock_QueryPerformanceCounter(__FILE__, __LINE__, __func__, counter)
             #define GetSystemTimeAsFileTime(file_time) \
                 mock_GetSystemTimeAsFileTime(__FILE__, __LINE__, __func__, file_time)
             #define GetStdHandle(std_handle) mock_GetStdHandle(__FILE__, __LINE__, __func__, std_handle)
@@ -168,6 +173,10 @@ extern "C"
 
 extern ULONGLONG delegate_real_GetTickCount64(const char *, const int, const char *);
 extern ULONGLONG delegate_fake_GetTickCount64(const char *, const int, const char *);
+extern BOOL delegate_real_QueryPerformanceFrequency(const char *, const int, const char *, LARGE_INTEGER *);
+extern BOOL delegate_fake_QueryPerformanceFrequency(const char *, const int, const char *, LARGE_INTEGER *);
+extern BOOL delegate_real_QueryPerformanceCounter(const char *, const int, const char *, LARGE_INTEGER *);
+extern BOOL delegate_fake_QueryPerformanceCounter(const char *, const int, const char *, LARGE_INTEGER *);
 extern void delegate_real_GetSystemTimeAsFileTime(const char *, const int, const char *, LPFILETIME);
 extern void delegate_fake_GetSystemTimeAsFileTime(const char *, const int, const char *, LPFILETIME);
 extern HANDLE delegate_real_GetStdHandle(const char *, const int, const char *, DWORD);
@@ -229,6 +238,8 @@ class Mock_windows
 {
   public:
     MOCK_METHOD(ULONGLONG, GetTickCount64, (const char *, const int, const char *));
+    MOCK_METHOD(BOOL, QueryPerformanceFrequency, (const char *, const int, const char *, LARGE_INTEGER *));
+    MOCK_METHOD(BOOL, QueryPerformanceCounter, (const char *, const int, const char *, LARGE_INTEGER *));
     MOCK_METHOD(void, GetSystemTimeAsFileTime, (const char *, const int, const char *, LPFILETIME));
     MOCK_METHOD(HANDLE, GetStdHandle, (const char *, const int, const char *, DWORD));
     MOCK_METHOD(BOOL, GetConsoleMode, (const char *, const int, const char *, HANDLE, LPDWORD));

@@ -67,6 +67,9 @@ Mock_windows::Mock_windows()
 void Mock_windows::switch_to_real_time()
 {
     ON_CALL(*this, GetTickCount64(_, _, _)).WillByDefault(Invoke(delegate_real_GetTickCount64));
+    ON_CALL(*this, QueryPerformanceCounter(_, _, _, _)).WillByDefault(Invoke(delegate_real_QueryPerformanceCounter));
+    ON_CALL(*this, QueryPerformanceFrequency(_, _, _, _))
+        .WillByDefault(Invoke(delegate_real_QueryPerformanceFrequency));
 
     ON_CALL(*this, GetSystemTimeAsFileTime(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetSystemTimeAsFileTime));
 }
@@ -74,6 +77,9 @@ void Mock_windows::switch_to_real_time()
 void Mock_windows::switch_to_mock_time()
 {
     ON_CALL(*this, GetTickCount64(_, _, _)).WillByDefault(Invoke(delegate_fake_GetTickCount64));
+    ON_CALL(*this, QueryPerformanceCounter(_, _, _, _)).WillByDefault(Invoke(delegate_fake_QueryPerformanceCounter));
+    ON_CALL(*this, QueryPerformanceFrequency(_, _, _, _))
+        .WillByDefault(Invoke(delegate_fake_QueryPerformanceFrequency));
 
     ON_CALL(*this, GetSystemTimeAsFileTime(_, _, _, _)).WillByDefault(Invoke(delegate_fake_GetSystemTimeAsFileTime));
 }

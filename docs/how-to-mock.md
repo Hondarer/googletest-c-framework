@@ -261,6 +261,23 @@ real delegate が同じオブジェクトを直接参照する構成では、追
 > 置換が無効になると、C のソースをコンパイルしているのに Mock クラス側の分岐が選ばれ、`algorithm が見つかりません` のような C++ 標準ライブラリのエラーになります。
 > 症状から原因が読み取りにくいため、この構成を採るときは最初からガードを入れてください。
 
+## Windows の時計 mock
+
+Windows の時計関数は、`include_override/windows.h` から `include/mock_windows.h` を取り込み、呼び出し元のファイル名、行番号、関数名を付けて置換します。
+
+| OS 関数 | mock 関数 | fake delegate の動作 |
+|---|---|---|
+| `GetTickCount64()` | `mock_GetTickCount64()` | 0 を返す |
+| `GetSystemTimeAsFileTime()` | `mock_GetSystemTimeAsFileTime()` | 出力をゼロにする |
+| `QueryPerformanceCounter()` | `mock_QueryPerformanceCounter()` | カウンターを 0 にして成功を返す |
+| `QueryPerformanceFrequency()` | `mock_QueryPerformanceFrequency()` | 周波数を 1,000,000,000 [Hz] にして成功を返す |
+
+Table: Windows の時計 mock と fake delegate の動作
+
+`Mock_windows` の既定動作と mock 未注入時の呼び出しは、実関数へ委譲します。  
+`switch_to_mock_time()` は表の fake delegate へ、`switch_to_real_time()` は real delegate へ切り替えます。  
+高分解能の時計の fake delegate は時刻を進めません。経過時間を制御する場合は、呼び出しごとのカウンター値を設定します。
+
 ## 参照例
 
 - Mock クラス
