@@ -463,20 +463,6 @@ int main(int argc, char **argv) {
         self.assertIn("source/sample.c", result.stdout)
         self.assertNotIn("Failed to calculate MD5", result.stdout)
 
-    def test_sources_collected_from_child(self):
-        child = self.leaf / "child"
-        child.mkdir()
-        self.addCleanup(shutil.rmtree, child)
-        with open(child / "makefile", "w", encoding="utf-8", newline="\n") as handle:
-            handle.write((self.root / "framework/makefw/makefiles/__template.mk").read_text(encoding="utf-8"))
-        (child / "makelocal.mk").write_text(
-            "TEST_SRCS := $(WORKSPACE_DIR)/source/sample.c\n", encoding="utf-8"
-        )
-        result = self.run_tests("PathSpaces.Pass")
-        self.assertEqual(result.returncode, 0, result.stdout)
-        self.assertTrue((self.leaf / "results/all_tests/coverage.xml").exists(), result.stdout)
-        self.assertIn("source/sample.c", result.stdout)
-
     def test_quicktest_batch(self):
         result = self.run_tests(
             "PathSpaces.Pass:*/Repeats.*/*:RawParams.Bytes/*:EvidenceFixture.ReportsSubprocedures:Records/EvidenceParams.ReportsSubprocedures/*",
@@ -513,6 +499,145 @@ int main(int argc, char **argv) {
         invalid_log = (self.leaf / "results/InvalidComment.Case/results.md").read_text(encoding="utf-8")
         self.assertIn("InvalidComment.Case:抽出コード:", invalid_log)
         self.assertNotIn("[       OK ] InvalidComment.Case", invalid_log)
+
+
+class SubdirectorySourcesTest(unittest.TestCase):
+    """起点とサブディレクトリの TEST_SRCS を、全体のカバレッジの対象として集めることを検証する。
+
+    テスト対象のソースは、TEST_SRCS を指定した makefile のディレクトリでコンパイルする
+    (makefw のサブフォルダー コンパイル構成と同じ配置)。
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.temp = tempfile.TemporaryDirectory(prefix="testfw subdir ")
+        cls.addClassCleanup(cls.temp.cleanup)
+        cls.root = Path(cls.temp.name)
+        cls.leaf = cls.root / "test leaf"
+        cls.child = cls.leaf / "child dir"
+        cls.child.mkdir(parents=True)
+        (cls.leaf / "bin").mkdir()
+        (cls.root / "tmp space").mkdir()
+        cls.script = cls.root / "framework/testfw/bin_internal/exec_test_c_cpp.sh"
+        shutil.copytree(TESTFW / "bin_internal", cls.script.parent)
+        for directory in ("makefiles", "bin_internal"):
+            shutil.copytree(MAKEFW / directory, cls.root / "framework/makefw" / directory)
+        (cls.root / ".workspaceRoot").touch()
+        sources = {
+            "sample.c": "int sample(int value) { return value + 1; }\n",
+            "other.c": "int other(int value) { return value + 2; }\n",
+        }
+        (cls.root / "source").mkdir()
+        for name, text in sources.items():
+            (cls.root / "source" / name).write_text(text, encoding="utf-8")
+        # 取り込み先 (TEST_SRCS を指定した makefile のディレクトリ) に置いたソースをコンパイルする。
+        (cls.leaf / "sample.c").write_text(sources["sample.c"], encoding="utf-8")
+        (cls.child / "other.c").write_text(sources["other.c"], encoding="utf-8")
+        with open(cls.child / "makefile", "w", encoding="utf-8", newline="\n") as handle:
+            handle.write((cls.root / "framework/makefw/makefiles/__template.mk").read_text(encoding="utf-8"))
+        (cls.child / "makelocal.mk").write_text(
+            "TEST_SRCS := $(WORKSPACE_DIR)/source/other.c\n", encoding="utf-8"
+        )
+        (cls.leaf / "subdirTest.cc").write_text('''#include <gtest/gtest.h>
+extern "C" int sample(int value);
+extern "C" int other(int value);
+TEST(Subdir, Pass) {
+    // Arrange
+    int value = 1;
+    // Act
+    int root_actual = sample(value);
+    int child_actual = other(value);
+    // Assert
+    EXPECT_EQ(root_actual, 2); // [確認_正常系] - 起点のソースの結果が 2 であること。
+    EXPECT_EQ(child_actual, 3); // [確認_正常系] - サブディレクトリのソースの結果が 3 であること。
+}
+int main(int argc, char **argv) {
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
+}
+''', encoding="utf-8")
+        cls.env = dict(os.environ, TMPDIR=(cls.root / "tmp space").as_posix())
+        for key in ("TEST_SRCS", "ADD_SRCS", "MAKEFW_TEST_LIBS", "WORKSPACE_DIR"):
+            cls.env.pop(key, None)
+        cls.env["MAKEFW_HOME"] = (cls.root / "framework/makefw").as_posix()
+        cls.env["TESTFW_HOME"] = (cls.root / "framework/testfw").as_posix()
+        if os.name == "nt":
+            # /Z7 でデバッグ情報をオブジェクトへ埋め込み、コンパイルしたディレクトリのパスを PDB へ残す。
+            commands = [(cls.child, ["cl", "/nologo", "/c", "/MD", "/Od", "/Z7", "other.c"])]
+            libs = TESTFW / "gtest/lib/windows_x64/md"
+            link = [
+                "cl", "/nologo", "/EHsc", "/MD", "/Od", "/Zi", "/std:c++17",
+                "/I" + str(TESTFW / "gtest/include"), "subdirTest.cc", "sample.c",
+                str(cls.child / "other.obj"), "/Febin/test leaf.exe", "/link", "/DEBUG",
+                "/INCREMENTAL:NO", "/SUBSYSTEM:CONSOLE", str(libs / "gtest.lib"),
+            ]
+        else:
+            commands = [
+                (cls.leaf, ["gcc", "--coverage", "-c", "sample.c", "-o", "obj/sample.o"]),
+                (cls.child, ["gcc", "--coverage", "-c", "other.c", "-o", "obj/other.o"]),
+            ]
+            (cls.leaf / "obj").mkdir()
+            (cls.child / "obj").mkdir()
+            libraries = sorted(
+                TESTFW.glob("gtest/lib/linux_*/libgtest.a"),
+                key=lambda path: int(re.search(r"linux_el(\d+)_", path.parent.name).group(1)),
+            )
+            if not libraries:
+                raise RuntimeError("Linux Google Test library not found")
+            link = [
+                "g++", "--coverage", "-std=c++17", "-pthread",
+                "-I" + str(TESTFW / "gtest/include"), "-I" + str(TESTFW / "gtest"),
+                "subdirTest.cc", "obj/sample.o", str(cls.child / "obj/other.o"), str(libraries[0]),
+                "-o", "bin/test leaf",
+            ]
+        for directory, command in [*commands, (cls.leaf, link)]:
+            result = subprocess.run(
+                command, cwd=directory, env=cls.env, stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT, encoding="utf-8", errors="replace", timeout=480,
+            )
+            if result.returncode:
+                raise RuntimeError(result.stdout)
+
+    def run_tests(self, root_sources):
+        env = dict(self.env, GTEST_FILTER="Subdir.Pass", MAKEFW_TEST_FORCE="1",
+                   TEST_SRCS=root_sources, ADD_SRCS="")
+        result = subprocess.run(
+            [BASH, str(self.script)], cwd=self.leaf, env=env,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+            encoding="utf-8", errors="replace", timeout=480,
+        )
+        if (self.leaf / "results/all_tests/summary.md").exists():
+            assert_results(self, self.leaf / "results")
+        return result
+
+    def assert_covered(self, result, names):
+        all_tests = self.leaf / "results/all_tests"
+        coverage = (all_tests / "coverage.xml").read_text(encoding="utf-8")
+        for name in names:
+            self.assertIn(name, coverage, result.stdout)
+            self.assertTrue((all_tests / (name + ".gcov.md")).exists(), result.stdout)
+
+    def md5_sources(self, result):
+        """MD5 の表に並んだソースの名前を、表の順に返す。"""
+        output = re.sub(r"\x1b\[[0-9;]*m", "", result.stdout)
+        table = output.split("MD5 checksums of files in TEST_SRCS:", 1)[1].split("----", 1)[0]
+        return re.findall(r"source/(\w+\.c)", table)
+
+    def test_root_and_child_sources_are_merged(self):
+        result = self.run_tests("../source/sample.c")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        # 起点のソースが先、サブディレクトリのソースが後に並ぶ。
+        self.assertEqual(self.md5_sources(result), ["sample.c", "other.c"], result.stdout)
+        self.assert_covered(result, ["sample.c", "other.c"])
+        summary = (self.leaf / "results/all_tests/summary.md").read_text(encoding="utf-8")
+        self.assertIn("other.c", summary)
+        self.assertIn("sample.c", summary)
+
+    def test_child_sources_only(self):
+        result = self.run_tests("")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertEqual(self.md5_sources(result), ["other.c"], result.stdout)
+        self.assert_covered(result, ["other.c"])
 
 
 if __name__ == "__main__":

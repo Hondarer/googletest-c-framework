@@ -46,7 +46,7 @@ function parse_path_list() {
         destination[$token]=${destination[$token]//__MAKEFW_SPACE__/ }
     done
 }
-declare -a TEST_SOURCE_FILES ADD_SOURCE_FILES TEST_LIBRARY_FILES
+declare -a TEST_SOURCE_FILES TEST_SOURCE_DIRS ADD_SOURCE_FILES TEST_LIBRARY_FILES
 parse_path_list TEST_SOURCE_FILES "${TEST_SRCS:-}"
 parse_path_list ADD_SOURCE_FILES "${ADD_SRCS:-}"
 parse_path_list TEST_LIBRARY_FILES "${MAKEFW_TEST_LIBS:-}"
@@ -672,34 +672,54 @@ function main() {
     # サブディレクトリを含めて gcda ファイルをクリア
     find . -name "*.gcda" -delete 2>/dev/null
 
+    # 全体のカバレッジの対象は、起点とサブディレクトリの TEST_SRCS を合わせたものとする。
+    # 起点の指定順を先に保ち、サブディレクトリの分はパスの昇順で続け、重複は除く。
+    # テスト対象のソースは TEST_SRCS を指定した makefile のディレクトリへ取り込まれて
+    # コンパイルされるため、そのディレクトリを TEST_SOURCE_DIRS に記録する
+    # (Windows の OpenCppCoverage の --sources に使う)。
     # 子の設定は makefw 自身に解釈させる。引用した配置先を文字列分割しない。
-    if [ ${#TEST_SOURCE_FILES[@]} -eq 0 ]; then
-        local child_makefile child_dir source source_file report_file
-        local make_command="${MAKEFW_SUBDIR_MAKE:-make}"
-        report_file=$(mktemp)
-        while IFS= read -r -d '' child_makefile; do
-            child_dir=${child_makefile%/*}
-            if ! MAKEFLAGS= MFLAGS= "$make_command" --no-print-directory -s \
-                -C "$child_dir" -f makefile -f "$SCRIPT_DIR/query_test_sources.mk" \
-                MAKEFW_BUILD=0 SUBDIRS= "MAKEFW_TEST_SRC_REPORT_FILE=$report_file" \
-                __testfw_query_sources; then
+    TEST_SOURCE_DIRS=()
+    local source_file
+    local -A seen_sources=()
+    for source_file in "${TEST_SOURCE_FILES[@]}"; do
+        TEST_SOURCE_DIRS+=(".")
+        seen_sources["$source_file"]=1
+    done
+    local child_makefile child_dir source report_file
+    local -A child_source_dirs=()
+    local make_command="${MAKEFW_SUBDIR_MAKE:-make}"
+    report_file=$(mktemp)
+    while IFS= read -r -d '' child_makefile; do
+        child_dir=${child_makefile%/*}
+        if ! MAKEFLAGS= MFLAGS= "$make_command" --no-print-directory -s \
+            -C "$child_dir" -f makefile -f "$SCRIPT_DIR/query_test_sources.mk" \
+            MAKEFW_BUILD=0 SUBDIRS= "MAKEFW_TEST_SRC_REPORT_FILE=$report_file" \
+            __testfw_query_sources; then
+            rm -f "$report_file"
+            return 1
+        fi
+        while IFS= read -r -d '' source; do
+            [ -n "$source" ] || continue
+            source_file=$(realpath -m --relative-to="$PWD" "$child_dir/$source") || {
                 rm -f "$report_file"
                 return 1
+            }
+            if [ -z "${child_source_dirs[$source_file]+x}" ]; then
+                child_source_dirs["$source_file"]=$child_dir
             fi
-            while IFS= read -r -d '' source; do
-                [ -n "$source" ] || continue
-                source_file=$(realpath -m --relative-to="$PWD" "$child_dir/$source") || {
-                    rm -f "$report_file"
-                    return 1
-                }
-                TEST_SOURCE_FILES+=("$source_file")
-            done < "$report_file"
-        done < <(find . -mindepth 2 -type f -name makefile -print0 2>/dev/null)
-        rm -f "$report_file"
-        if [ ${#TEST_SOURCE_FILES[@]} -gt 0 ]; then
-            mapfile -d '' -t TEST_SOURCE_FILES < <(printf '%s\0' "${TEST_SOURCE_FILES[@]}" | LC_ALL=C sort -zu)
-            printf -v TEST_SRCS '%s ' "${TEST_SOURCE_FILES[@]}"
-        fi
+        done < "$report_file"
+    done < <(find . -mindepth 2 -type f -name makefile -print0 2>/dev/null | LC_ALL=C sort -z)
+    rm -f "$report_file"
+    if [ ${#child_source_dirs[@]} -gt 0 ]; then
+        local -a child_sources=()
+        mapfile -d '' -t child_sources < <(printf '%s\0' "${!child_source_dirs[@]}" | LC_ALL=C sort -z)
+        for source_file in "${child_sources[@]}"; do
+            [ -z "${seen_sources[$source_file]+x}" ] || continue
+            seen_sources["$source_file"]=1
+            TEST_SOURCE_FILES+=("$source_file")
+            TEST_SOURCE_DIRS+=("${child_source_dirs[$source_file]}")
+        done
+        printf -v TEST_SRCS '%s ' "${TEST_SOURCE_FILES[@]}"
     fi
 
     # 再テスト スキップ判定
@@ -739,11 +759,19 @@ function main() {
         # see: https://www.cygwin.com/cygwin-ug-net/cygpath.html
         local current_dir=$(cygpath -l -w "$(pwd)" 2>/dev/null || pwd -W 2>/dev/null)
         current_dir=${current_dir//\//\\}
-        for src in "${TEST_SOURCE_FILES[@]}"; do
+        local src_index src src_dir
+        for src_index in "${!TEST_SOURCE_FILES[@]}"; do
+            src=${TEST_SOURCE_FILES[$src_index]}
             # パスからファイル名のみを抽出 (basename 相当)
             local src_basename=${src##*/}
-            # Windows 形式の絶対パスに結合
+            # テスト対象のソースは、TEST_SRCS を指定した makefile のディレクトリへ取り込まれて
+            # コンパイルされ、PDB にはその取り込み先のパスが記録される。取り込み先で指定する。
+            src_dir=${TEST_SOURCE_DIRS[$src_index]:-.}
+            src_dir=${src_dir#./}
             local src_fullpath="$current_dir\\$src_basename"
+            if [ -n "$src_dir" ] && [ "$src_dir" != "." ]; then
+                src_fullpath="$current_dir\\${src_dir//\//\\}\\$src_basename"
+            fi
             SOURCES_OPTS+=(--sources "$src_fullpath")
         done
     fi
