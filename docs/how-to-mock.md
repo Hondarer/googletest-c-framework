@@ -261,6 +261,23 @@ real delegate が同じオブジェクトを直接参照する構成では、追
 > 置換が無効になると、C のソースをコンパイルしているのに Mock クラス側の分岐が選ばれ、`algorithm が見つかりません` のような C++ 標準ライブラリのエラーになります。
 > 症状から原因が読み取りにくいため、この構成を採るときは最初からガードを入れてください。
 
+### Windows SDK のヘッダーを取り込むモック ヘッダー
+
+`bcrypt.h` のように `windows.h` の型を前提とするヘッダーのモックでは、テスト コード側から取り込む場合に限り、`winsock2.h`、`ws2tcpip.h`、`windows.h` の順に取り込んでから対象のヘッダーを取り込みます。  
+override ヘッダー経由の場合は何も取り込みません。製品のソースは、openssl のヘッダーから `windows.h` を経て対象のヘッダーへ至るなど、`winsock.h` を取り込み済みのことがあり、ここで `winsock2.h` を取り込むと型の再定義で失敗するためです。
+
+```c
+#ifndef _IN_OVERRIDE_HEADER_BCRYPT_H
+    #ifndef WIN32_LEAN_AND_MEAN
+        #define WIN32_LEAN_AND_MEAN
+    #endif
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <windows.h>
+    #include <bcrypt.h>
+#endif
+```
+
 ## Windows の時計 mock
 
 Windows の時計関数は、`include_override/windows.h` から `include/mock_windows.h` を取り込み、呼び出し元のファイル名、行番号、関数名を付けて置換します。

@@ -41,6 +41,8 @@ extern "C"
     extern PCSTR mock_inet_ntop(const char *, const int, const char *, INT, const void *, PSTR, size_t);
     extern INT mock_getaddrinfo(const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *, PADDRINFOA *);
     extern void mock_freeaddrinfo(const char *, const int, const char *, PADDRINFOA);
+    extern int mock_select(const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *,
+                           const struct timeval *);
 
         #ifdef __cplusplus
 }
@@ -80,6 +82,8 @@ extern "C"
             #define getaddrinfo(node_name, service_name, hints, result) \
                 mock_getaddrinfo(__FILE__, __LINE__, __func__, node_name, service_name, hints, result)
             #define freeaddrinfo(addr_info) mock_freeaddrinfo(__FILE__, __LINE__, __func__, addr_info)
+            #define select(nfds, readfds, writefds, exceptfds, timeout) \
+                mock_select(__FILE__, __LINE__, __func__, nfds, readfds, writefds, exceptfds, timeout)
 
         #else // _IN_OVERRIDE_HEADER_WINSOCK_H || !__cplusplus
 
@@ -110,6 +114,8 @@ extern PCSTR delegate_real_inet_ntop(const char *, const int, const char *, INT,
 extern INT delegate_real_getaddrinfo(const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *,
                                      PADDRINFOA *);
 extern void delegate_real_freeaddrinfo(const char *, const int, const char *, PADDRINFOA);
+extern int delegate_real_select(const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *,
+                                const struct timeval *);
 
 class Mock_winsock
 {
@@ -139,6 +145,8 @@ class Mock_winsock
     MOCK_METHOD(INT, getaddrinfo,
                 (const char *, const int, const char *, PCSTR, PCSTR, const ADDRINFOA *, PADDRINFOA *));
     MOCK_METHOD(void, freeaddrinfo, (const char *, const int, const char *, PADDRINFOA));
+    MOCK_METHOD(int, select,
+                (const char *, const int, const char *, int, fd_set *, fd_set *, fd_set *, const struct timeval *));
 
     Mock_winsock();
     virtual ~Mock_winsock();

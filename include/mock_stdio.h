@@ -51,6 +51,8 @@ extern "C"
 #else
 extern int mock__fseeki64(const char *, const int, const char *, FILE *, __int64, int);
 extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
+extern int mock_setvbuf(const char *, const int, const char *, FILE *, char *, int, size_t);
+extern int mock__fileno(const char *, const int, const char *, FILE *);
 #endif
 
 #ifdef __cplusplus
@@ -93,6 +95,9 @@ extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
     #else
         #define _fseeki64(stream, offset, whence) mock__fseeki64(__FILE__, __LINE__, __func__, stream, offset, whence)
         #define _ftelli64(stream)                 mock__ftelli64(__FILE__, __LINE__, __func__, stream)
+        #define setvbuf(stream, buffer, mode, size) \
+            mock_setvbuf(__FILE__, __LINE__, __func__, stream, buffer, mode, size)
+        #define _fileno(stream) mock__fileno(__FILE__, __LINE__, __func__, stream)
     #endif
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H
@@ -156,6 +161,8 @@ extern int delegate_real__fseeki64(const char *, const int, const char *, FILE *
 extern int delegate_fake__fseeki64(const char *, const int, const char *, FILE *, __int64, int);
 extern __int64 delegate_real__ftelli64(const char *, const int, const char *, FILE *);
 extern __int64 delegate_fake__ftelli64(const char *, const int, const char *, FILE *);
+extern int delegate_real_setvbuf(const char *, const int, const char *, FILE *, char *, int, size_t);
+extern int delegate_real__fileno(const char *, const int, const char *, FILE *);
     #endif
 
 class Mock_stdio
@@ -192,6 +199,8 @@ class Mock_stdio
     #else
     MOCK_METHOD(int, _fseeki64, (const char *, const int, const char *, FILE *, __int64, int));
     MOCK_METHOD(__int64, _ftelli64, (const char *, const int, const char *, FILE *));
+    MOCK_METHOD(int, setvbuf, (const char *, const int, const char *, FILE *, char *, int, size_t));
+    MOCK_METHOD(int, _fileno, (const char *, const int, const char *, FILE *));
     #endif
 
     void switch_to_real_fileio();

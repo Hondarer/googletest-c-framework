@@ -49,6 +49,8 @@ Mock_unistd::Mock_unistd()
     ON_CALL(*this, _dup2(_, _, _, _, _)).WillByDefault(Invoke(delegate_real__dup2));
     ON_CALL(*this, _read(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real__read));
     ON_CALL(*this, _write(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real__write));
+    ON_CALL(*this, _open_osfhandle(_, _, _, _, _)).WillByDefault(Invoke(delegate_real__open_osfhandle));
+    ON_CALL(*this, _get_osfhandle(_, _, _, _)).WillByDefault(Invoke(delegate_real__get_osfhandle));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_unistd);
 }

@@ -34,6 +34,7 @@ Mock_winsock::Mock_winsock()
     ON_CALL(*this, inet_ntop(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_inet_ntop));
     ON_CALL(*this, getaddrinfo(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_getaddrinfo));
     ON_CALL(*this, freeaddrinfo(_, _, _, _)).WillByDefault(Invoke(delegate_real_freeaddrinfo));
+    ON_CALL(*this, select(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_select));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_winsock);
 }
@@ -694,6 +695,36 @@ void mock_freeaddrinfo(const char *file, const int line, const char *func, PADDR
     }
 
     TRACE_WINSOCK_CALL(freeaddrinfo);
+}
+
+int delegate_real_select(const char *file, const int line, const char *func, int nfds, fd_set *readfds,
+                         fd_set *writefds, fd_set *exceptfds, const struct timeval *timeout)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return select(nfds, readfds, writefds, exceptfds, timeout);
+}
+
+int mock_select(const char *file, const int line, const char *func, int nfds, fd_set *readfds, fd_set *writefds,
+                fd_set *exceptfds, const struct timeval *timeout)
+{
+    int mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->select(file, line, func, nfds, readfds, writefds, exceptfds, timeout);
+    }
+    else
+    {
+        mock_ret = delegate_real_select(file, line, func, nfds, readfds, writefds, exceptfds, timeout);
+    }
+
+    TRACE_WINSOCK_CALL(select);
+
+    return mock_ret;
 }
 
 #endif // _WIN32

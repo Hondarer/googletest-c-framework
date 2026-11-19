@@ -73,6 +73,23 @@ extern "C"
     extern BOOL mock_GetProcessPriorityBoost(const char *, const int, const char *, HANDLE, PBOOL);
     extern BOOL mock_SetThreadPriority(const char *, const int, const char *, HANDLE, int);
     extern int mock_GetThreadPriority(const char *, const int, const char *, HANDLE);
+    extern BOOL mock_SetStdHandle(const char *, const int, const char *, DWORD, HANDLE);
+    extern DWORD mock_GetFileType(const char *, const int, const char *, HANDLE);
+    extern HANDLE mock_CreateFileW(const char *, const int, const char *, LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES,
+                                   DWORD, DWORD, HANDLE);
+    extern BOOL mock_SetServiceStatus(const char *, const int, const char *, SERVICE_STATUS_HANDLE, LPSERVICE_STATUS);
+    extern BOOL mock_SetConsoleCtrlHandler(const char *, const int, const char *, PHANDLER_ROUTINE, BOOL);
+    extern UINT mock_GetConsoleCP(const char *, const int, const char *);
+    extern UINT mock_GetConsoleOutputCP(const char *, const int, const char *);
+    extern BOOL mock_SetConsoleCP(const char *, const int, const char *, UINT);
+    extern BOOL mock_SetConsoleOutputCP(const char *, const int, const char *, UINT);
+    extern BOOL mock_AttachConsole(const char *, const int, const char *, DWORD);
+    extern BOOL mock_FreeConsole(const char *, const int, const char *);
+    extern int mock_MultiByteToWideChar(const char *, const int, const char *, UINT, DWORD, LPCCH, int, LPWSTR, int);
+    extern void mock_OutputDebugStringW(const char *, const int, const char *, LPCWSTR);
+    extern BOOL mock_SetHandleInformation(const char *, const int, const char *, HANDLE, DWORD, DWORD);
+    extern BOOL mock_SetEvent(const char *, const int, const char *, HANDLE);
+    extern BOOL mock_ResetEvent(const char *, const int, const char *, HANDLE);
 
         #ifdef __cplusplus
 }
@@ -165,7 +182,33 @@ extern "C"
                 mock_GetProcessPriorityBoost(__FILE__, __LINE__, __func__, process, disable_priority_boost)
             #define SetThreadPriority(thread, priority) \
                 mock_SetThreadPriority(__FILE__, __LINE__, __func__, thread, priority)
-            #define GetThreadPriority(thread) mock_GetThreadPriority(__FILE__, __LINE__, __func__, thread)
+            #define GetThreadPriority(thread)        mock_GetThreadPriority(__FILE__, __LINE__, __func__, thread)
+            #define SetStdHandle(std_handle, handle) mock_SetStdHandle(__FILE__, __LINE__, __func__, std_handle, handle)
+            #define GetFileType(file_handle)         mock_GetFileType(__FILE__, __LINE__, __func__, file_handle)
+            #define CreateFileW(file_name, desired_access, share_mode, security_attributes, creation_disposition, \
+                                flags_and_attributes, template_file) \
+                mock_CreateFileW(__FILE__, __LINE__, __func__, file_name, desired_access, share_mode, \
+                                 security_attributes, creation_disposition, flags_and_attributes, template_file)
+            #define SetServiceStatus(service_status_handle, service_status) \
+                mock_SetServiceStatus(__FILE__, __LINE__, __func__, service_status_handle, service_status)
+            #define SetConsoleCtrlHandler(handler_routine, add) \
+                mock_SetConsoleCtrlHandler(__FILE__, __LINE__, __func__, handler_routine, add)
+            #define GetConsoleCP()                   mock_GetConsoleCP(__FILE__, __LINE__, __func__)
+            #define GetConsoleOutputCP()             mock_GetConsoleOutputCP(__FILE__, __LINE__, __func__)
+            #define SetConsoleCP(code_page_id)       mock_SetConsoleCP(__FILE__, __LINE__, __func__, code_page_id)
+            #define SetConsoleOutputCP(code_page_id) mock_SetConsoleOutputCP(__FILE__, __LINE__, __func__, code_page_id)
+            #define AttachConsole(process_id)        mock_AttachConsole(__FILE__, __LINE__, __func__, process_id)
+            #define FreeConsole()                    mock_FreeConsole(__FILE__, __LINE__, __func__)
+            #define MultiByteToWideChar(code_page, flags, multi_byte_str, multi_byte_count, wide_char_str, \
+                                        wide_char_count) \
+                mock_MultiByteToWideChar(__FILE__, __LINE__, __func__, code_page, flags, multi_byte_str, \
+                                         multi_byte_count, wide_char_str, wide_char_count)
+            #define OutputDebugStringW(output_string) \
+                mock_OutputDebugStringW(__FILE__, __LINE__, __func__, output_string)
+            #define SetHandleInformation(object, mask, flags) \
+                mock_SetHandleInformation(__FILE__, __LINE__, __func__, object, mask, flags)
+            #define SetEvent(event)   mock_SetEvent(__FILE__, __LINE__, __func__, event)
+            #define ResetEvent(event) mock_ResetEvent(__FILE__, __LINE__, __func__, event)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -233,6 +276,25 @@ extern BOOL delegate_real_SetProcessPriorityBoost(const char *, const int, const
 extern BOOL delegate_real_GetProcessPriorityBoost(const char *, const int, const char *, HANDLE, PBOOL);
 extern BOOL delegate_real_SetThreadPriority(const char *, const int, const char *, HANDLE, int);
 extern int delegate_real_GetThreadPriority(const char *, const int, const char *, HANDLE);
+extern BOOL delegate_real_SetStdHandle(const char *, const int, const char *, DWORD, HANDLE);
+extern DWORD delegate_real_GetFileType(const char *, const int, const char *, HANDLE);
+extern HANDLE delegate_real_CreateFileW(const char *, const int, const char *, LPCWSTR, DWORD, DWORD,
+                                        LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
+extern BOOL delegate_real_SetServiceStatus(const char *, const int, const char *, SERVICE_STATUS_HANDLE,
+                                           LPSERVICE_STATUS);
+extern BOOL delegate_real_SetConsoleCtrlHandler(const char *, const int, const char *, PHANDLER_ROUTINE, BOOL);
+extern UINT delegate_real_GetConsoleCP(const char *, const int, const char *);
+extern UINT delegate_real_GetConsoleOutputCP(const char *, const int, const char *);
+extern BOOL delegate_real_SetConsoleCP(const char *, const int, const char *, UINT);
+extern BOOL delegate_real_SetConsoleOutputCP(const char *, const int, const char *, UINT);
+extern BOOL delegate_real_AttachConsole(const char *, const int, const char *, DWORD);
+extern BOOL delegate_real_FreeConsole(const char *, const int, const char *);
+extern int delegate_real_MultiByteToWideChar(const char *, const int, const char *, UINT, DWORD, LPCCH, int, LPWSTR,
+                                             int);
+extern void delegate_real_OutputDebugStringW(const char *, const int, const char *, LPCWSTR);
+extern BOOL delegate_real_SetHandleInformation(const char *, const int, const char *, HANDLE, DWORD, DWORD);
+extern BOOL delegate_real_SetEvent(const char *, const int, const char *, HANDLE);
+extern BOOL delegate_real_ResetEvent(const char *, const int, const char *, HANDLE);
 
 class Mock_windows
 {
@@ -295,6 +357,26 @@ class Mock_windows
     MOCK_METHOD(BOOL, GetProcessPriorityBoost, (const char *, const int, const char *, HANDLE, PBOOL));
     MOCK_METHOD(BOOL, SetThreadPriority, (const char *, const int, const char *, HANDLE, int));
     MOCK_METHOD(int, GetThreadPriority, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(BOOL, SetStdHandle, (const char *, const int, const char *, DWORD, HANDLE));
+    MOCK_METHOD(DWORD, GetFileType, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(HANDLE, CreateFileW,
+                (const char *, const int, const char *, LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD,
+                 HANDLE));
+    MOCK_METHOD(BOOL, SetServiceStatus,
+                (const char *, const int, const char *, SERVICE_STATUS_HANDLE, LPSERVICE_STATUS));
+    MOCK_METHOD(BOOL, SetConsoleCtrlHandler, (const char *, const int, const char *, PHANDLER_ROUTINE, BOOL));
+    MOCK_METHOD(UINT, GetConsoleCP, (const char *, const int, const char *));
+    MOCK_METHOD(UINT, GetConsoleOutputCP, (const char *, const int, const char *));
+    MOCK_METHOD(BOOL, SetConsoleCP, (const char *, const int, const char *, UINT));
+    MOCK_METHOD(BOOL, SetConsoleOutputCP, (const char *, const int, const char *, UINT));
+    MOCK_METHOD(BOOL, AttachConsole, (const char *, const int, const char *, DWORD));
+    MOCK_METHOD(BOOL, FreeConsole, (const char *, const int, const char *));
+    MOCK_METHOD(int, MultiByteToWideChar,
+                (const char *, const int, const char *, UINT, DWORD, LPCCH, int, LPWSTR, int));
+    MOCK_METHOD(void, OutputDebugStringW, (const char *, const int, const char *, LPCWSTR));
+    MOCK_METHOD(BOOL, SetHandleInformation, (const char *, const int, const char *, HANDLE, DWORD, DWORD));
+    MOCK_METHOD(BOOL, SetEvent, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(BOOL, ResetEvent, (const char *, const int, const char *, HANDLE));
 
     void switch_to_real_time();
     void switch_to_mock_time();

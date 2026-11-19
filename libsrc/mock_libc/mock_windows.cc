@@ -60,6 +60,23 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, GetProcessPriorityBoost(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetProcessPriorityBoost));
     ON_CALL(*this, SetThreadPriority(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetThreadPriority));
     ON_CALL(*this, GetThreadPriority(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetThreadPriority));
+    ON_CALL(*this, SetStdHandle(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetStdHandle));
+    ON_CALL(*this, GetFileType(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetFileType));
+    ON_CALL(*this, CreateFileW(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_CreateFileW));
+    ON_CALL(*this, SetServiceStatus(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetServiceStatus));
+    ON_CALL(*this, SetConsoleCtrlHandler(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleCtrlHandler));
+    ON_CALL(*this, GetConsoleCP(_, _, _)).WillByDefault(Invoke(delegate_real_GetConsoleCP));
+    ON_CALL(*this, GetConsoleOutputCP(_, _, _)).WillByDefault(Invoke(delegate_real_GetConsoleOutputCP));
+    ON_CALL(*this, SetConsoleCP(_, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleCP));
+    ON_CALL(*this, SetConsoleOutputCP(_, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleOutputCP));
+    ON_CALL(*this, AttachConsole(_, _, _, _)).WillByDefault(Invoke(delegate_real_AttachConsole));
+    ON_CALL(*this, FreeConsole(_, _, _)).WillByDefault(Invoke(delegate_real_FreeConsole));
+    ON_CALL(*this, MultiByteToWideChar(_, _, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_MultiByteToWideChar));
+    ON_CALL(*this, OutputDebugStringW(_, _, _, _)).WillByDefault(Invoke(delegate_real_OutputDebugStringW));
+    ON_CALL(*this, SetHandleInformation(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetHandleInformation));
+    ON_CALL(*this, SetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_SetEvent));
+    ON_CALL(*this, ResetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_ResetEvent));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);
 }

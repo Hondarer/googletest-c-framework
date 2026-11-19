@@ -49,6 +49,8 @@ extern int mock__dup(const char *, const int, const char *, int);
 extern int mock__dup2(const char *, const int, const char *, int, int);
 extern int mock__read(const char *, const int, const char *, int, void *, unsigned int);
 extern int mock__write(const char *, const int, const char *, int, const void *, unsigned int);
+extern int mock__open_osfhandle(const char *, const int, const char *, intptr_t, int);
+extern intptr_t mock__get_osfhandle(const char *, const int, const char *, int);
 #endif // _WIN32
 
 #ifdef __cplusplus
@@ -114,12 +116,14 @@ extern int mock__write(const char *, const int, const char *, int, const void *,
 
     #else // _WIN32
 
-        #define _lseeki64(fd, offset, whence) mock__lseeki64(__FILE__, __LINE__, __func__, fd, offset, whence)
-        #define _close(fd)                    mock__close(__FILE__, __LINE__, __func__, fd)
-        #define _dup(fd)                      mock__dup(__FILE__, __LINE__, __func__, fd)
-        #define _dup2(oldfd, newfd)           mock__dup2(__FILE__, __LINE__, __func__, oldfd, newfd)
-        #define _read(fd, buf, count)         mock__read(__FILE__, __LINE__, __func__, fd, buf, count)
-        #define _write(fd, buf, count)        mock__write(__FILE__, __LINE__, __func__, fd, buf, count)
+        #define _lseeki64(fd, offset, whence)     mock__lseeki64(__FILE__, __LINE__, __func__, fd, offset, whence)
+        #define _close(fd)                        mock__close(__FILE__, __LINE__, __func__, fd)
+        #define _dup(fd)                          mock__dup(__FILE__, __LINE__, __func__, fd)
+        #define _dup2(oldfd, newfd)               mock__dup2(__FILE__, __LINE__, __func__, oldfd, newfd)
+        #define _read(fd, buf, count)             mock__read(__FILE__, __LINE__, __func__, fd, buf, count)
+        #define _write(fd, buf, count)            mock__write(__FILE__, __LINE__, __func__, fd, buf, count)
+        #define _open_osfhandle(os_handle, flags) mock__open_osfhandle(__FILE__, __LINE__, __func__, os_handle, flags)
+        #define _get_osfhandle(fd)                mock__get_osfhandle(__FILE__, __LINE__, __func__, fd)
 
     #endif // _WIN32
 
@@ -197,6 +201,8 @@ extern int delegate_real__dup(const char *, const int, const char *, int);
 extern int delegate_real__dup2(const char *, const int, const char *, int, int);
 extern int delegate_real__read(const char *, const int, const char *, int, void *, unsigned int);
 extern int delegate_real__write(const char *, const int, const char *, int, const void *, unsigned int);
+extern int delegate_real__open_osfhandle(const char *, const int, const char *, intptr_t, int);
+extern intptr_t delegate_real__get_osfhandle(const char *, const int, const char *, int);
 
 class Mock_unistd
 {
@@ -207,6 +213,8 @@ class Mock_unistd
     MOCK_METHOD(int, _dup2, (const char *, const int, const char *, int, int));
     MOCK_METHOD(int, _read, (const char *, const int, const char *, int, void *, unsigned int));
     MOCK_METHOD(int, _write, (const char *, const int, const char *, int, const void *, unsigned int));
+    MOCK_METHOD(int, _open_osfhandle, (const char *, const int, const char *, intptr_t, int));
+    MOCK_METHOD(intptr_t, _get_osfhandle, (const char *, const int, const char *, int));
 
     Mock_unistd();
     virtual ~Mock_unistd();
