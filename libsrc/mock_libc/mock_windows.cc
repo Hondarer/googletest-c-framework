@@ -18,6 +18,7 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, SetConsoleMode(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleMode));
     ON_CALL(*this, WaitForSingleObject(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_WaitForSingleObject));
     ON_CALL(*this, ReadConsoleW(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadConsoleW));
+    ON_CALL(*this, WriteConsoleW(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_WriteConsoleW));
     ON_CALL(*this, ReadFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadFile));
     ON_CALL(*this, CreateFileMappingA(_, _, _, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_CreateFileMappingA));
@@ -77,6 +78,11 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, SetHandleInformation(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetHandleInformation));
     ON_CALL(*this, SetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_SetEvent));
     ON_CALL(*this, ResetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_ResetEvent));
+    ON_CALL(*this, GetTokenInformation(_, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_GetTokenInformation));
+    ON_CALL(*this, ProcessIdToSessionId(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_ProcessIdToSessionId));
+    ON_CALL(*this, GetNamedPipeClientProcessId(_, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_GetNamedPipeClientProcessId));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);
 }

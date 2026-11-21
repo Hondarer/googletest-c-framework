@@ -31,6 +31,7 @@ extern "C"
     extern DWORD mock_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
     extern BOOL mock_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD,
                                   PCONSOLE_READCONSOLE_CONTROL);
+    extern BOOL mock_WriteConsoleW(const char *, const int, const char *, HANDLE, const VOID *, DWORD, LPDWORD, LPVOID);
     extern BOOL mock_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
     extern HANDLE mock_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD,
                                           DWORD, DWORD, LPCSTR);
@@ -90,6 +91,10 @@ extern "C"
     extern BOOL mock_SetHandleInformation(const char *, const int, const char *, HANDLE, DWORD, DWORD);
     extern BOOL mock_SetEvent(const char *, const int, const char *, HANDLE);
     extern BOOL mock_ResetEvent(const char *, const int, const char *, HANDLE);
+    extern BOOL mock_GetTokenInformation(const char *, const int, const char *, HANDLE, TOKEN_INFORMATION_CLASS, LPVOID,
+                                         DWORD, PDWORD);
+    extern BOOL mock_ProcessIdToSessionId(const char *, const int, const char *, DWORD, DWORD *);
+    extern BOOL mock_GetNamedPipeClientProcessId(const char *, const int, const char *, HANDLE, PULONG);
 
         #ifdef __cplusplus
 }
@@ -114,6 +119,9 @@ extern "C"
                 mock_WaitForSingleObject(__FILE__, __LINE__, __func__, handle, milliseconds)
             #define ReadConsoleW(handle, buffer, count, read, control) \
                 mock_ReadConsoleW(__FILE__, __LINE__, __func__, handle, buffer, count, read, control)
+            #define WriteConsoleW(console_output, buffer, chars_to_write, chars_written, reserved) \
+                mock_WriteConsoleW(__FILE__, __LINE__, __func__, console_output, buffer, chars_to_write, \
+                                   chars_written, reserved)
             #define ReadFile(file_handle, buffer, bytes_to_read, bytes_read, overlapped) \
                 mock_ReadFile(__FILE__, __LINE__, __func__, file_handle, buffer, bytes_to_read, bytes_read, overlapped)
             #define CreateFileMappingA(file, attributes, protect, size_high, size_low, name) \
@@ -209,6 +217,14 @@ extern "C"
                 mock_SetHandleInformation(__FILE__, __LINE__, __func__, object, mask, flags)
             #define SetEvent(event)   mock_SetEvent(__FILE__, __LINE__, __func__, event)
             #define ResetEvent(event) mock_ResetEvent(__FILE__, __LINE__, __func__, event)
+            #define GetTokenInformation(token_handle, token_information_class, token_information, \
+                                        token_information_length, return_length) \
+                mock_GetTokenInformation(__FILE__, __LINE__, __func__, token_handle, token_information_class, \
+                                         token_information, token_information_length, return_length)
+            #define ProcessIdToSessionId(process_id, session_id) \
+                mock_ProcessIdToSessionId(__FILE__, __LINE__, __func__, process_id, session_id)
+            #define GetNamedPipeClientProcessId(pipe, client_process_id) \
+                mock_GetNamedPipeClientProcessId(__FILE__, __LINE__, __func__, pipe, client_process_id)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -230,6 +246,8 @@ extern BOOL delegate_real_SetConsoleMode(const char *, const int, const char *, 
 extern DWORD delegate_real_WaitForSingleObject(const char *, const int, const char *, HANDLE, DWORD);
 extern BOOL delegate_real_ReadConsoleW(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD,
                                        PCONSOLE_READCONSOLE_CONTROL);
+extern BOOL delegate_real_WriteConsoleW(const char *, const int, const char *, HANDLE, const VOID *, DWORD, LPDWORD,
+                                        LPVOID);
 extern BOOL delegate_real_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
 extern HANDLE delegate_real_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES,
                                                DWORD, DWORD, DWORD, LPCSTR);
@@ -295,6 +313,10 @@ extern void delegate_real_OutputDebugStringW(const char *, const int, const char
 extern BOOL delegate_real_SetHandleInformation(const char *, const int, const char *, HANDLE, DWORD, DWORD);
 extern BOOL delegate_real_SetEvent(const char *, const int, const char *, HANDLE);
 extern BOOL delegate_real_ResetEvent(const char *, const int, const char *, HANDLE);
+extern BOOL delegate_real_GetTokenInformation(const char *, const int, const char *, HANDLE, TOKEN_INFORMATION_CLASS,
+                                              LPVOID, DWORD, PDWORD);
+extern BOOL delegate_real_ProcessIdToSessionId(const char *, const int, const char *, DWORD, DWORD *);
+extern BOOL delegate_real_GetNamedPipeClientProcessId(const char *, const int, const char *, HANDLE, PULONG);
 
 class Mock_windows
 {
@@ -311,6 +333,8 @@ class Mock_windows
     MOCK_METHOD(DWORD, WaitForSingleObject, (const char *, const int, const char *, HANDLE, DWORD));
     MOCK_METHOD(BOOL, ReadConsoleW,
                 (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, PCONSOLE_READCONSOLE_CONTROL));
+    MOCK_METHOD(BOOL, WriteConsoleW,
+                (const char *, const int, const char *, HANDLE, const VOID *, DWORD, LPDWORD, LPVOID));
     MOCK_METHOD(BOOL, ReadFile, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED));
     MOCK_METHOD(HANDLE, CreateFileMappingA,
                 (const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR));
@@ -377,6 +401,10 @@ class Mock_windows
     MOCK_METHOD(BOOL, SetHandleInformation, (const char *, const int, const char *, HANDLE, DWORD, DWORD));
     MOCK_METHOD(BOOL, SetEvent, (const char *, const int, const char *, HANDLE));
     MOCK_METHOD(BOOL, ResetEvent, (const char *, const int, const char *, HANDLE));
+    MOCK_METHOD(BOOL, GetTokenInformation,
+                (const char *, const int, const char *, HANDLE, TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD));
+    MOCK_METHOD(BOOL, ProcessIdToSessionId, (const char *, const int, const char *, DWORD, DWORD *));
+    MOCK_METHOD(BOOL, GetNamedPipeClientProcessId, (const char *, const int, const char *, HANDLE, PULONG));
 
     void switch_to_real_time();
     void switch_to_mock_time();
