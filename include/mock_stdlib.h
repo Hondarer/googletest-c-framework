@@ -17,6 +17,7 @@ extern "C"
     extern void *mock_malloc(const char *, const int, const char *, size_t);
     extern void *mock_realloc(const char *, const int, const char *, void *, size_t);
     extern void *mock_calloc(const char *, const int, const char *, size_t, size_t);
+    extern void mock_free(const char *, const int, const char *, void *);
     extern char *mock_getenv(const char *, const int, const char *, const char *);
     extern int mock_atexit(const char *, const int, const char *, mock_atexit_fn);
 #ifndef _WIN32
@@ -38,6 +39,9 @@ extern "C"
     #define malloc(__size)          mock_malloc(__FILE__, __LINE__, __func__, __size)
     #define realloc(__ptr, __size)  mock_realloc(__FILE__, __LINE__, __func__, __ptr, __size)
     #define calloc(__nmemb, __size) mock_calloc(__FILE__, __LINE__, __func__, __nmemb, __size)
+    #ifdef TESTFW_MOCK_STDLIB_FREE
+        #define free(__ptr) mock_free(__FILE__, __LINE__, __func__, __ptr)
+    #endif
     #define getenv(__name)          mock_getenv(__FILE__, __LINE__, __func__, __name)
     #define atexit(__function)      mock_atexit(__FILE__, __LINE__, __func__, __function)
     #ifndef _WIN32
@@ -56,6 +60,7 @@ extern "C"
 extern void *delegate_real_malloc(const char *, const int, const char *, size_t);
 extern void *delegate_real_realloc(const char *, const int, const char *, void *, size_t);
 extern void *delegate_real_calloc(const char *, const int, const char *, size_t, size_t);
+extern void delegate_real_free(const char *, const int, const char *, void *);
 extern char *delegate_real_getenv(const char *, const int, const char *, const char *);
 extern int delegate_real_atexit(const char *, const int, const char *, mock_atexit_fn);
     #ifndef _WIN32
@@ -72,6 +77,7 @@ class Mock_stdlib
     MOCK_METHOD(void *, malloc, (const char *, const int, const char *, size_t));
     MOCK_METHOD(void *, realloc, (const char *, const int, const char *, void *, size_t));
     MOCK_METHOD(void *, calloc, (const char *, const int, const char *, size_t, size_t));
+    MOCK_METHOD(void, free, (const char *, const int, const char *, void *));
     MOCK_METHOD(char *, getenv, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, atexit, (const char *, const int, const char *, mock_atexit_fn));
     #ifndef _WIN32
