@@ -20,6 +20,7 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, ReadConsoleW(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadConsoleW));
     ON_CALL(*this, WriteConsoleW(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_WriteConsoleW));
     ON_CALL(*this, ReadFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ReadFile));
+    ON_CALL(*this, WriteFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_WriteFile));
     ON_CALL(*this, CreateFileMappingA(_, _, _, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_CreateFileMappingA));
     ON_CALL(*this, MapViewOfFile(_, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_MapViewOfFile));
@@ -74,6 +75,8 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, FreeConsole(_, _, _)).WillByDefault(Invoke(delegate_real_FreeConsole));
     ON_CALL(*this, MultiByteToWideChar(_, _, _, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_MultiByteToWideChar));
+    ON_CALL(*this, WideCharToMultiByte(_, _, _, _, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_WideCharToMultiByte));
     ON_CALL(*this, OutputDebugStringW(_, _, _, _)).WillByDefault(Invoke(delegate_real_OutputDebugStringW));
     ON_CALL(*this, SetHandleInformation(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetHandleInformation));
     ON_CALL(*this, SetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_SetEvent));

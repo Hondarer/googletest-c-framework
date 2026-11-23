@@ -2,6 +2,9 @@
 #define _MOCK_SYS_STAT_H
 
 #include <sys/stat.h>
+#ifdef _WIN32
+    #include <wchar.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -20,6 +23,7 @@ extern "C"
 
 #ifdef _WIN32
     extern int mock_stat64(const char *, const int, const char *, const char *, struct _stat64 *);
+    extern int mock_wstat64(const char *, const int, const char *, const wchar_t *, struct _stat64 *);
 #endif
 
 #ifdef __cplusplus
@@ -40,6 +44,7 @@ extern "C"
 
     #ifdef _WIN32
         #define _stat64(path, buf) mock_stat64(__FILE__, __LINE__, __func__, path, buf)
+        #define _wstat64(path, buf) mock_wstat64(__FILE__, __LINE__, __func__, path, buf)
     #endif
 
 #else // _IN_OVERRIDE_HEADER_STAT_H
@@ -58,6 +63,7 @@ extern int delegate_real_utimensat(const char *, const int, const char *, int, c
 
     #ifdef _WIN32
 extern int delegate_real_stat64(const char *, const int, const char *, const char *, struct _stat64 *);
+extern int delegate_real_wstat64(const char *, const int, const char *, const wchar_t *, struct _stat64 *);
     #endif
 
 class Mock_sys_stat
@@ -75,6 +81,7 @@ class Mock_sys_stat
 
     #ifdef _WIN32
     MOCK_METHOD(int, stat64, (const char *, const int, const char *, const char *, struct _stat64 *));
+    MOCK_METHOD(int, wstat64, (const char *, const int, const char *, const wchar_t *, struct _stat64 *));
     #endif
 
     Mock_sys_stat();

@@ -17,6 +17,7 @@ Mock_sys_stat::Mock_sys_stat()
 
 #ifdef _WIN32
     ON_CALL(*this, stat64(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_stat64));
+    ON_CALL(*this, wstat64(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_wstat64));
 #endif
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_stat);

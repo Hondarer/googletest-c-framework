@@ -33,6 +33,7 @@ extern "C"
                                   PCONSOLE_READCONSOLE_CONTROL);
     extern BOOL mock_WriteConsoleW(const char *, const int, const char *, HANDLE, const VOID *, DWORD, LPDWORD, LPVOID);
     extern BOOL mock_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
+    extern BOOL mock_WriteFile(const char *, const int, const char *, HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED);
     extern HANDLE mock_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD,
                                           DWORD, DWORD, LPCSTR);
     extern LPVOID mock_MapViewOfFile(const char *, const int, const char *, HANDLE, DWORD, DWORD, DWORD, SIZE_T);
@@ -87,6 +88,8 @@ extern "C"
     extern BOOL mock_AttachConsole(const char *, const int, const char *, DWORD);
     extern BOOL mock_FreeConsole(const char *, const int, const char *);
     extern int mock_MultiByteToWideChar(const char *, const int, const char *, UINT, DWORD, LPCCH, int, LPWSTR, int);
+    extern int mock_WideCharToMultiByte(const char *, const int, const char *, UINT, DWORD, LPCWCH, int, LPSTR, int,
+                                        LPCCH, LPBOOL);
     extern void mock_OutputDebugStringW(const char *, const int, const char *, LPCWSTR);
     extern BOOL mock_SetHandleInformation(const char *, const int, const char *, HANDLE, DWORD, DWORD);
     extern BOOL mock_SetEvent(const char *, const int, const char *, HANDLE);
@@ -124,6 +127,9 @@ extern "C"
                                    chars_written, reserved)
             #define ReadFile(file_handle, buffer, bytes_to_read, bytes_read, overlapped) \
                 mock_ReadFile(__FILE__, __LINE__, __func__, file_handle, buffer, bytes_to_read, bytes_read, overlapped)
+            #define WriteFile(file_handle, buffer, bytes_to_write, bytes_written, overlapped) \
+                mock_WriteFile(__FILE__, __LINE__, __func__, file_handle, buffer, bytes_to_write, bytes_written, \
+                               overlapped)
             #define CreateFileMappingA(file, attributes, protect, size_high, size_low, name) \
                 mock_CreateFileMappingA(__FILE__, __LINE__, __func__, file, attributes, protect, size_high, size_low, \
                                         name)
@@ -211,6 +217,11 @@ extern "C"
                                         wide_char_count) \
                 mock_MultiByteToWideChar(__FILE__, __LINE__, __func__, code_page, flags, multi_byte_str, \
                                          multi_byte_count, wide_char_str, wide_char_count)
+            #define WideCharToMultiByte(code_page, flags, wide_char_str, wide_char_count, multi_byte_str, \
+                                        multi_byte_count, default_char, used_default_char) \
+                mock_WideCharToMultiByte(__FILE__, __LINE__, __func__, code_page, flags, wide_char_str, \
+                                         wide_char_count, multi_byte_str, multi_byte_count, default_char, \
+                                         used_default_char)
             #define OutputDebugStringW(output_string) \
                 mock_OutputDebugStringW(__FILE__, __LINE__, __func__, output_string)
             #define SetHandleInformation(object, mask, flags) \
@@ -249,6 +260,8 @@ extern BOOL delegate_real_ReadConsoleW(const char *, const int, const char *, HA
 extern BOOL delegate_real_WriteConsoleW(const char *, const int, const char *, HANDLE, const VOID *, DWORD, LPDWORD,
                                         LPVOID);
 extern BOOL delegate_real_ReadFile(const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED);
+extern BOOL delegate_real_WriteFile(const char *, const int, const char *, HANDLE, LPCVOID, DWORD, LPDWORD,
+                                    LPOVERLAPPED);
 extern HANDLE delegate_real_CreateFileMappingA(const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES,
                                                DWORD, DWORD, DWORD, LPCSTR);
 extern LPVOID delegate_real_MapViewOfFile(const char *, const int, const char *, HANDLE, DWORD, DWORD, DWORD, SIZE_T);
@@ -309,6 +322,8 @@ extern BOOL delegate_real_AttachConsole(const char *, const int, const char *, D
 extern BOOL delegate_real_FreeConsole(const char *, const int, const char *);
 extern int delegate_real_MultiByteToWideChar(const char *, const int, const char *, UINT, DWORD, LPCCH, int, LPWSTR,
                                              int);
+extern int delegate_real_WideCharToMultiByte(const char *, const int, const char *, UINT, DWORD, LPCWCH, int, LPSTR,
+                                             int, LPCCH, LPBOOL);
 extern void delegate_real_OutputDebugStringW(const char *, const int, const char *, LPCWSTR);
 extern BOOL delegate_real_SetHandleInformation(const char *, const int, const char *, HANDLE, DWORD, DWORD);
 extern BOOL delegate_real_SetEvent(const char *, const int, const char *, HANDLE);
@@ -336,6 +351,8 @@ class Mock_windows
     MOCK_METHOD(BOOL, WriteConsoleW,
                 (const char *, const int, const char *, HANDLE, const VOID *, DWORD, LPDWORD, LPVOID));
     MOCK_METHOD(BOOL, ReadFile, (const char *, const int, const char *, HANDLE, LPVOID, DWORD, LPDWORD, LPOVERLAPPED));
+    MOCK_METHOD(BOOL, WriteFile,
+                (const char *, const int, const char *, HANDLE, LPCVOID, DWORD, LPDWORD, LPOVERLAPPED));
     MOCK_METHOD(HANDLE, CreateFileMappingA,
                 (const char *, const int, const char *, HANDLE, LPSECURITY_ATTRIBUTES, DWORD, DWORD, DWORD, LPCSTR));
     MOCK_METHOD(LPVOID, MapViewOfFile, (const char *, const int, const char *, HANDLE, DWORD, DWORD, DWORD, SIZE_T));
@@ -397,6 +414,8 @@ class Mock_windows
     MOCK_METHOD(BOOL, FreeConsole, (const char *, const int, const char *));
     MOCK_METHOD(int, MultiByteToWideChar,
                 (const char *, const int, const char *, UINT, DWORD, LPCCH, int, LPWSTR, int));
+    MOCK_METHOD(int, WideCharToMultiByte,
+                (const char *, const int, const char *, UINT, DWORD, LPCWCH, int, LPSTR, int, LPCCH, LPBOOL));
     MOCK_METHOD(void, OutputDebugStringW, (const char *, const int, const char *, LPCWSTR));
     MOCK_METHOD(BOOL, SetHandleInformation, (const char *, const int, const char *, HANDLE, DWORD, DWORD));
     MOCK_METHOD(BOOL, SetEvent, (const char *, const int, const char *, HANDLE));
