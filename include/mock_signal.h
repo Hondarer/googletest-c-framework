@@ -12,6 +12,8 @@ extern "C"
 
     extern int mock_sigaction(const char *, const int, const char *, int, const struct sigaction *, struct sigaction *);
     extern int mock_sigemptyset(const char *, const int, const char *, sigset_t *);
+    extern int mock_sigaddset(const char *, const int, const char *, sigset_t *, int);
+    extern int mock_pthread_sigmask(const char *, const int, const char *, int, const sigset_t *, sigset_t *);
     extern void (*mock_signal(const char *, const int, const char *, int, void (*)(int)))(int);
     extern int mock_raise(const char *, const int, const char *, int);
 
@@ -21,10 +23,20 @@ extern "C"
 
     #ifdef _IN_OVERRIDE_HEADER_SIGNAL_H
 
+        #ifdef sigaddset
+            #undef sigaddset
+        #endif
+        #ifdef pthread_sigmask
+            #undef pthread_sigmask
+        #endif
+
         #define sigaction(signum, act, oldact) mock_sigaction(__FILE__, __LINE__, __func__, signum, act, oldact)
         #define sigemptyset(set)               mock_sigemptyset(__FILE__, __LINE__, __func__, set)
-        #define signal(signum, handler)        mock_signal(__FILE__, __LINE__, __func__, signum, handler)
-        #define raise(signum)                  mock_raise(__FILE__, __LINE__, __func__, signum)
+        #define sigaddset(set, signum)         mock_sigaddset(__FILE__, __LINE__, __func__, set, signum)
+        #define pthread_sigmask(how, set, oldset) \
+            mock_pthread_sigmask(__FILE__, __LINE__, __func__, how, set, oldset)
+        #define signal(signum, handler) mock_signal(__FILE__, __LINE__, __func__, signum, handler)
+        #define raise(signum)           mock_raise(__FILE__, __LINE__, __func__, signum)
 
     #else // _IN_OVERRIDE_HEADER_SIGNAL_H
 
@@ -33,6 +45,8 @@ extern "C"
 extern int delegate_real_sigaction(const char *, const int, const char *, int, const struct sigaction *,
                                    struct sigaction *);
 extern int delegate_real_sigemptyset(const char *, const int, const char *, sigset_t *);
+extern int delegate_real_sigaddset(const char *, const int, const char *, sigset_t *, int);
+extern int delegate_real_pthread_sigmask(const char *, const int, const char *, int, const sigset_t *, sigset_t *);
 extern void (*delegate_real_signal(const char *, const int, const char *, int, void (*)(int)))(int);
 extern int delegate_real_raise(const char *, const int, const char *, int);
 
@@ -42,6 +56,8 @@ class Mock_signal
     MOCK_METHOD(int, sigaction,
                 (const char *, const int, const char *, int, const struct sigaction *, struct sigaction *));
     MOCK_METHOD(int, sigemptyset, (const char *, const int, const char *, sigset_t *));
+    MOCK_METHOD(int, sigaddset, (const char *, const int, const char *, sigset_t *, int));
+    MOCK_METHOD(int, pthread_sigmask, (const char *, const int, const char *, int, const sigset_t *, sigset_t *));
     MOCK_METHOD(void (*)(int), signal, (const char *, const int, const char *, int, void (*)(int)));
     MOCK_METHOD(int, raise, (const char *, const int, const char *, int));
 
