@@ -17,10 +17,11 @@ Mock_stdio::Mock_stdio()
 
     ON_CALL(*this, vfscanf(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_vfscanf));
 
-#ifdef _WIN32
-    /* setvbuf と _fileno は切り替えの対象にせず、常に実物へ委譲する */
+    /* setvbuf は切り替えの対象にせず、常に実物へ委譲する */
     ON_CALL(*this, setvbuf(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_setvbuf));
 
+#ifdef _WIN32
+    /* _fileno は切り替えの対象にせず、常に実物へ委譲する */
     ON_CALL(*this, _fileno(_, _, _, _)).WillByDefault(Invoke(delegate_real__fileno));
 #endif
 

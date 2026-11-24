@@ -1,7 +1,5 @@
-#ifdef _WIN32
-
-    #include <mock_stdio.h>
-    #include <test_com.h>
+#include <mock_stdio.h>
+#include <test_com.h>
 
 using namespace testing;
 
@@ -44,5 +42,3 @@ int mock_setvbuf(const char *file, const int line, const char *func, FILE *strea
 
     return mock_ret;
 }
-
-#endif // _WIN32

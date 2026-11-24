@@ -44,6 +44,7 @@ extern "C"
     extern FILE *mock_freopen(const char *, const int, const char *, const char *, const char *, FILE *);
     extern int mock_remove(const char *, const int, const char *, const char *);
     extern int mock_rename(const char *, const int, const char *, const char *, const char *);
+    extern int mock_setvbuf(const char *, const int, const char *, FILE *, char *, int, size_t);
 #ifndef _WIN32
     extern FILE *mock_fdopen(const char *, const int, const char *, int, const char *);
     extern int mock_fseeko(const char *, const int, const char *, FILE *, off_t, int);
@@ -51,7 +52,6 @@ extern "C"
 #else
 extern int mock__fseeki64(const char *, const int, const char *, FILE *, __int64, int);
 extern __int64 mock__ftelli64(const char *, const int, const char *, FILE *);
-extern int mock_setvbuf(const char *, const int, const char *, FILE *, char *, int, size_t);
 extern int mock__fileno(const char *, const int, const char *, FILE *);
 #endif
 
@@ -88,6 +88,8 @@ extern int mock__fileno(const char *, const int, const char *, FILE *);
         #define remove(path)             mock_remove(__FILE__, __LINE__, __func__, path)
         #define rename(oldpath, newpath) mock_rename(__FILE__, __LINE__, __func__, oldpath, newpath)
     #endif /* !__cplusplus */
+    #define setvbuf(stream, buffer, mode, size) \
+        mock_setvbuf(__FILE__, __LINE__, __func__, stream, buffer, mode, size)
     #ifndef _WIN32
         #define fdopen(fd, modes)              mock_fdopen(__FILE__, __LINE__, __func__, fd, modes)
         #define fseeko(stream, offset, whence) mock_fseeko(__FILE__, __LINE__, __func__, stream, offset, whence)
@@ -95,9 +97,7 @@ extern int mock__fileno(const char *, const int, const char *, FILE *);
     #else
         #define _fseeki64(stream, offset, whence) mock__fseeki64(__FILE__, __LINE__, __func__, stream, offset, whence)
         #define _ftelli64(stream)                 mock__ftelli64(__FILE__, __LINE__, __func__, stream)
-        #define setvbuf(stream, buffer, mode, size) \
-            mock_setvbuf(__FILE__, __LINE__, __func__, stream, buffer, mode, size)
-        #define _fileno(stream) mock__fileno(__FILE__, __LINE__, __func__, stream)
+        #define _fileno(stream)                   mock__fileno(__FILE__, __LINE__, __func__, stream)
     #endif
 
 #else // _IN_OVERRIDE_HEADER_STDIO_H
@@ -149,6 +149,7 @@ extern int delegate_real_remove(const char *, const int, const char *, const cha
 extern int delegate_fake_remove(const char *, const int, const char *, const char *);
 extern int delegate_real_rename(const char *, const int, const char *, const char *, const char *);
 extern int delegate_fake_rename(const char *, const int, const char *, const char *, const char *);
+extern int delegate_real_setvbuf(const char *, const int, const char *, FILE *, char *, int, size_t);
     #ifndef _WIN32
 extern FILE *delegate_real_fdopen(const char *, const int, const char *, int, const char *);
 extern FILE *delegate_fake_fdopen(const char *, const int, const char *, int, const char *);
@@ -161,7 +162,6 @@ extern int delegate_real__fseeki64(const char *, const int, const char *, FILE *
 extern int delegate_fake__fseeki64(const char *, const int, const char *, FILE *, __int64, int);
 extern __int64 delegate_real__ftelli64(const char *, const int, const char *, FILE *);
 extern __int64 delegate_fake__ftelli64(const char *, const int, const char *, FILE *);
-extern int delegate_real_setvbuf(const char *, const int, const char *, FILE *, char *, int, size_t);
 extern int delegate_real__fileno(const char *, const int, const char *, FILE *);
     #endif
 
@@ -192,6 +192,7 @@ class Mock_stdio
     MOCK_METHOD(FILE *, freopen, (const char *, const int, const char *, const char *, const char *, FILE *));
     MOCK_METHOD(int, remove, (const char *, const int, const char *, const char *));
     MOCK_METHOD(int, rename, (const char *, const int, const char *, const char *, const char *));
+    MOCK_METHOD(int, setvbuf, (const char *, const int, const char *, FILE *, char *, int, size_t));
     #ifndef _WIN32
     MOCK_METHOD(FILE *, fdopen, (const char *, const int, const char *, int, const char *));
     MOCK_METHOD(int, fseeko, (const char *, const int, const char *, FILE *, off_t, int));
@@ -199,7 +200,6 @@ class Mock_stdio
     #else
     MOCK_METHOD(int, _fseeki64, (const char *, const int, const char *, FILE *, __int64, int));
     MOCK_METHOD(__int64, _ftelli64, (const char *, const int, const char *, FILE *));
-    MOCK_METHOD(int, setvbuf, (const char *, const int, const char *, FILE *, char *, int, size_t));
     MOCK_METHOD(int, _fileno, (const char *, const int, const char *, FILE *));
     #endif
 
