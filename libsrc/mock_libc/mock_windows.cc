@@ -86,6 +86,12 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, ProcessIdToSessionId(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_ProcessIdToSessionId));
     ON_CALL(*this, GetNamedPipeClientProcessId(_, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_GetNamedPipeClientProcessId));
+    ON_CALL(*this, GetTempPathW(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetTempPathW));
+    ON_CALL(*this, GetTempFileNameW(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetTempFileNameW));
+    ON_CALL(*this, GetModuleHandleW(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetModuleHandleW));
+    ON_CALL(*this, GetProcAddress(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetProcAddress));
+    ON_CALL(*this, CompareStringOrdinal(_, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_CompareStringOrdinal));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);
 }

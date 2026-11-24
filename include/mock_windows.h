@@ -98,6 +98,11 @@ extern "C"
                                          DWORD, PDWORD);
     extern BOOL mock_ProcessIdToSessionId(const char *, const int, const char *, DWORD, DWORD *);
     extern BOOL mock_GetNamedPipeClientProcessId(const char *, const int, const char *, HANDLE, PULONG);
+    extern DWORD mock_GetTempPathW(const char *, const int, const char *, DWORD, LPWSTR);
+    extern UINT mock_GetTempFileNameW(const char *, const int, const char *, LPCWSTR, LPCWSTR, UINT, LPWSTR);
+    extern HMODULE mock_GetModuleHandleW(const char *, const int, const char *, LPCWSTR);
+    extern FARPROC mock_GetProcAddress(const char *, const int, const char *, HMODULE, LPCSTR);
+    extern int mock_CompareStringOrdinal(const char *, const int, const char *, LPCWCH, int, LPCWCH, int, BOOL);
 
         #ifdef __cplusplus
 }
@@ -236,6 +241,15 @@ extern "C"
                 mock_ProcessIdToSessionId(__FILE__, __LINE__, __func__, process_id, session_id)
             #define GetNamedPipeClientProcessId(pipe, client_process_id) \
                 mock_GetNamedPipeClientProcessId(__FILE__, __LINE__, __func__, pipe, client_process_id)
+            #define GetTempPathW(buffer_length, buffer) \
+                mock_GetTempPathW(__FILE__, __LINE__, __func__, buffer_length, buffer)
+            #define GetTempFileNameW(path_name, prefix_string, unique, temp_file_name) \
+                mock_GetTempFileNameW(__FILE__, __LINE__, __func__, path_name, prefix_string, unique, temp_file_name)
+            #define GetModuleHandleW(module_name) mock_GetModuleHandleW(__FILE__, __LINE__, __func__, module_name)
+            #define GetProcAddress(module, proc_name) \
+                mock_GetProcAddress(__FILE__, __LINE__, __func__, module, proc_name)
+            #define CompareStringOrdinal(string1, count1, string2, count2, ignore_case) \
+                mock_CompareStringOrdinal(__FILE__, __LINE__, __func__, string1, count1, string2, count2, ignore_case)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -332,6 +346,11 @@ extern BOOL delegate_real_GetTokenInformation(const char *, const int, const cha
                                               LPVOID, DWORD, PDWORD);
 extern BOOL delegate_real_ProcessIdToSessionId(const char *, const int, const char *, DWORD, DWORD *);
 extern BOOL delegate_real_GetNamedPipeClientProcessId(const char *, const int, const char *, HANDLE, PULONG);
+extern DWORD delegate_real_GetTempPathW(const char *, const int, const char *, DWORD, LPWSTR);
+extern UINT delegate_real_GetTempFileNameW(const char *, const int, const char *, LPCWSTR, LPCWSTR, UINT, LPWSTR);
+extern HMODULE delegate_real_GetModuleHandleW(const char *, const int, const char *, LPCWSTR);
+extern FARPROC delegate_real_GetProcAddress(const char *, const int, const char *, HMODULE, LPCSTR);
+extern int delegate_real_CompareStringOrdinal(const char *, const int, const char *, LPCWCH, int, LPCWCH, int, BOOL);
 
 class Mock_windows
 {
@@ -424,6 +443,13 @@ class Mock_windows
                 (const char *, const int, const char *, HANDLE, TOKEN_INFORMATION_CLASS, LPVOID, DWORD, PDWORD));
     MOCK_METHOD(BOOL, ProcessIdToSessionId, (const char *, const int, const char *, DWORD, DWORD *));
     MOCK_METHOD(BOOL, GetNamedPipeClientProcessId, (const char *, const int, const char *, HANDLE, PULONG));
+    MOCK_METHOD(DWORD, GetTempPathW, (const char *, const int, const char *, DWORD, LPWSTR));
+    MOCK_METHOD(UINT, GetTempFileNameW,
+                (const char *, const int, const char *, LPCWSTR, LPCWSTR, UINT, LPWSTR));
+    MOCK_METHOD(HMODULE, GetModuleHandleW, (const char *, const int, const char *, LPCWSTR));
+    MOCK_METHOD(FARPROC, GetProcAddress, (const char *, const int, const char *, HMODULE, LPCSTR));
+    MOCK_METHOD(int, CompareStringOrdinal,
+                (const char *, const int, const char *, LPCWCH, int, LPCWCH, int, BOOL));
 
     void switch_to_real_time();
     void switch_to_mock_time();
