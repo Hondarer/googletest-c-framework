@@ -22,6 +22,15 @@ extern "C"
     extern int mock_WSACleanup(const char *, const int, const char *);
     extern int mock_WSAGetLastError(const char *, const int, const char *);
     extern int mock_WSAPoll(const char *, const int, const char *, LPWSAPOLLFD, ULONG, INT);
+    extern WSAEVENT mock_WSACreateEvent(const char *, const int, const char *);
+    extern BOOL mock_WSACloseEvent(const char *, const int, const char *, WSAEVENT);
+    extern BOOL mock_WSASetEvent(const char *, const int, const char *, WSAEVENT);
+    extern BOOL mock_WSAResetEvent(const char *, const int, const char *, WSAEVENT);
+    extern int mock_WSAEventSelect(const char *, const int, const char *, SOCKET, WSAEVENT, long);
+    extern int mock_WSAEnumNetworkEvents(const char *, const int, const char *, SOCKET, WSAEVENT,
+                                         LPWSANETWORKEVENTS);
+    extern DWORD mock_WSAWaitForMultipleEvents(const char *, const int, const char *, DWORD, const WSAEVENT *, BOOL,
+                                               DWORD, BOOL);
     extern SOCKET mock_socket(const char *, const int, const char *, int, int, int);
     extern int mock_bind(const char *, const int, const char *, SOCKET, const struct sockaddr *, int);
     extern int mock_listen(const char *, const int, const char *, SOCKET, int);
@@ -57,6 +66,16 @@ extern "C"
             #define WSACleanup()                    mock_WSACleanup(__FILE__, __LINE__, __func__)
             #define WSAGetLastError()               mock_WSAGetLastError(__FILE__, __LINE__, __func__)
             #define WSAPoll(fd_array, fds, timeout) mock_WSAPoll(__FILE__, __LINE__, __func__, fd_array, fds, timeout)
+            #define WSACreateEvent() mock_WSACreateEvent(__FILE__, __LINE__, __func__)
+            #define WSACloseEvent(event) mock_WSACloseEvent(__FILE__, __LINE__, __func__, event)
+            #define WSASetEvent(event) mock_WSASetEvent(__FILE__, __LINE__, __func__, event)
+            #define WSAResetEvent(event) mock_WSAResetEvent(__FILE__, __LINE__, __func__, event)
+            #define WSAEventSelect(sock, event, network_events) \
+                mock_WSAEventSelect(__FILE__, __LINE__, __func__, sock, event, network_events)
+            #define WSAEnumNetworkEvents(sock, event, network_events) \
+                mock_WSAEnumNetworkEvents(__FILE__, __LINE__, __func__, sock, event, network_events)
+            #define WSAWaitForMultipleEvents(count, events, wait_all, timeout, alertable) \
+                mock_WSAWaitForMultipleEvents(__FILE__, __LINE__, __func__, count, events, wait_all, timeout, alertable)
             #define socket(af, type, protocol)      mock_socket(__FILE__, __LINE__, __func__, af, type, protocol)
             #define bind(s, name, namelen)          mock_bind(__FILE__, __LINE__, __func__, s, name, namelen)
             #define listen(s, backlog)              mock_listen(__FILE__, __LINE__, __func__, s, backlog)
@@ -93,6 +112,15 @@ extern int delegate_real_WSAStartup(const char *, const int, const char *, WORD,
 extern int delegate_real_WSACleanup(const char *, const int, const char *);
 extern int delegate_real_WSAGetLastError(const char *, const int, const char *);
 extern int delegate_real_WSAPoll(const char *, const int, const char *, LPWSAPOLLFD, ULONG, INT);
+extern WSAEVENT delegate_real_WSACreateEvent(const char *, const int, const char *);
+extern BOOL delegate_real_WSACloseEvent(const char *, const int, const char *, WSAEVENT);
+extern BOOL delegate_real_WSASetEvent(const char *, const int, const char *, WSAEVENT);
+extern BOOL delegate_real_WSAResetEvent(const char *, const int, const char *, WSAEVENT);
+extern int delegate_real_WSAEventSelect(const char *, const int, const char *, SOCKET, WSAEVENT, long);
+extern int delegate_real_WSAEnumNetworkEvents(const char *, const int, const char *, SOCKET, WSAEVENT,
+                                               LPWSANETWORKEVENTS);
+extern DWORD delegate_real_WSAWaitForMultipleEvents(const char *, const int, const char *, DWORD, const WSAEVENT *, BOOL,
+                                                     DWORD, BOOL);
 extern SOCKET delegate_real_socket(const char *, const int, const char *, int, int, int);
 extern int delegate_real_bind(const char *, const int, const char *, SOCKET, const struct sockaddr *, int);
 extern int delegate_real_listen(const char *, const int, const char *, SOCKET, int);
@@ -124,6 +152,15 @@ class Mock_winsock
     MOCK_METHOD(int, WSACleanup, (const char *, const int, const char *));
     MOCK_METHOD(int, WSAGetLastError, (const char *, const int, const char *));
     MOCK_METHOD(int, WSAPoll, (const char *, const int, const char *, LPWSAPOLLFD, ULONG, INT));
+    MOCK_METHOD(WSAEVENT, WSACreateEvent, (const char *, const int, const char *));
+    MOCK_METHOD(BOOL, WSACloseEvent, (const char *, const int, const char *, WSAEVENT));
+    MOCK_METHOD(BOOL, WSASetEvent, (const char *, const int, const char *, WSAEVENT));
+    MOCK_METHOD(BOOL, WSAResetEvent, (const char *, const int, const char *, WSAEVENT));
+    MOCK_METHOD(int, WSAEventSelect, (const char *, const int, const char *, SOCKET, WSAEVENT, long));
+    MOCK_METHOD(int, WSAEnumNetworkEvents,
+                (const char *, const int, const char *, SOCKET, WSAEVENT, LPWSANETWORKEVENTS));
+    MOCK_METHOD(DWORD, WSAWaitForMultipleEvents,
+                (const char *, const int, const char *, DWORD, const WSAEVENT *, BOOL, DWORD, BOOL));
     MOCK_METHOD(SOCKET, socket, (const char *, const int, const char *, int, int, int));
     MOCK_METHOD(int, bind, (const char *, const int, const char *, SOCKET, const struct sockaddr *, int));
     MOCK_METHOD(int, listen, (const char *, const int, const char *, SOCKET, int));

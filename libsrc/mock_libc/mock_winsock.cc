@@ -16,6 +16,14 @@ Mock_winsock::Mock_winsock()
     ON_CALL(*this, WSACleanup(_, _, _)).WillByDefault(Invoke(delegate_real_WSACleanup));
     ON_CALL(*this, WSAGetLastError(_, _, _)).WillByDefault(Invoke(delegate_real_WSAGetLastError));
     ON_CALL(*this, WSAPoll(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_WSAPoll));
+    ON_CALL(*this, WSACreateEvent(_, _, _)).WillByDefault(Invoke(delegate_real_WSACreateEvent));
+    ON_CALL(*this, WSACloseEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_WSACloseEvent));
+    ON_CALL(*this, WSASetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_WSASetEvent));
+    ON_CALL(*this, WSAResetEvent(_, _, _, _)).WillByDefault(Invoke(delegate_real_WSAResetEvent));
+    ON_CALL(*this, WSAEventSelect(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_WSAEventSelect));
+    ON_CALL(*this, WSAEnumNetworkEvents(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_WSAEnumNetworkEvents));
+    ON_CALL(*this, WSAWaitForMultipleEvents(_, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_WSAWaitForMultipleEvents));
     ON_CALL(*this, socket(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_socket));
     ON_CALL(*this, bind(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_bind));
     ON_CALL(*this, listen(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_listen));
@@ -723,6 +731,210 @@ int mock_select(const char *file, const int line, const char *func, int nfds, fd
     }
 
     TRACE_WINSOCK_CALL(select);
+
+    return mock_ret;
+}
+
+WSAEVENT delegate_real_WSACreateEvent(const char *file, const int line, const char *func)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSACreateEvent();
+}
+
+WSAEVENT mock_WSACreateEvent(const char *file, const int line, const char *func)
+{
+    WSAEVENT mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSACreateEvent(file, line, func);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSACreateEvent(file, line, func);
+    }
+
+    TRACE_WINSOCK_CALL(WSACreateEvent);
+
+    return mock_ret;
+}
+
+BOOL delegate_real_WSACloseEvent(const char *file, const int line, const char *func, WSAEVENT event)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSACloseEvent(event);
+}
+
+BOOL mock_WSACloseEvent(const char *file, const int line, const char *func, WSAEVENT event)
+{
+    BOOL mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSACloseEvent(file, line, func, event);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSACloseEvent(file, line, func, event);
+    }
+
+    TRACE_WINSOCK_CALL(WSACloseEvent);
+
+    return mock_ret;
+}
+
+BOOL delegate_real_WSASetEvent(const char *file, const int line, const char *func, WSAEVENT event)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSASetEvent(event);
+}
+
+BOOL mock_WSASetEvent(const char *file, const int line, const char *func, WSAEVENT event)
+{
+    BOOL mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSASetEvent(file, line, func, event);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSASetEvent(file, line, func, event);
+    }
+
+    TRACE_WINSOCK_CALL(WSASetEvent);
+
+    return mock_ret;
+}
+
+BOOL delegate_real_WSAResetEvent(const char *file, const int line, const char *func, WSAEVENT event)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSAResetEvent(event);
+}
+
+BOOL mock_WSAResetEvent(const char *file, const int line, const char *func, WSAEVENT event)
+{
+    BOOL mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSAResetEvent(file, line, func, event);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSAResetEvent(file, line, func, event);
+    }
+
+    TRACE_WINSOCK_CALL(WSAResetEvent);
+
+    return mock_ret;
+}
+
+int delegate_real_WSAEventSelect(const char *file, const int line, const char *func, SOCKET sock, WSAEVENT event,
+                                long network_events)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSAEventSelect(sock, event, network_events);
+}
+
+int mock_WSAEventSelect(const char *file, const int line, const char *func, SOCKET sock, WSAEVENT event,
+                        long network_events)
+{
+    int mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSAEventSelect(file, line, func, sock, event, network_events);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSAEventSelect(file, line, func, sock, event, network_events);
+    }
+
+    TRACE_WINSOCK_CALL(WSAEventSelect);
+
+    return mock_ret;
+}
+
+int delegate_real_WSAEnumNetworkEvents(const char *file, const int line, const char *func, SOCKET sock,
+                                       WSAEVENT event, LPWSANETWORKEVENTS network_events)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSAEnumNetworkEvents(sock, event, network_events);
+}
+
+int mock_WSAEnumNetworkEvents(const char *file, const int line, const char *func, SOCKET sock, WSAEVENT event,
+                              LPWSANETWORKEVENTS network_events)
+{
+    int mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSAEnumNetworkEvents(file, line, func, sock, event, network_events);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSAEnumNetworkEvents(file, line, func, sock, event, network_events);
+    }
+
+    TRACE_WINSOCK_CALL(WSAEnumNetworkEvents);
+
+    return mock_ret;
+}
+
+DWORD delegate_real_WSAWaitForMultipleEvents(const char *file, const int line, const char *func, DWORD count,
+                                              const WSAEVENT *events, BOOL wait_all, DWORD timeout, BOOL alertable)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return WSAWaitForMultipleEvents(count, events, wait_all, timeout, alertable);
+}
+
+DWORD mock_WSAWaitForMultipleEvents(const char *file, const int line, const char *func, DWORD count,
+                                     const WSAEVENT *events, BOOL wait_all, DWORD timeout, BOOL alertable)
+{
+    DWORD mock_ret;
+
+    if (_mock_winsock != nullptr)
+    {
+        mock_ret = _mock_winsock->WSAWaitForMultipleEvents(file, line, func, count, events, wait_all, timeout,
+                                                           alertable);
+    }
+    else
+    {
+        mock_ret = delegate_real_WSAWaitForMultipleEvents(file, line, func, count, events, wait_all, timeout,
+                                                          alertable);
+    }
+
+    TRACE_WINSOCK_CALL(WSAWaitForMultipleEvents);
 
     return mock_ret;
 }
