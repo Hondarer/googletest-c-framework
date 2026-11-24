@@ -10,6 +10,7 @@
         #include <winsock2.h>
         #include <ws2tcpip.h>
         #include <windows.h>
+        #include <evntrace.h>
         #ifdef byte
             #undef byte /* C++17 std::byte と Windows SDK byte typedef の競合を解消 */
         #endif          /* byte */
@@ -103,6 +104,16 @@ extern "C"
     extern HMODULE mock_GetModuleHandleW(const char *, const int, const char *, LPCWSTR);
     extern FARPROC mock_GetProcAddress(const char *, const int, const char *, HMODULE, LPCSTR);
     extern int mock_CompareStringOrdinal(const char *, const int, const char *, LPCWCH, int, LPCWCH, int, BOOL);
+    extern ULONG mock_StartTraceW(const char *, const int, const char *, CONTROLTRACE_ID *, LPCWSTR,
+                                  PEVENT_TRACE_PROPERTIES);
+    extern ULONG mock_ControlTraceW(const char *, const int, const char *, CONTROLTRACE_ID, LPCWSTR,
+                                    PEVENT_TRACE_PROPERTIES, ULONG);
+    extern ULONG mock_EnableTraceEx2(const char *, const int, const char *, CONTROLTRACE_ID, LPCGUID, ULONG, UCHAR,
+                                     ULONGLONG, ULONGLONG, ULONG, PENABLE_TRACE_PARAMETERS);
+    extern PROCESSTRACE_HANDLE mock_OpenTraceW(const char *, const int, const char *, PEVENT_TRACE_LOGFILEW);
+    extern ULONG mock_ProcessTrace(const char *, const int, const char *, PROCESSTRACE_HANDLE *, ULONG, LPFILETIME,
+                                   LPFILETIME);
+    extern ULONG mock_CloseTrace(const char *, const int, const char *, PROCESSTRACE_HANDLE);
 
         #ifdef __cplusplus
 }
@@ -250,6 +261,18 @@ extern "C"
                 mock_GetProcAddress(__FILE__, __LINE__, __func__, module, proc_name)
             #define CompareStringOrdinal(string1, count1, string2, count2, ignore_case) \
                 mock_CompareStringOrdinal(__FILE__, __LINE__, __func__, string1, count1, string2, count2, ignore_case)
+            #define StartTraceW(trace_id, instance_name, properties) \
+                mock_StartTraceW(__FILE__, __LINE__, __func__, trace_id, instance_name, properties)
+            #define ControlTraceW(trace_id, instance_name, properties, control_code) \
+                mock_ControlTraceW(__FILE__, __LINE__, __func__, trace_id, instance_name, properties, control_code)
+            #define EnableTraceEx2(trace_id, provider_id, control_code, level, match_any_keyword, match_all_keyword, \
+                                   timeout, enable_parameters) \
+                mock_EnableTraceEx2(__FILE__, __LINE__, __func__, trace_id, provider_id, control_code, level, \
+                                    match_any_keyword, match_all_keyword, timeout, enable_parameters)
+            #define OpenTraceW(logfile) mock_OpenTraceW(__FILE__, __LINE__, __func__, logfile)
+            #define ProcessTrace(handle_array, handle_count, start_time, end_time) \
+                mock_ProcessTrace(__FILE__, __LINE__, __func__, handle_array, handle_count, start_time, end_time)
+            #define CloseTrace(trace_handle) mock_CloseTrace(__FILE__, __LINE__, __func__, trace_handle)
 
         #else // _IN_OVERRIDE_HEADER_WINDOWS_H
 
@@ -351,6 +374,16 @@ extern UINT delegate_real_GetTempFileNameW(const char *, const int, const char *
 extern HMODULE delegate_real_GetModuleHandleW(const char *, const int, const char *, LPCWSTR);
 extern FARPROC delegate_real_GetProcAddress(const char *, const int, const char *, HMODULE, LPCSTR);
 extern int delegate_real_CompareStringOrdinal(const char *, const int, const char *, LPCWCH, int, LPCWCH, int, BOOL);
+extern ULONG delegate_real_StartTraceW(const char *, const int, const char *, CONTROLTRACE_ID *, LPCWSTR,
+                                       PEVENT_TRACE_PROPERTIES);
+extern ULONG delegate_real_ControlTraceW(const char *, const int, const char *, CONTROLTRACE_ID, LPCWSTR,
+                                         PEVENT_TRACE_PROPERTIES, ULONG);
+extern ULONG delegate_real_EnableTraceEx2(const char *, const int, const char *, CONTROLTRACE_ID, LPCGUID, ULONG, UCHAR,
+                                          ULONGLONG, ULONGLONG, ULONG, PENABLE_TRACE_PARAMETERS);
+extern PROCESSTRACE_HANDLE delegate_real_OpenTraceW(const char *, const int, const char *, PEVENT_TRACE_LOGFILEW);
+extern ULONG delegate_real_ProcessTrace(const char *, const int, const char *, PROCESSTRACE_HANDLE *, ULONG, LPFILETIME,
+                                        LPFILETIME);
+extern ULONG delegate_real_CloseTrace(const char *, const int, const char *, PROCESSTRACE_HANDLE);
 
 class Mock_windows
 {
@@ -450,6 +483,18 @@ class Mock_windows
     MOCK_METHOD(FARPROC, GetProcAddress, (const char *, const int, const char *, HMODULE, LPCSTR));
     MOCK_METHOD(int, CompareStringOrdinal,
                 (const char *, const int, const char *, LPCWCH, int, LPCWCH, int, BOOL));
+    MOCK_METHOD(ULONG, StartTraceW,
+                (const char *, const int, const char *, CONTROLTRACE_ID *, LPCWSTR, PEVENT_TRACE_PROPERTIES));
+    MOCK_METHOD(ULONG, ControlTraceW,
+                (const char *, const int, const char *, CONTROLTRACE_ID, LPCWSTR, PEVENT_TRACE_PROPERTIES, ULONG));
+    MOCK_METHOD(ULONG, EnableTraceEx2,
+                (const char *, const int, const char *, CONTROLTRACE_ID, LPCGUID, ULONG, UCHAR, ULONGLONG, ULONGLONG,
+                 ULONG, PENABLE_TRACE_PARAMETERS));
+    MOCK_METHOD(PROCESSTRACE_HANDLE, OpenTraceW,
+                (const char *, const int, const char *, PEVENT_TRACE_LOGFILEW));
+    MOCK_METHOD(ULONG, ProcessTrace,
+                (const char *, const int, const char *, PROCESSTRACE_HANDLE *, ULONG, LPFILETIME, LPFILETIME));
+    MOCK_METHOD(ULONG, CloseTrace, (const char *, const int, const char *, PROCESSTRACE_HANDLE));
 
     void switch_to_real_time();
     void switch_to_mock_time();

@@ -92,6 +92,13 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, GetProcAddress(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_GetProcAddress));
     ON_CALL(*this, CompareStringOrdinal(_, _, _, _, _, _, _, _))
         .WillByDefault(Invoke(delegate_real_CompareStringOrdinal));
+    ON_CALL(*this, StartTraceW(_, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_StartTraceW));
+    ON_CALL(*this, ControlTraceW(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ControlTraceW));
+    ON_CALL(*this, EnableTraceEx2(_, _, _, _, _, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_EnableTraceEx2));
+    ON_CALL(*this, OpenTraceW(_, _, _, _)).WillByDefault(Invoke(delegate_real_OpenTraceW));
+    ON_CALL(*this, ProcessTrace(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_ProcessTrace));
+    ON_CALL(*this, CloseTrace(_, _, _, _)).WillByDefault(Invoke(delegate_real_CloseTrace));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_windows);
 }
