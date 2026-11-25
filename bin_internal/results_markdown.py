@@ -68,8 +68,8 @@ def link(label, path):
 def table(headers, rows, caption, numeric=False):
     separator = ["---"] + (["---:"] * (len(headers) - 1) if numeric else ["---"] * (len(headers) - 1))
     lines = "\n".join("| " + " | ".join(cell(v) for v in row) + " |" for row in [headers, separator, *rows])
-    # 表のキャプションは、表の直後に空行を挟んだ Table: 行で指定する。
-    return lines + "\n\nTable: " + caption
+    # 表のキャプションは、表の直前に空行を挟んだ Table: 行で指定する。
+    return "Table: " + caption + "\n\n" + lines
 
 
 def admonition(kind, message):

@@ -50,6 +50,8 @@ This feature automatically implements option 1 (the recommended approach). By em
 
 ### 基本動作 / Basic Behavior
 
+Table: LIBS 記述形式に応じたリンク処理方法
+
 | LIBS の記述形式 | 処理方法 | 例 |
 |----------------|---------|-----|
 | 直接 `.a` 指定 | 静的リンク | `libcalcbase.a` |
@@ -59,7 +61,7 @@ This feature automatically implements option 1 (the recommended approach). By em
 | `-L` オプション | 検索パスとして使用 | `-L/path/to/libs` |
 | その他リンク オプション | そのまま渡す | `-Wl,-rpath,/path` |
 
-Table: LIBS 記述形式に応じたリンク処理方法
+Table: LIBS 記述形式に応じたリンク処理方法 (英語版)
 
 | LIBS format | Processing | Example |
 |-------------|------------|---------|
@@ -69,8 +71,6 @@ Table: LIBS 記述形式に応じたリンク処理方法
 | Direct `.so` specification | Dynamic linking | `libfoo.so` |
 | `-L` option | Used as search path | `-L/path/to/libs` |
 | Other link options | Passed as-is | `-Wl,-rpath,/path` |
-
-Table: LIBS 記述形式に応じたリンク処理方法 (英語版)
 
 ### ライブラリ検索パス / Library Search Path
 

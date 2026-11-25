@@ -8,6 +8,8 @@ GoogleTest は、テスト実行結果の視認性を高めるため、ターミ
 
 GoogleTest の内部では、以下の 4 つの色が定義されています。
 
+Table: GoogleTest の内部定義色と ANSI コード一覧
+
 | 色 | 内部定義名 | ANSI コード | 用途 |
 |---|---|---|---|
 | 既定 (無色) | `kDefault` | `\033[0m` | 色のリセット |
@@ -15,13 +17,13 @@ GoogleTest の内部では、以下の 4 つの色が定義されています。
 | 赤 | `kRed` | `\033[0;31m` | 失敗状態の表示 |
 | 黄 | `kYellow` | `\033[0;33m` | 無効テスト、注記の表示 |
 
-Table: GoogleTest の内部定義色と ANSI コード一覧
-
 ## 見出し行と着色の対応
 
 テスト実行中に表示される見出し行と、それぞれに適用される色を以下に示します。
 
 ### テスト実行フェーズ
+
+Table: テスト実行フェーズの見出し行と着色定義
 
 | 見出し | 色 | 意味 |
 |---|---|---|
@@ -29,9 +31,9 @@ Table: GoogleTest の内部定義色と ANSI コード一覧
 | `[----------]` | 緑 | テスト スイートの開始・終了 |
 | `[ RUN      ]` | 緑 | 個別テストの開始 |
 
-Table: テスト実行フェーズの見出し行と着色定義
-
 ### テスト結果
+
+Table: テスト結果の見出し行と着色定義
 
 | 見出し | 色 | 意味 |
 |---|---|---|
@@ -41,18 +43,16 @@ Table: テスト実行フェーズの見出し行と着色定義
 | `[  SKIPPED ]` | 緑 | テストのスキップ (GTEST_SKIP 使用時) |
 | `[ DISABLED ]` | 黄 | 無効にしたテスト (`DISABLED_` 使用時) |
 
-Table: テスト結果の見出し行と着色定義
-
 GoogleTest は、スキップを成功と同じ緑で出力します。
 
 ### その他の情報出力
+
+Table: その他の情報出力見出しと着色定義
 
 | 見出し | 色 | 意味 |
 |---|---|---|
 | `[  DEATH   ]` | なし | Death test の子プロセスが出力した各行の行頭 (失敗メッセージに含まれる) |
 | `[  INFO ]`、`[WARNING]`、`[ ERROR ]`、`[ FATAL ]` | なし | GoogleTest の内部ログ (標準エラー出力) |
-
-Table: その他の情報出力見出しと着色定義
 
 これらの見出しは `ColoredPrintf` を通らないため、GoogleTest は着色しません。  
 `add_gtest_color.py` も、`[  DEATH   ]`、`[  INFO ]`、`[ ERROR ]`、`[ FATAL ]` を着色しません。  
@@ -117,6 +117,8 @@ export GTEST_COLOR=0    # 色を無効化
 
 着色は `gtest.cc` 内の `PrettyUnitTestResultPrinter` クラスで実装されています。主要なメソッドは次のとおりです。
 
+Table: PrettyUnitTestResultPrinter のメソッドと出力見出し対応
+
 | メソッド | 出力する見出し |
 |---|---|
 | `OnTestIterationStart` | `[==========]` (緑) |
@@ -126,8 +128,6 @@ export GTEST_COLOR=0    # 色を無効化
 | `OnTestDisabled` | `[ DISABLED ]` (黄) |
 | `OnTestEnd` | `[       OK ]` (緑) または `[  SKIPPED ]` (緑) または `[  FAILED  ]` (赤) |
 | `OnTestIterationEnd` | `[==========]` (緑)、`[  PASSED  ]` (緑)、`[  SKIPPED ]` (緑)、`[  FAILED  ]` (赤) |
-
-Table: PrettyUnitTestResultPrinter のメソッドと出力見出し対応
 
 ## 着色フィルターの使用
 
@@ -159,6 +159,8 @@ Windows の `add_gtest_color.py` は、行頭の `[` で始まる GoogleTest の
 
 標準的なテスト実行で出力されるすべての見出しは、テキスト パターンから一意に色を復元できます。
 
+Table: 見出しテキスト別の色復元可逆性
+
 | 見出しテキスト | 色 | 可逆性 |
 |---|---|---|
 | `[ RUN      ]` | 緑 | ✅ 完全 |
@@ -169,8 +171,6 @@ Windows の `add_gtest_color.py` は、行頭の `[` で始まる GoogleTest の
 | `[ DISABLED ]` | 黄 | ✅ 完全 |
 | `[==========]` | 緑 | ✅ 完全 |
 | `[----------]` | 緑 | ✅ 完全 |
-
-Table: 見出しテキスト別の色復元可逆性
 
 ### 可逆性の技術的根拠
 

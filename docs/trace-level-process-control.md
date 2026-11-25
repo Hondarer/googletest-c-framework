@@ -10,6 +10,8 @@ traceLevel をプロセス制御関数にも対応させることで、テスト
 
 ### traceLevel 機構の概要
 
+Table: traceLevel 機構の関数と役割
+
 | 関数 | 役割 |
 |---|---|
 | `resetTraceLevel()` | 辞書をクリアして既定値を `TRACE_NONE` にリセット |
@@ -17,17 +19,15 @@ traceLevel をプロセス制御関数にも対応させることで、テスト
 | `setDefaultTraceLevel(int level)` | 全関数共通の既定レベルを設定 |
 | `getTraceLevel()` | 現在の関数名 (`__func__`) をキーにしてレベルを取得するマクロ |
 
-Table: traceLevel 機構の関数と役割
-
 レベル定数:
+
+Table: トレース レベル定数の一覧
 
 | 定数 | 値 | 意味 |
 |---|---|---|
 | `TRACE_NONE` | 0 | 出力なし (既定) |
 | `TRACE_INFO` | 1 | 関数呼び出しと主要引数を出力 |
 | `TRACE_DETAIL` | 2 | 戻り値・結果を追加出力 |
-
-Table: トレース レベル定数の一覧
 
 ### 既存のモック関数での実装パターン
 
@@ -72,6 +72,8 @@ void SetUp() override
 processController は全体で 1 つの機能であり、キーは `processController` 1 つとします。  
 それぞれの機能で出力を次のようにします。
 
+Table: プロセス制御機能のトレース出力仕様
+
 | 機能 | TRACE_INFO の出力 | TRACE_DETAIL の追加出力 |
 |---|---|---|
 | `startProcessAsync` | `"  > startProcessAsync \"<path>\" \"<arg1>\" ..."` | 成功: `" -> startProcessAsync pid=<N>"`、失敗: `" -> startProcessAsync nullptr"` |
@@ -87,18 +89,16 @@ processController は全体で 1 つの機能であり、キーは `processContr
 | stderr キャプチャ時 (`\n` 検出時)           | `"  > stderr   : \"<line>\""` | なし |
 | debug 出力 キャプチャ時 (`\n` 検出時) | なし | `"  > debug_log: \"<line>\""` |
 
-Table: プロセス制御機能のトレース出力仕様
-
 ※ `writeStdin` は `writeLineStdin` からも呼び出されるため、最終出力処理を別関数 `writeStdinImpl` に分離してトレースさせます。
 
 ### 除外する関数
+
+Table: トレース対象から除外する関数と理由
 
 | 関数 | 除外理由 |
 |---|---|
 | `getStdout` / `getStderr` | 単純ゲッター。呼び出し頻度が高く、トレース出力の価値が低い |
 | `getDebugLogCount` / `getDebugLog` | 同上 |
-
-Table: トレース対象から除外する関数と理由
 
 ## テスト コードでの使用例
 

@@ -138,7 +138,7 @@ help オプションで必須位置引数なしでも正常終了することの
     def test_inline_cells_and_links(self):
         self.assertEqual(md.inline('a``b'), '``` a``b ```')
         self.assertEqual(md.cell('a|b'), r'a\|b')
-        self.assertEqual(md.table(['項目'], [['値']], '表題'), '| 項目 |\n| --- |\n| 値 |\n\nTable: 表題')
+        self.assertEqual(md.table(['項目'], [['値']], '表題'), 'Table: 表題\n\n| 項目 |\n| --- |\n| 値 |')
         self.assertEqual(md.link('結果', '../a b/#x?%/results.md'), '[結果](../a%20b/%23x%3F%25/results.md)')
 
     def test_names_are_plain_text_with_markdown_escapes(self):

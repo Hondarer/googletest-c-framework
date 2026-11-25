@@ -16,6 +16,8 @@ Linux の `nm -D --defined-only` が返すリンカー合成シンボル (`__bss
 
 ## 提供する関数・マクロ
 
+Table: エクスポート シンボル検査用マクロおよび関数一覧
+
 | 名前 | 役割 |
 | --- | --- |
 | `TESTFW_EXPORT_STATIC_ASSERT_ENTRY(name, sig)` | EXPORT_ENTRY マクロ テーブルから `static_assert` を生成する定型マクロ |
@@ -26,8 +28,6 @@ Linux の `nm -D --defined-only` が返すリンカー合成シンボル (`__bss
 | `testing::findUndecoratedExternVariables(include_dir, export_macro_name)` | 指定ディレクトリ配下のヘッダーから、export マクロを伴わない `extern` 変数宣言を検出する |
 | `testing::identManifestSymbolName(target)` | IDENT 機能 ([ident.md](../../makefw/docs/ident.md)) が自動生成するシンボル名を組み立てる |
 | `testing::joinNames(names)` | 文字列一覧をカンマ区切りで連結する (失敗メッセージ整形用) |
-
-Table: エクスポート シンボル検査用マクロおよび関数一覧
 
 ## app 側で書くもの (固有定義)
 

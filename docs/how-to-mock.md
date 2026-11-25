@@ -17,13 +17,13 @@ mock 関数を追加するときの共通ルールを示します。
 - 差し替え前の処理、ヘッダー、API
     - mock が委譲する元の処理と、override ヘッダーが読み込む元のヘッダーや API です。「本物」や「実際の処理」とは呼ばず、指す対象に応じて次のように呼びます。
 
+Table: 委譲先と差し替え前のヘッダーの呼び方
+
 | 対象 | 製品コード (`prod`) | libc、OpenSSL などのライブラリ | 特定のライブラリに限らない説明 |
 | --- | --- | --- | --- |
 | 委譲先の処理 | 製品 (prod) の処理 | libc の処理、OpenSSL の処理 | 差し替え前の処理 |
 | ヘッダー | 製品 (prod) のヘッダー | libc のヘッダー、OpenSSL のヘッダー | 差し替え前のヘッダー |
 | API | 製品 (prod) の API | libc の API、OpenSSL の API | 差し替え前の API |
-
-Table: 委譲先と差し替え前のヘッダーの呼び方
 
 ## 流れ
 
@@ -49,12 +49,12 @@ Table: 委譲先と差し替え前のヘッダーの呼び方
 
 結果コード以外の戻り値も対象にする点は同じですが、場所で名前を分けます。
 
+Table: 戻り値中継変数の定義場所と役割
+
 | 場所 | 変数 | 役割 |
 |---|---|---|
 | mock 関数本体 | `mock_ret` | 委譲先の値を受けて返す |
 | テスト本体 | `actual_ret` | 試験対象の実際の戻り値を `EXPECT_*` で検証する |
-
-Table: 戻り値中継変数の定義場所と役割
 
 どちらも生産コードの `ret` とは混ぜません。
 
@@ -282,14 +282,14 @@ override ヘッダー経由の場合は何も取り込みません。製品の�
 
 Windows の時計関数は、`include_override/windows.h` から `include/mock_windows.h` を取り込み、呼び出し元のファイル名、行番号、関数名を付けて置換します。
 
+Table: Windows の時計 mock と fake delegate の動作
+
 | OS 関数 | mock 関数 | fake delegate の動作 |
 |---|---|---|
 | `GetTickCount64()` | `mock_GetTickCount64()` | 0 を返す |
 | `GetSystemTimeAsFileTime()` | `mock_GetSystemTimeAsFileTime()` | 出力をゼロにする |
 | `QueryPerformanceCounter()` | `mock_QueryPerformanceCounter()` | カウンターを 0 にして成功を返す |
 | `QueryPerformanceFrequency()` | `mock_QueryPerformanceFrequency()` | 周波数を 1,000,000,000 [Hz] にして成功を返す |
-
-Table: Windows の時計 mock と fake delegate の動作
 
 `Mock_windows` の既定動作と mock 未注入時の呼び出しは、実関数へ委譲します。  
 `switch_to_mock_time()` は表の fake delegate へ、`switch_to_real_time()` は real delegate へ切り替えます。  
