@@ -8,6 +8,10 @@
         #include <sys/socket.h>
     #endif
 
+/* sendmmsg() と struct mmsghdr は _GNU_SOURCE の定義時だけ宣言される。
+ * 未定義の翻訳単位でも仮引数の型が有効範囲を持つよう、構造体を前方宣言する。 */
+struct mmsghdr;
+
     #ifdef __cplusplus
 extern "C"
 {
@@ -27,6 +31,7 @@ extern "C"
                                const struct sockaddr *, socklen_t);
     extern ssize_t mock_recvfrom(const char *, const int, const char *, int, void *, size_t, int, struct sockaddr *,
                                  socklen_t *);
+    extern int mock_sendmmsg(const char *, const int, const char *, int, struct mmsghdr *, unsigned int, int);
 
     #ifdef __cplusplus
 }
@@ -50,6 +55,8 @@ extern "C"
             mock_sendto(__FILE__, __LINE__, __func__, sockfd, buf, len, flags, dest_addr, addrlen)
         #define recvfrom(sockfd, buf, len, flags, src_addr, addrlen) \
             mock_recvfrom(__FILE__, __LINE__, __func__, sockfd, buf, len, flags, src_addr, addrlen)
+        #define sendmmsg(sockfd, msgvec, vlen, flags) \
+            mock_sendmmsg(__FILE__, __LINE__, __func__, sockfd, msgvec, vlen, flags)
 
     #else // _IN_OVERRIDE_HEADER_SYS_SOCKET_H
 
@@ -69,6 +76,7 @@ extern ssize_t delegate_real_sendto(const char *, const int, const char *, int, 
                                     const struct sockaddr *, socklen_t);
 extern ssize_t delegate_real_recvfrom(const char *, const int, const char *, int, void *, size_t, int,
                                       struct sockaddr *, socklen_t *);
+extern int delegate_real_sendmmsg(const char *, const int, const char *, int, struct mmsghdr *, unsigned int, int);
 
 class Mock_sys_socket
 {
@@ -88,6 +96,7 @@ class Mock_sys_socket
                  socklen_t));
     MOCK_METHOD(ssize_t, recvfrom,
                 (const char *, const int, const char *, int, void *, size_t, int, struct sockaddr *, socklen_t *));
+    MOCK_METHOD(int, sendmmsg, (const char *, const int, const char *, int, struct mmsghdr *, unsigned int, int));
 
     Mock_sys_socket();
     virtual ~Mock_sys_socket();

@@ -22,6 +22,7 @@ Mock_sys_socket::Mock_sys_socket()
     ON_CALL(*this, recv(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_recv));
     ON_CALL(*this, sendto(_, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_sendto));
     ON_CALL(*this, recvfrom(_, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_recvfrom));
+    ON_CALL(*this, sendmmsg(_, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_sendmmsg));
 
     TESTFW_REGISTER_MOCK_INSTANCE(_mock_sys_socket);
 }
@@ -398,6 +399,36 @@ ssize_t mock_recvfrom(const char *file, const int line, const char *func, int so
     }
 
     TRACE_SOCKET_CALL(recvfrom);
+
+    return mock_ret;
+}
+
+int delegate_real_sendmmsg(const char *file, const int line, const char *func, int sockfd, struct mmsghdr *msgvec,
+                           unsigned int vlen, int flags)
+{
+    // avoid -Wunused-parameter
+    (void)file;
+    (void)line;
+    (void)func;
+
+    return sendmmsg(sockfd, msgvec, vlen, flags);
+}
+
+int mock_sendmmsg(const char *file, const int line, const char *func, int sockfd, struct mmsghdr *msgvec,
+                  unsigned int vlen, int flags)
+{
+    int mock_ret;
+
+    if (_mock_sys_socket != nullptr)
+    {
+        mock_ret = _mock_sys_socket->sendmmsg(file, line, func, sockfd, msgvec, vlen, flags);
+    }
+    else
+    {
+        mock_ret = delegate_real_sendmmsg(file, line, func, sockfd, msgvec, vlen, flags);
+    }
+
+    TRACE_SOCKET_CALL(sendmmsg);
 
     return mock_ret;
 }
