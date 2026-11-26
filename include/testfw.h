@@ -8,6 +8,7 @@
 #include <test_com.h>
 #include <processController.h>
 #include <sharedLibrary.h>
+#include <testPort.h>
 #include <export_check.h>
 #include <gtest_wrapmain.h>
 #include <mock_instance.h>
