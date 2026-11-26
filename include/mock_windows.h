@@ -80,6 +80,8 @@ extern "C"
     extern DWORD mock_GetFileType(const char *, const int, const char *, HANDLE);
     extern HANDLE mock_CreateFileW(const char *, const int, const char *, LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES,
                                    DWORD, DWORD, HANDLE);
+    extern BOOL mock_GetFileInformationByHandleEx(const char *, const int, const char *, HANDLE,
+                                                  FILE_INFO_BY_HANDLE_CLASS, LPVOID, DWORD);
     extern BOOL mock_SetServiceStatus(const char *, const int, const char *, SERVICE_STATUS_HANDLE, LPSERVICE_STATUS);
     extern BOOL mock_SetConsoleCtrlHandler(const char *, const int, const char *, PHANDLER_ROUTINE, BOOL);
     extern UINT mock_GetConsoleCP(const char *, const int, const char *);
@@ -219,6 +221,9 @@ extern "C"
                                 flags_and_attributes, template_file) \
                 mock_CreateFileW(__FILE__, __LINE__, __func__, file_name, desired_access, share_mode, \
                                  security_attributes, creation_disposition, flags_and_attributes, template_file)
+            #define GetFileInformationByHandleEx(file_handle, information_class, information, buffer_size) \
+                mock_GetFileInformationByHandleEx(__FILE__, __LINE__, __func__, file_handle, information_class, \
+                                                  information, buffer_size)
             #define SetServiceStatus(service_status_handle, service_status) \
                 mock_SetServiceStatus(__FILE__, __LINE__, __func__, service_status_handle, service_status)
             #define SetConsoleCtrlHandler(handler_routine, add) \
@@ -348,6 +353,8 @@ extern BOOL delegate_real_SetStdHandle(const char *, const int, const char *, DW
 extern DWORD delegate_real_GetFileType(const char *, const int, const char *, HANDLE);
 extern HANDLE delegate_real_CreateFileW(const char *, const int, const char *, LPCWSTR, DWORD, DWORD,
                                         LPSECURITY_ATTRIBUTES, DWORD, DWORD, HANDLE);
+extern BOOL delegate_real_GetFileInformationByHandleEx(const char *, const int, const char *, HANDLE,
+                                                       FILE_INFO_BY_HANDLE_CLASS, LPVOID, DWORD);
 extern BOOL delegate_real_SetServiceStatus(const char *, const int, const char *, SERVICE_STATUS_HANDLE,
                                            LPSERVICE_STATUS);
 extern BOOL delegate_real_SetConsoleCtrlHandler(const char *, const int, const char *, PHANDLER_ROUTINE, BOOL);
@@ -455,6 +462,8 @@ class Mock_windows
     MOCK_METHOD(HANDLE, CreateFileW,
                 (const char *, const int, const char *, LPCWSTR, DWORD, DWORD, LPSECURITY_ATTRIBUTES, DWORD, DWORD,
                  HANDLE));
+    MOCK_METHOD(BOOL, GetFileInformationByHandleEx,
+                (const char *, const int, const char *, HANDLE, FILE_INFO_BY_HANDLE_CLASS, LPVOID, DWORD));
     MOCK_METHOD(BOOL, SetServiceStatus,
                 (const char *, const int, const char *, SERVICE_STATUS_HANDLE, LPSERVICE_STATUS));
     MOCK_METHOD(BOOL, SetConsoleCtrlHandler, (const char *, const int, const char *, PHANDLER_ROUTINE, BOOL));

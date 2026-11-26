@@ -65,6 +65,8 @@ Mock_windows::Mock_windows()
     ON_CALL(*this, SetStdHandle(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetStdHandle));
     ON_CALL(*this, GetFileType(_, _, _, _)).WillByDefault(Invoke(delegate_real_GetFileType));
     ON_CALL(*this, CreateFileW(_, _, _, _, _, _, _, _, _, _)).WillByDefault(Invoke(delegate_real_CreateFileW));
+    ON_CALL(*this, GetFileInformationByHandleEx(_, _, _, _, _, _, _))
+        .WillByDefault(Invoke(delegate_real_GetFileInformationByHandleEx));
     ON_CALL(*this, SetServiceStatus(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetServiceStatus));
     ON_CALL(*this, SetConsoleCtrlHandler(_, _, _, _, _)).WillByDefault(Invoke(delegate_real_SetConsoleCtrlHandler));
     ON_CALL(*this, GetConsoleCP(_, _, _)).WillByDefault(Invoke(delegate_real_GetConsoleCP));
