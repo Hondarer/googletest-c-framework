@@ -300,9 +300,12 @@ Table: Windows の時計 mock と fake delegate の動作
 - Mock クラス
     - `../include/mock_stdio.h`
     - `../include/mock_unistd.h`
+    - `../include/mock_systemd.h` (Linux 専用、`libmock_systemd.a`、`SKIP_BUILD = WINDOWS`)
 - override ヘッダー
     - `../include_override/stdio.h`
     - `../include_override/unistd.h`
     - `../include_override/io.h` (Windows の `_close` / `_read` など。`mock_unistd.h` と共用)
+    - `../include_override/systemd/` (`sd-bus.h`、`sd-daemon.h`、`sd-event.h`)
 - 関数実装
     - `../libsrc/mock_libc/`
+    - `../libsrc/mock_systemd/` (独立静的ライブラリ、`SKIP_BUILD = WINDOWS`)
